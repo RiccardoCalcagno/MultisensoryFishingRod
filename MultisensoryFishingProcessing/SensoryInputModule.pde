@@ -24,6 +24,7 @@ class SensoryInputModule{
   
   InputModuleManager inputModuleManager;
   
+  // use inputModuleManager to notify the game with all the data comming from the rod
   SensoryInputModule(InputModuleManager _inputModuleManager){
     inputModuleManager = _inputModuleManager;
   }
