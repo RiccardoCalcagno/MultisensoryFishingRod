@@ -17,11 +17,15 @@ class Fish implements PublicFish{
   float foodX = 0, foodY = 0, foodZ = 0; // Food position at (0, 0, 0)
   float intentionality; // Intentionality of the fish (0 to 1)
   float stepSize; // Size of each step
-  float boxsize;
+  int boxsize;
+
   float[] direction = new float[3];
   
-  Fish() {
-    boxsize = 1300;
+  GameManager gameManager;
+  
+  Fish(GameManager _gameManager) {
+    gameManager = _gameManager;
+    boxsize = gameManager.getSizeOfAcquarium();
     posX = random(-boxsize/2, boxsize/2);
     posY = random(-boxsize/2, boxsize/2);
     posZ = random(-boxsize/2, boxsize/2);

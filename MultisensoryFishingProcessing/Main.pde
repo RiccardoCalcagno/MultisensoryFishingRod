@@ -49,8 +49,12 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   SessionData currentSession;
   float totalWeightedScore; // Punteggio totale ponderato
   int totalWeightedScoreCount; // Contatore per il punteggio totale
+  int boxsize;
   Fish fish;
   Player player;
+  int getSizeOfAcquarium(){
+    return boxsize;
+  }
 
   int NumFramesHaloExternUpdates = 5;
   int haloForWireRetrieving, haloForRawMovements;
@@ -70,6 +74,9 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
 
   // Costruttore per GameManager
   GameManager() {
+    
+    boxsize = min(width, height) / 2; 
+    
     haloForWireRetrieving = NumFramesHaloExternUpdates;
     haloForRawMovements = NumFramesHaloExternUpdates;
     
@@ -77,7 +84,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     totalWeightedScoreCount = 0;
     
     player = new Player(this);
-    fish = new Fish();
+    fish = new Fish(this);
     
     sensoryInputModule = new SensoryInputModule(this);
     
@@ -108,8 +115,6 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   }
   
   void gameLoop(){
-    
-    background(255);
     
     fish.UpdatePosition();
     
@@ -282,10 +287,12 @@ void setup() {
 }
 
 void draw() {
-  background(135, 206, 250); // Colore azzurro per l'acqua
   
   if(globalGameManager.currentState != GameState.Null && globalGameManager.currentState != GameState.EndExperience){
       globalGameManager.gameLoop();
+  }
+  else{
+    background(255); 
   }
 }
 

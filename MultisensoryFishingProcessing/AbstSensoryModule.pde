@@ -14,6 +14,8 @@ interface OutputModulesManager{
   // true <=> the player is in the second part of the session (retreiving the hooked fish)
   boolean isFishHooked();
   
+  int getSizeOfAcquarium();
+  
   // Use it if you need to have some information about the fish
   PublicFish getFish();
 }
