@@ -81,20 +81,3 @@ class RodStatusData{
       
     !!!!!!!!  Make use of the SerializationUtility static class and its methods to properly serialize the data to forward !!!!!!!!!!
 */
-
-class HapticSensoryModule extends AbstSensoryOutModule{
-  
-  HapticSensoryModule(OutputModulesManager outputModulesManager){
-    super(outputModulesManager);
-  }
-}
-class AudioSensoryModule extends AbstSensoryOutModule{
-  AudioSensoryModule(OutputModulesManager outputModulesManager){
-    super(outputModulesManager);
-  }
-}
-class VisualSensoryModule extends AbstSensoryOutModule{ 
-    VisualSensoryModule(OutputModulesManager outputModulesManager){
-    super(outputModulesManager);
-  }
-}
