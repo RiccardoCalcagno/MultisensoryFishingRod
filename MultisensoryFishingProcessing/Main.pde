@@ -109,13 +109,15 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   
   void gameLoop(){
     
+    background(255);
+    
     fish.UpdatePosition();
     
     RodStatusData data = calculateRodStatusData();
     for (AbstSensoryOutModule sensoryModule : sensoryModules) {
-        sensoryModule.OnRodStatusReading(data);
+
+      sensoryModule.OnRodStatusReading(data);
     }
-    
     
   }
   
@@ -178,7 +180,6 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
         sensoryModules.add(moduleToAdd);
       }
     }
-    
     
     setState(GameState.Begin);
     // Inizializzare i gestori e la sessione di gioco
@@ -273,7 +274,7 @@ GameManager globalGameManager;
 Player player;
 
 void setup() {
-  size(1600, 1400);
+  size(1400, 1400, P3D);
   globalGameManager = new GameManager();
   player = new Player(globalGameManager);
   

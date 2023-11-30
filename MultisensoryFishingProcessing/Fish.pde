@@ -8,7 +8,7 @@ class Fish implements PublicFish{
     return new float[] {posX, posY, posZ};
   }
   float[] getDeltaPos(){
-    return new float[] {directionX, directionY, directionZ};
+    return direction;
   }
   float getIntentionality(){
     return intentionality;
@@ -18,20 +18,13 @@ class Fish implements PublicFish{
   float intentionality; // Intentionality of the fish (0 to 1)
   float stepSize; // Size of each step
   float boxsize;
-  PImage fishImg; 
-  float directionX;
-  float directionY;
-  float directionZ;
+  float[] direction = new float[3];
   
   Fish() {
     boxsize = 1300;
-    //size(1400, 1400, P3D);
     posX = random(-boxsize/2, boxsize/2);
     posY = random(-boxsize/2, boxsize/2);
     posZ = random(-boxsize/2, boxsize/2);
-    
-    fishImg = loadImage("fish.png");
-    fishImg.resize(180, 180);
   }
   
   
@@ -59,6 +52,10 @@ class Fish implements PublicFish{
     noiseY /= noisedistance;
     noiseZ /= noisedistance;
     
+    direction[0] = posX - prevPosX;
+    direction[1] = posY - prevPosY;
+    direction[2] = posZ - prevPosZ;
+    
     prevPosX = posX;
     prevPosY = posY;
     prevPosZ = posZ;
@@ -71,31 +68,5 @@ class Fish implements PublicFish{
     posX = constrain(posX, -boxsize/2, boxsize/2);
     posY = constrain(posY, -boxsize/2, boxsize/2);
     posZ = constrain(posZ, -boxsize/2, boxsize/2);   
-  }
-  
-  void drawFish() {
-    background(255);
-
-    translate(width/2, height/2);
-    //fill(color(240, 240, 255 ,100));
-    //box(boxsize);
-    
-    directionX = posX - prevPosX;
-    directionY = posY - prevPosY;
-    directionZ = posZ - prevPosZ;
-    
-    // Apply rotation based on direction of motion
-    float thetaY = atan2(-directionX, -directionZ);
-    float thetaX = atan2(directionY, sqrt(directionZ * directionZ + directionX * directionX));
-    
-    pushMatrix();
-    translate(posX, posY, posZ);
-    rotateY(thetaY);
-    rotateX(thetaX);
-    fill(0);
-    noStroke();
-     imageMode(CENTER);
-    image(fishImg, 0, 0); // Draw the fish image
-    popMatrix();
   }
 }
