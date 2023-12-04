@@ -29,6 +29,7 @@ enum GameState {
 class SessionData {
   float sessionPerformanceWeight;
   int sessionPerformanceValue;
+  String endReason;
   PlayerInfo playerInfo;
 }
 // Classe per memorizzare le informazioni del giocatore
@@ -111,7 +112,9 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   }
   
   void OnWireBreaks(){
-  
+    if(isFishHooked()){
+      setState(GameState.FishLost);
+    }
   }
   
   void gameLoop(){
@@ -221,6 +224,12 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
         break;
 
       // Implementare la logica per gli altri stati allo stesso modo
+      
+      case FishLost:
+      case WireEnded:
+      case FishCaught:
+        OnReasonToEnd(currentState);
+        break;
 
       case End:
         // Logica per terminare la sessione di gioco
@@ -237,6 +246,21 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   void beginGameSession(){
     wireCountdown = 1000;
   }
+  
+  void OnReasonToEnd(GameState reason){
+    
+    switch(reason){
+      case FishLost: currentSession.endReason = "FishLost";
+        break;
+      case WireEnded: currentSession.endReason = "WireEnded";
+        break;
+      case FishCaught: currentSession.endReason = "FishCaught";
+        break;
+    }  
+    
+    
+    setState(GameState.End);
+  }
 
   // Metodo per terminare la sessione di gioco
   void endGameSession() {
@@ -249,7 +273,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     totalWeightedScore += weightedScore;
     totalWeightedScoreCount++;
     
-    createAnswerToContinuePlayingUI();
+    createAnswerToContinuePlayingUI(currentSession.endReason == "FishCaught");
   }
   
   void AnswerToContinuePlaying(boolean value){

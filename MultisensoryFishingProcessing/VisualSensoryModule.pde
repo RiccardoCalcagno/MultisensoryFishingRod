@@ -77,7 +77,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     rotateX(thetaX);
     fill(0);
     imageMode(CENTER);
-    image(fishImg, -fishPXSize/2, -fishPXSize/2); // Draw the fish image
+    image(fishImg, 0, 0); // Draw the fish image
 
     
     popMatrix();

@@ -9,7 +9,7 @@ GTextField playerNameField;
 GCheckbox cbSight, cbAudition, cbHaptic;
 GPanel panel;
 
-GLabel questionLabel;
+GLabel questionLabel, endMessage;
 GButton yesButton, noButton;
 GPanel newPanel;
 float scala = 1.5; 
@@ -86,10 +86,19 @@ void disposeUI() {
 
 
 
-void createAnswerToContinuePlayingUI() {
+void createAnswerToContinuePlayingUI(boolean haveWon) {
   newPanel = new GPanel(this, width/2 - 150* scala, height/2 - 100* scala, 300 * scala, 200 * scala);
   newPanel.setText("Continue?");
   newPanel.setTextAlign(GAlign.CENTER, GAlign.MIDDLE);
+
+  endMessage = new GLabel(this, 20 * scala, 30 * scala, 260 * scala, 40 * scala);
+  if(haveWon){
+    endMessage.setText("YOU HAVE WON!");
+  }
+  else{
+    endMessage.setText("Unfortunately you have lost ;(");
+  }
+  endMessage.setTextAlign(GAlign.CENTER, GAlign.MIDDLE);
 
   questionLabel = new GLabel(this, 20 * scala, 30 * scala, 260 * scala, 40 * scala);
   questionLabel.setText("Would you like to continue playing?");
@@ -103,6 +112,7 @@ void createAnswerToContinuePlayingUI() {
   noButton.setText("No");
   noButton.addEventHandler(this, "onNoButtonClick");
 
+  newPanel.addControl(endMessage);
   newPanel.addControl(questionLabel);
   newPanel.addControl(yesButton);
   newPanel.addControl(noButton);
@@ -123,6 +133,7 @@ public void onNoButtonClick(GButton source, GEvent event) {
 }
 
 void disposeNewUI() {
+  endMessage.dispose();
   questionLabel.dispose();
   yesButton.dispose();
   noButton.dispose();
