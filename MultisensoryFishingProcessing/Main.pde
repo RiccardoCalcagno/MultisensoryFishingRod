@@ -76,6 +76,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   // Costruttore per GameManager
   GameManager() {
     
+    SerializationUtility serial = new SerializationUtility(this);
     boxsize = min(width, height) / 2; 
     
     haloForWireRetrieving = NumFramesHaloExternUpdates;
