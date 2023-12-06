@@ -12,18 +12,18 @@ interface WIMPUIManager {
 
 // Definizione dell'enumerazione per lo stato del gioco
 enum GameState {
-  Null,
+  Null, 
   Begin, 
   ColdAttractingFish, 
-  HotAttractingFish,
+  HotAttractingFish, 
   FishNibbing, 
   FishHooked, 
   FishOpposingForce, 
   FishLost, 
   WireEnded, 
   FishCaught, 
-  End,
-  EndExperience
+  End, 
+  EndExperience 
 }
 
 class SessionData {
@@ -58,8 +58,9 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   }
 
   int NumFramesHaloExternUpdates = 5;
-  int haloForWireRetrieving, haloForRawMovements;
+  int haloForWireRetrieving, haloForRawMovements, haloForShakeRodEvent;
   float cachedSpeedOfWireRetrieving = 0;
+  ShakeDimention cachedShakeRodEvent = ShakeDimention.NONE;
   RawMotionData cachedRawMotionData = new RawMotionData();
   
   ArrayList<AbstSensoryOutModule> sensoryModules = new ArrayList<AbstSensoryOutModule>();
@@ -80,6 +81,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     
     haloForWireRetrieving = NumFramesHaloExternUpdates;
     haloForRawMovements = NumFramesHaloExternUpdates;
+    haloForShakeRodEvent = NumFramesHaloExternUpdates;
     
     totalWeightedScore = 0.0;
     totalWeightedScoreCount = 0;
@@ -96,9 +98,8 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   
   
   void OnShakeEvent(ShakeDimention type){
-    for (AbstSensoryOutModule sensoryModule : sensoryModules) {
-        sensoryModule.OnShakeOfRod(type);
-    }
+        cachedShakeRodEvent = type;
+        haloForShakeRodEvent = NumFramesHaloExternUpdates;
   }
   
   void OnWeelActivated(float speedOfWireRetrieving){
@@ -120,6 +121,14 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   void gameLoop(){
     
     fish.UpdatePosition();
+    
+    if(haloForShakeRodEvent <= 0){
+      for (AbstSensoryOutModule sensoryModule : sensoryModules) {
+        sensoryModule.OnShakeOfRod(cachedShakeRodEvent); 
+      }
+      cachedShakeRodEvent = ShakeDimention.NONE;
+      haloForWireRetrieving = 0;
+    }
     
     RodStatusData data = calculateRodStatusData();
     for (AbstSensoryOutModule sensoryModule : sensoryModules) {
