@@ -5,7 +5,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   PImage fishImg; 
   PImage fishFromTop;
   int fishPXSize = 230;
-  
+  float actualThetaY, actualThetaZ;
   
   VisualSensoryModule(OutputModulesManager outputModulesManager){
     super(outputModulesManager);
@@ -13,8 +13,8 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     // this coefficent allow us to take advantage of a good perspective of the camera and avoid the fish
     scaleScene =  (2.0 +(float)outputModulesManager.getSizeOfAcquarium() / (float)min(width, height)) / 3.0;
    
-    fishImg = loadImage("fish.png");
-    fishImg.resize(fishPXSize, fishPXSize);
+    fishImg = loadImage("fishNotCentered.png");
+    fishImg.resize(fishPXSize*2, fishPXSize);
     
     //TODO fishFromTop
     
@@ -63,8 +63,12 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     var directionZ = fishDeltaPos[2];
     
     float thetaY = atan2(directionX, directionZ) - PI/2;
-    float thetaX = atan2(-directionY, sqrt(directionZ * directionZ + directionX * directionX));
-   
+    float thetaZ = atan2(directionY, directionX);
+    thetaZ = map(thetaZ, -PI, PI, -PI / 4.0, PI/4.0);
+    
+    actualThetaY = lerp(actualThetaY, thetaY, 0.05);
+    actualThetaZ = lerp(actualThetaZ, thetaZ, 0.05);
+    
     
     pushMatrix();
     translate(width/2 + fishPose[0], height/2 +fishPose[1], fishPose[2]);
@@ -73,8 +77,9 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     // to go out of the field of view
     scale(scaleScene);
     
-    rotateY(thetaY);
-    rotateX(thetaX);
+    rotateY(actualThetaY);
+    rotateZ(actualThetaZ);
+    
     fill(0);
     imageMode(CENTER);
     image(fishImg, 0, 0); // Draw the fish image

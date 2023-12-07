@@ -77,7 +77,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   // Costruttore per GameManager
   GameManager() {
     
-    boxsize = min(width, height) / 2; 
+    boxsize = min(width, height) * 2 / 3; 
     
     haloForWireRetrieving = NumFramesHaloExternUpdates;
     haloForRawMovements = NumFramesHaloExternUpdates;
