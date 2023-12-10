@@ -1,12 +1,15 @@
 interface PublicFish{
+  float fishWidth = 500, fishHeight = 131; 
   // return a vector 3 of the position of the fish in the acquarium
-  float[] getPos();
+  PVector getPos();
   
   // return a vector 3 of delta position between the current frame and the previous;
-  float[] getDeltaPos();
+  PVector getDeltaPos();
   
   // Fish intentionality is a coefficent from 0 to 1 that tell how much willing is the fish to bite the hook... 0 => random movement, 1 => strait movement to the hook. 
   float getIntentionality();
+  
+  PVector getFishRotation();
 }
 
 

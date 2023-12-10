@@ -1,43 +1,41 @@
 
 class Fish implements PublicFish{
   
-  float prevPosX, prevPosY, prevPosZ; 
-  float posX, posY, posZ;
+  PVector prevPos, pos, prevDirectionLerped = null;
+  float actualThetaX, actualThetaY, actualThetaZ;
   
-  float[] getPos(){
-    return new float[] {posX, posY, posZ};
+  PVector getPos(){
+    return pos.copy();
   }
-  float[] getDeltaPos(){
-    return direction;
+  PVector getDeltaPos(){
+    return direction.copy();
   }
   float getIntentionality(){
     return intentionality;
   }
+ 
   
   float stepSize = 2; // Size of each step
-  float maxAngularSpeed = 0.01; // Modifica la velocità angolare massima secondo necessità
+  float maxAngularSpeed = 0.1; // Modifica la velocità angolare massima secondo necessità
   float distanceFromFoodWhenStartToDecellerate = 50;
 
   int boxsize;
-  float foodX, foodY, foodZ; // Food position at (0, 0, 0)
   float intentionality; // Intentionality of the fish (0 to 1)
-  float[] direction = new float[3];
+  PVector direction = new PVector();
   
   GameManager gameManager;
+  Player player;
   
-  Fish(GameManager _gameManager) {
+  Fish(GameManager _gameManager, Player _player) {
+    
     gameManager = _gameManager;
+    player = _player;
     
     intentionality = 0.5;
-    
-    foodX = 0; 
-    foodY = 0;
-    foodZ = 0;
      
     boxsize = gameManager.getSizeOfAcquarium();
-    posX = random(-boxsize/2, boxsize/2);
-    posY = random(-boxsize/2, boxsize/2);
-    posZ = random(-boxsize/2, boxsize/2);
+    
+    pos = new PVector(random(-boxsize/2, boxsize/2), random(-boxsize/2, boxsize/2), random(-boxsize/2, boxsize/2));
     
     calculateDeltaFood(direction);
   }
@@ -45,27 +43,46 @@ class Fish implements PublicFish{
   
   void UpdatePosition() {
     
-    float[] deltaTarget = calculateDeltaTarget();
+    PVector deltaTarget = calculateDeltaTarget();
 
     adjustDirectionBasedOnTerget(deltaTarget); 
     
     float currentStepSize = adjustSpeed();
     
-    posX += direction[0] * currentStepSize;
-    posY += direction[1] * currentStepSize;
-    posZ += direction[2] * currentStepSize;
+    pos.x += direction.x * currentStepSize;
+    pos.y += direction.y * currentStepSize;
+    pos.z += direction.z * currentStepSize;
     
     // Constrain fish within the cube
-    posX = constrain(posX, -boxsize/2, boxsize/2);
-    posY = constrain(posY, -boxsize/2, boxsize/2);
-    posZ = constrain(posZ, -boxsize/2, boxsize/2);
+    pos.x = constrain(pos.x, -boxsize/2, boxsize/2);
+    pos.y = constrain(pos.y, -boxsize/2, boxsize/2);
+    pos.z = constrain(pos.z, -boxsize/2, boxsize/2);
+    
   }
   
   
+  PVector getFishRotation(){
+    
+    PVector fishDeltaPos = getDeltaPos();
+    
+    if(prevDirectionLerped != null){
+      
+      prevDirectionLerped = PVector.lerp(prevDirectionLerped, fishDeltaPos, 0.03);
+    }
+    else{
+      prevDirectionLerped = fishDeltaPos;
+    }
+    
+    prevDirectionLerped.normalize();
+    constrain(prevDirectionLerped.y, -0.35, 0.35);
+    prevDirectionLerped.normalize();
+    
+    return prevDirectionLerped;
+  }
   
   
-  float[] calculateDeltaTarget(){
-    float[] deltaFood = new float[3];
+  PVector calculateDeltaTarget(){
+    PVector deltaFood = new PVector();
     calculateDeltaFood(deltaFood);
     
     // Update fish's position based on intention
@@ -79,41 +96,49 @@ class Fish implements PublicFish{
     noiseZ /= noisedistance;
     
     // Calculate the weighted combination of random movement and intentional movement
-    float[] deltaTarget = new float[3];
-    deltaTarget[0] = lerp(noiseX, deltaFood[0], intentionality);
-    deltaTarget[1] = lerp(noiseY, deltaFood[1], intentionality);
-    deltaTarget[2] = lerp(noiseZ, deltaFood[2], intentionality);
+    PVector deltaTarget = new PVector(
+      lerp(noiseX, deltaFood.x, intentionality),
+      lerp(noiseY, deltaFood.y, intentionality),
+      lerp(noiseZ, deltaFood.z, intentionality)
+      );
     
     return deltaTarget;
   }
   
   
-  void adjustDirectionBasedOnTerget(float[] deltaTarget){
+  void adjustDirectionBasedOnTerget(PVector deltaTarget){
     
-    float targetAngleX = atan2(deltaTarget[1], deltaTarget[0]);
-    float targetAngleY = atan2(deltaTarget[2], sqrt(deltaTarget[0] * deltaTarget[0] + deltaTarget[1] * deltaTarget[1]));
+    direction = deltaTarget.copy();
+    
+    //pos = new PVector(0,0,0);
+    //direction = new PVector(0, 0, sin((float)(frameCount % 100) *2 *PI/ 100.0));
+    /*
+    float targetAngleX = atan2(deltaTarget.x, deltaTarget.x);
+    float targetAngleY = atan2(deltaTarget.z, sqrt(deltaTarget.x * deltaTarget.x + deltaTarget.y * deltaTarget.y));
 
-    float currentAngleX = atan2(direction[1], direction[0]);
-    float currentAngleY = atan2(direction[2], sqrt(direction[0] * direction[0] + direction[1] * direction[1]));
+    float currentAngleX = atan2(direction.y, direction.x);
+    float currentAngleY = atan2(direction.z, sqrt(direction.x * direction.x + direction.y * direction.y));
 
     float angleDiffX = targetAngleX - currentAngleX;
     float angleDiffY = targetAngleY - currentAngleY;
     angleDiffX = atan2(sin(angleDiffX), cos(angleDiffX));
     angleDiffY = atan2(sin(angleDiffY), cos(angleDiffY));
-    angleDiffX = constrain(angleDiffX, -maxAngularSpeed, maxAngularSpeed);
-    angleDiffY = constrain(angleDiffY, -maxAngularSpeed, maxAngularSpeed);
+    
+    //angleDiffX = constrain(angleDiffX, -maxAngularSpeed, maxAngularSpeed);
+    //angleDiffY = constrain(angleDiffY, -maxAngularSpeed, maxAngularSpeed);
 
     currentAngleX += angleDiffX;
     currentAngleY += angleDiffY;
     
-    direction[0] = cos(currentAngleX) * cos(currentAngleY);
-    direction[1] = sin(currentAngleX) * cos(currentAngleY);
-    direction[2] = sin(currentAngleY);
+    direction.x = cos(currentAngleX) * cos(currentAngleY);
+    direction.y = sin(currentAngleX) * cos(currentAngleY);
+    direction.z = sin(currentAngleY);
+    */
   }
   
   
   float adjustSpeed(){
-    float[] deltaFood = new float[3];
+    PVector deltaFood = new PVector();
     float foodDistance = calculateDeltaFood(deltaFood);
     
     float coefficentOfSpeed = 1;
@@ -122,11 +147,8 @@ class Fish implements PublicFish{
     if(foodDistance < distanceFromFoodWhenStartToDecellerate){
       
       float coeff_HowMuchDivergingFormFood = 0;
-      float[] normDistanceFromFood = new float[3];
-      normDistanceFromFood[0] = deltaFood[0] - direction[0];
-      normDistanceFromFood[1] = deltaFood[1] - direction[1];
-      normDistanceFromFood[2] = deltaFood[2] - direction[2];
-      float distanceInGeometricPhereOfFood =  sqrt(normDistanceFromFood[0]*normDistanceFromFood[0] + normDistanceFromFood[1]*normDistanceFromFood[1] + normDistanceFromFood[2]*normDistanceFromFood[2]);
+      PVector normDistanceFromFood = PVector.sub(deltaFood, direction);
+      float distanceInGeometricPhereOfFood = normDistanceFromFood.mag();
       // max distence = sqrt(2*2+2*2+2*2) = sqrt(12)
       coeff_HowMuchDivergingFormFood = distanceInGeometricPhereOfFood / sqrt(12);
       
@@ -139,16 +161,20 @@ class Fish implements PublicFish{
   
   
   
-  float calculateDeltaFood(float[] out_DeltaFood){
-      out_DeltaFood[0] = foodX - posX;
-      out_DeltaFood[1] = foodY - posY;
-      out_DeltaFood[2] = foodZ - posZ;
+  
+  
+  
+  float calculateDeltaFood(PVector out_DeltaFood){
+      PVector hookPos = player.getHookPos();
+      out_DeltaFood.x = hookPos.x - pos.x;
+      out_DeltaFood.y = hookPos.y - pos.y;
+      out_DeltaFood.z = hookPos.z - pos.z;
       
       // Normalize target direction
-      float foodDistance = sqrt(out_DeltaFood[0]*out_DeltaFood[0] + out_DeltaFood[1]*out_DeltaFood[1] + out_DeltaFood[2]*out_DeltaFood[2]);
-      out_DeltaFood[0] /= foodDistance;
-      out_DeltaFood[1] /= foodDistance;
-      out_DeltaFood[2] /= foodDistance;
+      float foodDistance = sqrt(out_DeltaFood.x*out_DeltaFood.x + out_DeltaFood.y*out_DeltaFood.y + out_DeltaFood.z*out_DeltaFood.z);
+      out_DeltaFood.x /= foodDistance;
+      out_DeltaFood.y /= foodDistance;
+      out_DeltaFood.z /= foodDistance;
       return foodDistance;
   }
 }
