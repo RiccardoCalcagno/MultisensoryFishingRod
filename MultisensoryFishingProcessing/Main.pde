@@ -77,7 +77,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   // Costruttore per GameManager
   GameManager() {
     
-    boxsize = min(width, height) / 2; 
+    boxsize = min(width, height) * 2 / 3; 
     
     haloForWireRetrieving = NumFramesHaloExternUpdates;
     haloForRawMovements = NumFramesHaloExternUpdates;
@@ -87,7 +87,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     totalWeightedScoreCount = 0;
     
     player = new Player(this);
-    fish = new Fish(this);
+    fish = new Fish(this, player);
     
     sensoryInputModule = new SensoryInputModule(this);
     
@@ -120,7 +120,11 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   
   void gameLoop(){
     
+    player.update();
+    
     fish.UpdatePosition();
+    
+    hint(ENABLE_DEPTH_SORT);
     
     if(haloForShakeRodEvent <= 0){
       for (AbstSensoryOutModule sensoryModule : sensoryModules) {
@@ -136,6 +140,9 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
       sensoryModule.OnRodStatusReading(data);
     }
     
+    player.render();
+    
+    hint(DISABLE_DEPTH_SORT);
   }
   
   
@@ -157,8 +164,8 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
         newData.coefficentOfWireTension = 0;
       }
       else{
-        float coeffOfTentionBasedOnFishDirection = minAngleBetweenVectors(player.wireDirection, fish.getDeltaPos()) / PI;
-        float coeffForRetreivingTheWire = (1 -newData.speedOfWireRetrieving) / 2.0;
+        float coeffOfTentionBasedOnFishDirection = PVector.angleBetween(player.getWireDirection(), fish.getDeltaPos()) / PI;
+        float coeffForRetreivingTheWire = (1 - newData.speedOfWireRetrieving) / 2.0;
         
         newData.coefficentOfWireTension = coeffOfTentionBasedOnFishDirection * coeffForRetreivingTheWire;
       }
@@ -313,15 +320,21 @@ Player player;
 
 void setup() {
   size(1400, 1400, P3D);
+  //hint(ENABLE_DEPTH_SORT);
+  hint(DISABLE_OPENGL_ERRORS);
   globalGameManager = new GameManager();
   player = new Player(globalGameManager);
   
-  createUI(globalGameManager);
+  //createUI(globalGameManager);
+  //TODO Remove and decomment createUI, just for debug
+  globalGameManager.StartGameWithSettings(new PlayerInfo("testplayer", new boolean[] {true, true, true}));
 }
 
 void draw() {
   
   if(globalGameManager.currentState != GameState.Null && globalGameManager.currentState != GameState.EndExperience){
+    
+      background(85, 146, 200); // Colore azzurro per l'acqua  
       globalGameManager.gameLoop();
   }
   else{
@@ -337,29 +350,97 @@ void draw() {
 
 //   ------------------------- Utilities -----------------------------
 
-float minAngleBetweenVectors(float[] v1, float[] v2) {
-  // Calcolo del prodotto scalare tra i due vettori
-  float dotProduct = dotProduct(v1, v2);
-  
-  // Calcolo delle magnitudini dei due vettori
-  float magV1 = magnitude(v1);
-  float magV2 = magnitude(v2);
-  
-  // Calcolo del coseno dell'angolo tra i due vettori
-  float cosAngle = dotProduct / (magV1 * magV2);
-  
-  // Calcolo dell'angolo in radianti
-  float angle = acos(cosAngle);
-  
-  return angle;
+
+PImage getWithAlpha(PImage in, float alpha) {
+  PImage out = in.get();
+  for (int i=0; i<out.pixels.length; i++) {
+    color c = out.pixels[i];
+    float r = red(c);
+    float g = green(c);
+    float b = blue(c);
+    out.pixels[i] = color(r,g,b, alpha);
+  }
+  return out;
 }
 
-// Funzione per calcolare il prodotto scalare tra due vettori
-float dotProduct(float[] v1, float[] v2) {
-  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-}
 
-// Funzione per calcolare la magnitudine di un vettore
-float magnitude(float[] v) {
-  return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+
+// Classe di potenziamento di PVector, per le rotazioni in 3D
+class Vec3 extends PVector {
+
+  Vec3() { super(); }
+  Vec3(float x, float y) { super(x, y); }
+  Vec3(float x, float y, float z) { super(x, y, z); }
+  Vec3(PVector v) { super(); set(v); }
+
+  String toString() {
+    return String.format("[ %+.2f, %+.2f, %+.2f ]",
+      x, y, z);
+  }
+
+  PVector rotate(float angle) {
+    return rotateZ(angle);
+  }
+
+  PVector rotateX(float angle) {
+    float cosa = cos(angle);
+    float sina = sin(angle);
+    float tempy = y;
+    y = cosa * y - sina * z;
+    z = cosa * z + sina * tempy;
+    return this;
+  }
+
+  PVector rotateY(float angle) {
+    float cosa = cos(angle);
+    float sina = sin(angle);
+    float tempz = z;
+    z = cosa * z - sina * x;
+    x = cosa * x + sina * tempz;
+    return this;
+  }
+
+  PVector rotateZ(float angle) {
+    float cosa = cos(angle);
+    float sina = sin(angle);
+    float tempx = x;
+    x = cosa * x - sina * y;
+    y = cosa * y + sina * tempx;
+    return this;
+  }
+  
+  PMatrix3D lookAt(PVector target) {
+     return lookAt(target, new PVector(0.0, 1.0, 0.0), new PMatrix3D());
+   }
+
+   PMatrix3D lookAt(PVector target, PVector up) {
+     return lookAt(target, up, new PMatrix3D());
+   }
+
+   PMatrix3D lookAt(PVector target, PMatrix3D out) {
+      return lookAt(target, new PVector(0.0, 1.0, 0.0), out);
+    }
+
+   PMatrix3D lookAt(PVector target, PVector up, PMatrix3D out) {
+    PVector k = PVector.sub(target, this);
+    float m = k.magSq();
+    if(m < EPSILON) {
+      return out;
+    }
+    k.mult(1.0 / sqrt(m));
+
+    PVector i = new PVector();
+    PVector.cross(up, k, i);
+    i.normalize();
+
+    PVector j = new PVector();
+    PVector.cross(k, i, j);
+    j.normalize();
+
+    out.set(i.x, j.x, k.x, 0.0,
+      i.y, j.y, k.y, 0.0,
+      i.z, j.z, k.z, 0.0,
+      0.0, 0.0, 0.0, 1.0);
+    return out;
+  }
 }
