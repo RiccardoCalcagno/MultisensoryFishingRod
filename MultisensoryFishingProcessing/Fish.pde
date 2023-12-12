@@ -31,7 +31,7 @@ class Fish implements PublicFish{
     gameManager = _gameManager;
     player = _player;
     
-    intentionality = 0.5;
+    intentionality = 0.4;
      
     boxsize = gameManager.getSizeOfAcquarium();
     
@@ -45,22 +45,23 @@ class Fish implements PublicFish{
     
     PVector deltaTarget = calculateDeltaTarget();
 
-    adjustDirectionBasedOnTerget(deltaTarget); 
+    direction = adjustDirectionBasedOnTerget(deltaTarget); 
     
     float currentStepSize = adjustSpeed();
     
-    pos.x += direction.x * currentStepSize;
-    pos.y += direction.y * currentStepSize;
-    pos.z += direction.z * currentStepSize;
+    direction.mult(currentStepSize);
+    
+    pos.add(direction);
     
     // Constrain fish within the cube
     pos.x = constrain(pos.x, -boxsize/2, boxsize/2);
     pos.y = constrain(pos.y, -boxsize/2, boxsize/2);
     pos.z = constrain(pos.z, -boxsize/2, boxsize/2);
     
+    //DebugHeadColliderAndSpeedVector();
   }
   
-  
+    
   PVector getFishRotation(){
     
     PVector fishDeltaPos = getDeltaPos();
@@ -106,34 +107,9 @@ class Fish implements PublicFish{
   }
   
   
-  void adjustDirectionBasedOnTerget(PVector deltaTarget){
+  PVector adjustDirectionBasedOnTerget(PVector deltaTarget){
     
-    direction = deltaTarget.copy();
-    
-    //pos = new PVector(0,0,0);
-    //direction = new PVector(0, 0, sin((float)(frameCount % 100) *2 *PI/ 100.0));
-    /*
-    float targetAngleX = atan2(deltaTarget.x, deltaTarget.x);
-    float targetAngleY = atan2(deltaTarget.z, sqrt(deltaTarget.x * deltaTarget.x + deltaTarget.y * deltaTarget.y));
-
-    float currentAngleX = atan2(direction.y, direction.x);
-    float currentAngleY = atan2(direction.z, sqrt(direction.x * direction.x + direction.y * direction.y));
-
-    float angleDiffX = targetAngleX - currentAngleX;
-    float angleDiffY = targetAngleY - currentAngleY;
-    angleDiffX = atan2(sin(angleDiffX), cos(angleDiffX));
-    angleDiffY = atan2(sin(angleDiffY), cos(angleDiffY));
-    
-    //angleDiffX = constrain(angleDiffX, -maxAngularSpeed, maxAngularSpeed);
-    //angleDiffY = constrain(angleDiffY, -maxAngularSpeed, maxAngularSpeed);
-
-    currentAngleX += angleDiffX;
-    currentAngleY += angleDiffY;
-    
-    direction.x = cos(currentAngleX) * cos(currentAngleY);
-    direction.y = sin(currentAngleX) * cos(currentAngleY);
-    direction.z = sin(currentAngleY);
-    */
+    return deltaTarget.copy();
   }
   
   
@@ -154,13 +130,10 @@ class Fish implements PublicFish{
       
       float coeff_HowMuchIsNearToFood = foodDistance / distanceFromFoodWhenStartToDecellerate;
       
-      coefficentOfSpeed = map(coeff_HowMuchIsNearToFood, 0, 1, coeff_HowMuchDivergingFormFood, 1);
+      coefficentOfSpeed = map(coeff_HowMuchIsNearToFood, 0, 1, lerp(coeff_HowMuchDivergingFormFood, 1, 0.9), 1);
     }
     return lerp(0, stepSize, coefficentOfSpeed); 
   }
-  
-  
-  
   
   
   
@@ -176,5 +149,24 @@ class Fish implements PublicFish{
       out_DeltaFood.y /= foodDistance;
       out_DeltaFood.z /= foodDistance;
       return foodDistance;
+  }
+  
+  
+  void DebugHeadColliderAndSpeedVector(){
+    PVector mouthPos = PVector.sub(pos, getFishRotation().setMag(PublicFish.fishHeight / 4));
+    pushMatrix();
+    scale(player.scaleScene);
+    translate(width/2 + mouthPos.x, height/2 + mouthPos.y, mouthPos.z);
+    stroke(color(255, 0, 0));
+    sphere(PublicFish.fishHeight / 4);
+    popMatrix();
+    pushMatrix();
+    scale(player.scaleScene);
+    PVector enlargedDirection = direction.copy().mult(100);
+    translate(width/2 + pos.x + enlargedDirection.x, height/2 + pos.y + enlargedDirection.y, pos.z + enlargedDirection.z);
+    stroke(color(0, 255, 0));
+    sphere(10);
+    line(0,0,0, -enlargedDirection.x, -enlargedDirection.y, -enlargedDirection.z);
+    popMatrix();
   }
 }

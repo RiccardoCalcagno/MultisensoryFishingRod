@@ -61,11 +61,10 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   void OnRodStatusReading(RodStatusData dataSnapshot){
       
     rotateCamera();
-    //hint(DISABLE_DEPTH_TEST);
-    drawBottom();
-    //hint(ENABLE_DEPTH_TEST);
     
-    //drawAlgae();
+    drawBottom();
+    
+    drawAlgae();
     
     if(outputModulesManager.isFishHooked() == true){
       drawSceneFishHooked();
@@ -104,12 +103,10 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     
     float cameraX = (width/2) + (width) * cos(angle);
     float cameraZ = (width) * sin(angle);
-    
-    
     // Imposta la posizione della camera
     camera(cameraX, height/2.0, cameraZ, width/2, height/2, 0, 0, 1, 0);
     
-    /*
+    /* FOR DEBUG
     if((frameCount / 100) %2 == 0){
       camera(width/2,  height/2, width/2, width/2, height/2, 0, 0, 1, 0);
     }
@@ -156,76 +153,6 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     popMatrix();
   }
   
-  void drawSceneFishNotHooked_delete() {
-    
-    var fish = outputModulesManager.getFish();
-    var fishRotation = fish.getFishRotation();
-    
-    //var rotations = TrasformVectorInRotation(fishRotation, new PVector(1, 0, 0));//TrasformVectorInRotation(fishRotation, new PVector(1, 0, 0));
-    var fishPose = fish.getPos();
-    
-    
-    /*
-    pushMatrix();
-    scale(scaleScene);
-    
-    translate(width/2 + fishPose.x, height/2 +fishPose.y, fishPose.z);
-    applyMatrix(rotationMatrix);   
-    rotateY(-PI/2);
-    //rotateX(rotations[0]);
-    //rotateY(rotations[1]);
-    //rotateZ(rotations[2]);
-    
-    
-    fill(0);
-    imageMode(CENTER);
-    image(fishImg, 0, 0); // Draw the fish image
-    
-    popMatrix();
-    
-    */
-    
-    
-    //fishPose = new PVector(0, 0, 0);
-    
-    var dirr =  fishRotation.copy().setMag(100);//PVector.add(fishPose, fishRotation.copy().setMag(100));
-    //dirr = new PVector(100 , 0, 0);
-    pushMatrix();
-    scale(scaleScene);
-    
-    translate(width/2 + fishPose.x, height/2 +fishPose.y, fishPose.z);
-    stroke(color(255, 0, 0));
-    sphere(10);
-    
-    translate(dirr.x, dirr.y, dirr.z);
-    line(0,0,0, -dirr.x,-dirr.y, -dirr.z);
-    stroke(color(0, 255, 0));
-    sphere(10);
-       
-    popMatrix();
-    
-    
-    // TODO Delete
-    PVector versore = new PVector(100, 0, 0);
-    Vec3 powerdRotation = new Vec3(1,0,0);
-    PMatrix3D rotationMatrix = powerdRotation.lookAt(dirr, new PVector(0, -1, 0));
-    
-    
-    pushMatrix();
-    scale(scaleScene);
-    translate(width/2 + fishPose.x, height/2 +fishPose.y, fishPose.z);
-    
-    applyMatrix(rotationMatrix);   
-    rotateY(-PI/2);
-
-    translate(versore.x, versore.y, versore.z);
-    stroke(color(0,0,255));
-    line(0,0,0,-versore.x,-versore.y, -versore.z);
-    sphere(10);
-    popMatrix();
-    
-  }
-  
   void drawSceneFishNotHooked() {
     
     var fish = outputModulesManager.getFish();
@@ -258,27 +185,22 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     
     
     
-    /*
-    PVector versore = new PVector(100 , 0, 0);
+    /* FOR DEBUG
+    
     pushMatrix();
     scale(scaleScene);
-    
     translate(width/2 + fishPose.x, height/2 +fishPose.y, fishPose.z);
     stroke(color(255, 0, 0));
-    sphere(10);
-    
-    translate(rotationEnlarged.x, rotationEnlarged.y, rotationEnlarged.z);
-    line(0,0,0, -rotationEnlarged.x,-rotationEnlarged.y, -rotationEnlarged.z);
-    stroke(color(0, 255, 0));
-    sphere(10);
-       
+    //sphere(10);
+    //translate(rotationEnlarged.x, rotationEnlarged.y, rotationEnlarged.z);
+    line(0,0,0, rotationEnlarged.x,rotationEnlarged.y, rotationEnlarged.z);
+    //stroke(color(0, 255, 0));
+    //sphere(10);
     popMatrix();
     
-    
-    // TODO Delete
-    
-    
+
     pushMatrix();
+    PVector versore = new PVector(100 , 0, 0);
     scale(scaleScene);
     translate(width/2 + fishPose.x, height/2 +fishPose.y, fishPose.z);
  
