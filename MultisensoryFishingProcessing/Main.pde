@@ -14,8 +14,7 @@ enum GameState {
   Null, 
   Begin, 
   AttractingFish, 
-  FishHooked, 
-  FishOpposingForce, 
+  FishHooked,
   FishLost, 
   WireEnded,  
   End, 
@@ -64,7 +63,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   SensoryInputModule sensoryInputModule;
   
   boolean isFishHooked(){
-    return currentState == GameState.FishHooked || currentState == GameState.FishOpposingForce;
+    return currentState == GameState.FishHooked;
   };
   PublicFish getFish(){
     return fish;
