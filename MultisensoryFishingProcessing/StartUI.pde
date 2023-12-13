@@ -143,7 +143,7 @@ void disposeNewUI() {
 
 
 
-void writeCSVRow(String playerName, float score, int numOfGames, boolean sight, boolean audio, boolean haptic) {
+void writeCSVRow(String playerName, float score, int numOfGames, boolean sight, boolean audio, boolean haptic, String endReason) {
   String filename = "output.csv";
   boolean fileExists = new File(dataPath(filename)).exists();
 
@@ -152,11 +152,11 @@ void writeCSVRow(String playerName, float score, int numOfGames, boolean sight, 
 
     // Se il file non esiste, scrive l'intestazione
     if (!fileExists) {
-      csvWriter.println("PlayerName,Score,numOfGames,sight,audio,haptic");
+      csvWriter.println("PlayerName,Score,numOfGames,sight,audio,haptic,endReason");
     }
 
     // Scrive i valori della riga nel file CSV
-    csvWriter.println(playerName + "," + score + "," + numOfGames + "," + sight + "," + audio + "," + haptic);
+    csvWriter.println(playerName + "," + score + "," + numOfGames + "," + sight + "," + audio + "," + haptic + "," + endReason);
 
     csvWriter.flush();
     csvWriter.close();

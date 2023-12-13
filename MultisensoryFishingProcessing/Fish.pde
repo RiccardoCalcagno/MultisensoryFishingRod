@@ -30,14 +30,15 @@ class Fish implements PublicFish{
     
     gameManager = _gameManager;
     player = _player;
-    
-    intentionality = 0.4;
      
     boxsize = gameManager.getSizeOfAcquarium();
-    
+  }
+  
+  void Restart(){
+   
     pos = new PVector(random(-boxsize/2, boxsize/2), random(-boxsize/2, boxsize/2), random(-boxsize/2, boxsize/2));
     
-    calculateDeltaFood(direction);
+    intentionality = 0;
   }
   
   

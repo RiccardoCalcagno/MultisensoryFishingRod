@@ -3,7 +3,6 @@ import java.util.ArrayList;
 
 // Dichiarazione di una classe astratta per il GameManager
 interface WIMPUIManager {
-  void handleWireCountdown(int value);
   
   void StartGameWithSettings(PlayerInfo playerInfo);
   
@@ -14,14 +13,11 @@ interface WIMPUIManager {
 enum GameState {
   Null, 
   Begin, 
-  ColdAttractingFish, 
-  HotAttractingFish, 
-  FishNibbing, 
+  AttractingFish, 
   FishHooked, 
   FishOpposingForce, 
   FishLost, 
-  WireEnded, 
-  FishCaught, 
+  WireEnded,  
   End, 
   EndExperience 
 }
@@ -45,12 +41,13 @@ class PlayerInfo {
 
 // Implementazione della classe GameManager che eredita da AbstGameManager
 class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleManager {
-  int wireCountdown; // Conto alla rovescia del filo
+  float wireCountdown; // Conto alla rovescia del filo
   GameState currentState; // Stato corrente del gioco
   SessionData currentSession;
   float totalWeightedScore; // Punteggio totale ponderato
   int totalWeightedScoreCount; // Contatore per il punteggio totale
   int boxsize;
+  String summativeEndReasons;
   Fish fish;
   Player player;
   int getSizeOfAcquarium(){
@@ -79,43 +76,17 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     
     boxsize = min(width, height) * 2 / 3; 
     
-    haloForWireRetrieving = NumFramesHaloExternUpdates;
-    haloForRawMovements = NumFramesHaloExternUpdates;
-    haloForShakeRodEvent = NumFramesHaloExternUpdates;
-    
     totalWeightedScore = 0.0;
     totalWeightedScoreCount = 0;
     
     player = new Player(this);
     fish = new Fish(this, player);
     
+    summativeEndReasons = "";
+    
     sensoryInputModule = new SensoryInputModule(this);
     
     currentState = GameState.Null;
-  }
-  
-
-  
-  
-  void OnShakeEvent(ShakeDimention type){
-        cachedShakeRodEvent = type;
-        haloForShakeRodEvent = NumFramesHaloExternUpdates;
-  }
-  
-  void OnWeelActivated(float speedOfWireRetrieving){
-    cachedSpeedOfWireRetrieving = speedOfWireRetrieving;
-    haloForWireRetrieving = NumFramesHaloExternUpdates;
-  }
-  
-  void OnRawMotionDetected(RawMotionData data){
-    cachedRawMotionData = data;
-    haloForRawMovements = NumFramesHaloExternUpdates;
-  }
-  
-  void OnWireBreaks(){
-    if(isFishHooked()){
-      setState(GameState.FishLost);
-    }
   }
   
   void gameLoop(){
@@ -146,6 +117,83 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   }
   
   
+
+  // Metodo per avviare la sessione di gioco
+  void StartGameWithSettings(PlayerInfo _playerInfo){
+    currentSession = new SessionData();
+    currentSession.playerInfo = _playerInfo;
+    for(int i=0; i<3; i++){
+      if(_playerInfo.selectedModalities[i]){
+        AbstSensoryOutModule moduleToAdd = null; 
+        switch (i) {
+          case 0:
+            moduleToAdd = new VisualSensoryModule(this);
+            break;          
+          case 1:
+            moduleToAdd = new AudioSensoryModule(this);
+            break;
+          case 2:
+            moduleToAdd = new HapticSensoryModule(this);
+            break;
+        }
+        sensoryModules.add(moduleToAdd);
+      }
+    }
+    
+    setState(GameState.Begin);
+  }
+  
+  void beginGameSession(){
+    wireCountdown = 1000.0;
+    
+    haloForWireRetrieving = NumFramesHaloExternUpdates;
+    haloForRawMovements = NumFramesHaloExternUpdates;
+    haloForShakeRodEvent = NumFramesHaloExternUpdates;
+    
+    player.Restart();
+    
+    fish.Restart();
+    
+    setState(GameState.AttractingFish);
+  }
+
+  // Metodo per impostare lo stato del gioco
+  void setState(GameState newState) {
+    if (currentState != newState) {
+      GameState pre = currentState;
+      currentState = newState;
+      currentState = manageGameStates(pre, newState);
+      
+      // notify the modules of a relevant change in state
+      if(newState == GameState.FishHooked || newState == GameState.FishLost || newState == GameState.WireEnded){
+        for (AbstSensoryOutModule sensoryModule : sensoryModules) {
+          switch (currentState) {
+            case FishHooked:
+              sensoryModule.OnFishHooked();
+              break;
+            case FishLost:
+              sensoryModule.OnFishLost();
+              break;
+            case WireEnded:
+              if(player.hasFish()){
+                sensoryModule.OnFishCaught();
+              }
+              else{
+                sensoryModule.OnWireEndedWithNoFish();
+              }
+              break;
+          }
+        }
+      }
+    }
+  }
+  
+  void OnWireBreaks(){
+    if(isFishHooked()){
+      setState(GameState.FishLost);
+    }
+  }
+  
   RodStatusData calculateRodStatusData(){
       
       if(haloForWireRetrieving <= 0){
@@ -174,59 +222,17 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
         player.damageWire(newData.coefficentOfWireTension);
       }
       
+      wireCountdown -= newData.speedOfWireRetrieving;
+      if (wireCountdown <= 0) {
+        setState(GameState.WireEnded);
+      }
+      
       haloForWireRetrieving--;
       haloForRawMovements--;
     
       return newData;
   }
-  
-  
 
-  // Metodo per avviare la sessione di gioco
-  void StartGameWithSettings(PlayerInfo _playerInfo){
-    currentSession = new SessionData();
-    currentSession.playerInfo = _playerInfo;
-    
-    for(int i=0; i<3; i++){
-      if(_playerInfo.selectedModalities[i]){
-        AbstSensoryOutModule moduleToAdd = null; 
-        switch (i) {
-          case 0:
-            moduleToAdd = new VisualSensoryModule(this);
-            break;          
-          case 1:
-            moduleToAdd = new AudioSensoryModule(this);
-            break;
-          case 2:
-            moduleToAdd = new HapticSensoryModule(this);
-            break;
-        }
-        sensoryModules.add(moduleToAdd);
-      }
-    }
-    
-    setState(GameState.Begin);
-    // Inizializzare i gestori e la sessione di gioco
-    // Esempio: inizializzare Player, Fish, sistema di punteggio, ecc.
-  }
-
-  // Metodo per gestire il conto alla rovescia del filo
-  void handleWireCountdown(int valueFromEvent) {
-    wireCountdown -= valueFromEvent;
-    if (wireCountdown <= 0) {
-      // Transizione allo stato di End quando il conto alla rovescia del filo raggiunge 0
-      setState(GameState.WireEnded);
-    }
-  }
-
-  // Metodo per impostare lo stato del gioco
-  void setState(GameState newState) {
-    if (currentState != newState) {
-      GameState pre = currentState;
-      currentState = newState;
-      currentState = manageGameStates(pre, newState);
-    }
-  }
 
   // Metodo per gestire gli stati del gioco e le transizioni
   GameState manageGameStates(GameState preState, GameState newState) {
@@ -235,22 +241,21 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
         beginGameSession();
         break;
 
-      case ColdAttractingFish:
-        // Logica per lo stato ColdAttractingFish
+      case AttractingFish:
         break;
-
-      // Implementare la logica per gli altri stati allo stesso modo
-      
+        
+      case FishHooked:
+        break;
+   
       case FishLost:
       case WireEnded:
-      case FishCaught:
         OnReasonToEnd(currentState);
         break;
-
+        
       case End:
-        // Logica per terminare la sessione di gioco
         endGameSession();
         break;
+        
       case EndExperience:
         EndExperience();
         break;
@@ -259,21 +264,20 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     return newState;
   }
   
-  void beginGameSession(){
-    wireCountdown = 1000;
-  }
-  
   void OnReasonToEnd(GameState reason){
     
     switch(reason){
       case FishLost: currentSession.endReason = "FishLost";
         break;
-      case WireEnded: currentSession.endReason = "WireEnded";
-        break;
-      case FishCaught: currentSession.endReason = "FishCaught";
+      case WireEnded: 
+        if(player.hasFish()){
+           currentSession.endReason = "FishCaught";
+        }
+        else{
+           currentSession.endReason = "WireEndedWithoutFish"; 
+        }
         break;
     }  
-    
     
     setState(GameState.End);
   }
@@ -281,13 +285,15 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   // Metodo per terminare la sessione di gioco
   void endGameSession() {
     
-    // last edit to the values
+    // TODO last edit to the values
     currentSession.sessionPerformanceWeight = random(0.0, 1.0);
     currentSession.sessionPerformanceValue = int(random(0, 2));
   
     float weightedScore = currentSession.sessionPerformanceValue * currentSession.sessionPerformanceWeight;
     totalWeightedScore += weightedScore;
     totalWeightedScoreCount++;
+    
+    summativeEndReasons += currentSession.endReason+" ";
     
     createAnswerToContinuePlayingUI(currentSession.endReason == "FishCaught");
   }
@@ -308,9 +314,25 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     } else {
       score = totalWeightedScore / totalWeightedScoreCount; // Calcola la media ponderata
     }
+    summativeEndReasons = summativeEndReasons.substring(0, summativeEndReasons.length() -1);
+    writeCSVRow(currentSession.playerInfo.playerName, score, totalWeightedScoreCount, selectedModalities[0], selectedModalities[1], selectedModalities[2], summativeEndReasons);
     
-    writeCSVRow(currentSession.playerInfo.playerName, score, totalWeightedScoreCount, selectedModalities[0], selectedModalities[1], selectedModalities[2]);
-    
+  }
+  
+  
+  void OnShakeEvent(ShakeDimention type){
+        cachedShakeRodEvent = type;
+        haloForShakeRodEvent = NumFramesHaloExternUpdates;
+  }
+  
+  void OnWeelActivated(float speedOfWireRetrieving){
+    cachedSpeedOfWireRetrieving = speedOfWireRetrieving;
+    haloForWireRetrieving = NumFramesHaloExternUpdates;
+  }
+  
+  void OnRawMotionDetected(RawMotionData data){
+    cachedRawMotionData = data;
+    haloForRawMovements = NumFramesHaloExternUpdates;
   }
 };
 

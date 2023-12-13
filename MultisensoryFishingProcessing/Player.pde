@@ -18,6 +18,7 @@ class Player {
   PVector origin;
   float scaleScene;
   PublicFish fish = null;
+  boolean haFish;
   
   float ropeLenght(){
     return  nodeDistance * totalNodes;
@@ -28,6 +29,11 @@ class Player {
   PVector getWireDirection(){
     return PVector.sub(getHookPos(), nodes[0].position).normalize();
   }
+  
+  
+  boolean hasFish(){
+    return haFish; 
+  }
  
 
   // Costruttore per Player
@@ -37,8 +43,6 @@ class Player {
     foodImg.resize(40, 60);
     
     gameManager = _gameManager;
-    
-    damageCounter = 100;
     
     boxsize = gameManager.getSizeOfAcquarium();
     scaleScene = (2.0 +(float)boxsize / (float)min(width, height)) / 3.0;
@@ -53,6 +57,13 @@ class Player {
       pos.y += nodeDistance;
     }
     // Inizializzazione delle variabili del giocatore
+  }
+  
+  void Restart(){
+    
+     damageCounter = 100;
+     
+     haFish = false;
   }
 
   // Metodo per simulare l'evento di ritrazione del filo

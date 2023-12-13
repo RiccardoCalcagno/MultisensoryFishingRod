@@ -46,7 +46,7 @@ abstract class AbstSensoryOutModule{
   
   void OnFishCaught(){}
   
-  void OnWireEnded(){}
+  void OnWireEndedWithNoFish(){}
 }
 
 enum ShakeDimention{
