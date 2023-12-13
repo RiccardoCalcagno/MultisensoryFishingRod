@@ -56,7 +56,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   int NumFramesHaloExternUpdates = 5;
   int haloForWireRetrieving, haloForRawMovements, haloForShakeRodEvent;
   float cachedSpeedOfWireRetrieving = 0;
-  ShakeDimention cachedShakeRodEvent = ShakeDimention.NONE;
+  ShakeDimention cachedShakeRodEvent = ShakeDimention.NONE, prevCachedShakeRodEvent = ShakeDimention.NONE;
   RawMotionData cachedRawMotionData = new RawMotionData();
   
   ArrayList<AbstSensoryOutModule> sensoryModules = new ArrayList<AbstSensoryOutModule>();
@@ -98,9 +98,11 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     
     if(haloForShakeRodEvent <= 0){
       for (AbstSensoryOutModule sensoryModule : sensoryModules) {
+        if(prevCachedShakeRodEvent != ShakeDimention.NONE && cachedShakeRodEvent != ShakeDimention.NONE){
+          sensoryModule.OnShakeOfRod(ShakeDimention.NONE); 
+        }
         sensoryModule.OnShakeOfRod(cachedShakeRodEvent); 
       }
-      cachedShakeRodEvent = ShakeDimention.NONE;
       haloForWireRetrieving = 0;
     }
     
@@ -320,8 +322,11 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   
   
   void OnShakeEvent(ShakeDimention type){
-        cachedShakeRodEvent = type;
-        haloForShakeRodEvent = NumFramesHaloExternUpdates;
+    if(prevCachedShakeRodEvent != cachedShakeRodEvent){
+      prevCachedShakeRodEvent = cachedShakeRodEvent;
+      cachedShakeRodEvent = type;
+      haloForShakeRodEvent = 1;
+    }
   }
   
   void OnWeelActivated(float speedOfWireRetrieving){

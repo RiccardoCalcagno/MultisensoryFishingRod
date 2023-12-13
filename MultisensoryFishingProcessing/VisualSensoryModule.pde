@@ -141,7 +141,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     
     translate(width/2,  height, 0);
     rotateX(PI / 2.0);
-    rotateZ(PI / 2.0);
+    rotateZ(PI / 3.0);
     beginShape();
     texture(sandImg);
     vertex(-fieldSize/2, -fieldSize/2, -fieldSize/2, fieldSize/2);

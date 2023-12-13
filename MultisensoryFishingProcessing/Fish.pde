@@ -38,7 +38,7 @@ class Fish implements PublicFish{
    
     pos = new PVector(random(-boxsize/2, boxsize/2), random(-boxsize/2, boxsize/2), random(-boxsize/2, boxsize/2));
     
-    intentionality = 0;
+    intentionality = 0.5;
   }
   
   
