@@ -90,8 +90,6 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   
   void gameLoop(){
     
-    player.update();
-    
     fish.UpdatePosition();
     
     hint(ENABLE_DEPTH_SORT);
@@ -107,6 +105,13 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     }
     
     RodStatusData data = calculateRodStatusData();
+    
+    if(currentState == GameState.AttractingFish){
+      player.TornWireOnRodMovments(data.rawMotionData);
+    }
+    
+    player.update();
+
     for (AbstSensoryOutModule sensoryModule : sensoryModules) {
 
       sensoryModule.OnRodStatusReading(data);

@@ -48,9 +48,7 @@ class Fish implements PublicFish{
 
     direction = adjustDirectionBasedOnTerget(deltaTarget); 
     
-    float currentStepSize = adjustSpeed();
-    
-    direction.mult(currentStepSize);
+    direction.setMag(adjustSpeed());
     
     pos.add(direction);
     

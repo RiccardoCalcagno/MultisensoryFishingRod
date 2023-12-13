@@ -1,24 +1,27 @@
-
+import java.util.ArrayList;
 // Dichiarazione della classe Player
 class Player {
-  GameManager gameManager; // Manager del gioco
-  
-  PImage foodImg;
-  
-  int boxsize;
-  float damageCounter;
-  float actualThetaY, actualThetaZ;
   
   float multipliyerOfCollisionReaction = 4;
   float stepTime = 0.01;
   PVector gravity = new PVector(0, 0.098, 0); // Gravitational force in 3D
+  int totalNodes = 50;
+  float speedToReachTheIdleOrigin = 10;
+  float intensityOfRodMovments = 10;
+  float intensityOfRandomVariationsFormTheYAxisInRodPulling = 0.005;
+  
+  GameManager gameManager; // Manager del gioco
+  PImage foodImg;
+  int boxsize;
+  float damageCounter;
+  float actualThetaY, actualThetaZ;
   VerletNode[] nodes;
   float nodeDistance = 15;
-  int totalNodes = 50;
   PVector origin;
   float scaleScene;
   PublicFish fish = null;
-  boolean haFish;
+  boolean hasFish;
+  RawMotionData cachedRawMotionData = new RawMotionData();
   
   float ropeLenght(){
     return  nodeDistance * totalNodes;
@@ -30,9 +33,8 @@ class Player {
     return PVector.sub(getHookPos(), nodes[0].position).normalize();
   }
   
-  
   boolean hasFish(){
-    return haFish; 
+    return hasFish; 
   }
  
 
@@ -63,7 +65,7 @@ class Player {
     
      damageCounter = 100;
      
-     haFish = false;
+     hasFish = false;
   }
 
   // Metodo per simulare l'evento di ritrazione del filo
@@ -75,16 +77,46 @@ class Player {
     }
   }
   
+  void TornWireOnRodMovments(RawMotionData rawMotionData){
+    cachedRawMotionData = rawMotionData;
+  }
   
   void update(){
     if(fish == null){
      fish = gameManager.getFish(); 
     }
+    
+    applyForcesOfRod();
+    
     handleCollision();
-    simulate();
+    
+    applyPhisics();
+    
+    // Lazy application of all the forces collected during the cicle
+    for (VerletNode node : nodes) {
+      node.applyCachedForces();
+    }
+    
+    // More iterations define the rigidity of the rope
     for(int i=0; i<totalNodes * 2; i++){
       applyConstraints();
     }
+  }
+  
+  void applyForcesOfRod(){
+    
+     // Force that will guide the hook slowly towards the idle origin, in order to not make the hook disappear if the user pull too much the rod.
+     PVector towardsTheIdle = PVector.sub(origin.copy(), nodes[0].position).setMag(speedToReachTheIdleOrigin);
+     nodes[0].cacheForce(towardsTheIdle);
+     
+     // Force simulated by the motion of the rod
+     if(abs(cachedRawMotionData.speed) > 0.1){
+       Vec3 rodPullingVector = new Vec3(0, -cachedRawMotionData.speed*intensityOfRodMovments, 0);
+       
+       rodPullingVector.rotateX(map(noise(frameCount * 0.01), 0, 1, -intensityOfRandomVariationsFormTheYAxisInRodPulling, intensityOfRandomVariationsFormTheYAxisInRodPulling)); 
+       rodPullingVector.rotateY(map(noise((frameCount+ 1000) * 0.01), 0, 1, -intensityOfRandomVariationsFormTheYAxisInRodPulling, intensityOfRandomVariationsFormTheYAxisInRodPulling)); 
+       nodes[0].cacheForce(rodPullingVector); 
+     }
   }
   
   void handleCollision() {
@@ -105,29 +137,22 @@ class Player {
         PVector collisionForce = collisionNormal.mult((mouthRadius - distance) * multipliyerOfCollisionReaction);
         
         // Applica la forza della collisione alla corda
-        node.position.add(collisionForce);
+        node.cacheForce(collisionForce);
       }
     }
   }
     
-  void simulate() {
+  void applyPhisics() {
     for (int i = 1; i < nodes.length; i++) {
       VerletNode node = nodes[i];
       
-      PVector temp = new PVector(node.position.x, node.position.y, node.position.z);
-      node.position.add(PVector.sub(node.position, node.oldPosition));
-      if(i >= nodes.length -1){
-        node.position.add(gravity.copy().mult(20));
-      }
-      else{
-        node.position.add(gravity);
-      }
-      node.oldPosition.set(temp);
+      // Add Innertia
+      node.cacheForce(PVector.sub(node.position, node.oldPosition));
+      
+      // Add gravity force
+      node.cacheForce( ((i >= nodes.length -1)? gravity.copy().mult(20): gravity));
     }
-    
-    nodes[0].updatePosition(origin.copy());
   }
-  
   
   void applyConstraints() {
     for (int i = 0; i < nodes.length - 1; i++) {
@@ -195,10 +220,23 @@ class Player {
 class VerletNode {
   PVector position;
   PVector oldPosition;
+  ArrayList<PVector> lazyForcesToApply = new ArrayList<PVector>();
   
   VerletNode(PVector startPos) {
     position = startPos.get();
     oldPosition = startPos.get();
+  }
+  
+  void cacheForce(PVector force){
+    lazyForcesToApply.add(force);
+  }
+  
+  void applyCachedForces(){
+    oldPosition = position.copy();
+    for (PVector force : lazyForcesToApply) {
+       position.add(force);
+    }
+    lazyForcesToApply.clear();
   }
   
   void updatePosition(PVector newPos) {

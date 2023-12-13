@@ -33,7 +33,6 @@ abstract class AbstSensoryOutModule{
   // Asyncronous meningful events
   void OnShakeOfRod(ShakeDimention rodShakeType){}
   
-  
   // event fired when the fish is touching the hook. I (Riccardo) change its movemnts in the way that 1 event of tasting the bait has at least 0.8 sec of distance between each others
   void OnFishTasteBait(){}
   
