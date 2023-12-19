@@ -21,6 +21,7 @@ enum GameState {
   EndExperience 
 }
 
+
 class SessionData {
   float sessionPerformanceWeight;
   int sessionPerformanceValue;
@@ -37,12 +38,12 @@ class PlayerInfo {
   }
 }
 
-
 // Implementazione della classe GameManager che eredita da AbstGameManager
 class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleManager {
+  
   float wireCountdown; // Conto alla rovescia del filo
-  GameState currentState; // Stato corrente del gioco
   SessionData currentSession;
+  ShakeDimention currentRodState;
   float totalWeightedScore; // Punteggio totale ponderato
   int totalWeightedScoreCount; // Contatore per il punteggio totale
   int boxsize;
@@ -52,12 +53,14 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   int getSizeOfAcquarium(){
     return boxsize;
   }
+  
 
   int NumFramesHaloExternUpdates = 5;
   int haloForWireRetrieving, haloForRawMovements, haloForShakeRodEvent;
   float cachedSpeedOfWireRetrieving = 0;
   ShakeDimention cachedShakeRodEvent = ShakeDimention.NONE, prevCachedShakeRodEvent = ShakeDimention.NONE;
   RawMotionData cachedRawMotionData = new RawMotionData();
+  boolean hasFish;
   
   ArrayList<AbstSensoryOutModule> sensoryModules = new ArrayList<AbstSensoryOutModule>();
   SensoryInputModule sensoryInputModule;
@@ -72,6 +75,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
 
   // Costruttore per GameManager
   GameManager() {
+    
     
     boxsize = min(width, height) * 2 / 3; 
     
@@ -90,11 +94,14 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   
   void gameLoop(){
     
+    updateState();
+    
     fish.UpdatePosition();
     
     hint(ENABLE_DEPTH_SORT);
     
     if(haloForShakeRodEvent <= 0){
+      currentRodState = cachedShakeRodEvent;
       for (AbstSensoryOutModule sensoryModule : sensoryModules) {
         if(prevCachedShakeRodEvent != ShakeDimention.NONE && cachedShakeRodEvent != ShakeDimention.NONE){
           sensoryModule.OnShakeOfRod(ShakeDimention.NONE); 
@@ -102,12 +109,28 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
         sensoryModule.OnShakeOfRod(cachedShakeRodEvent); 
       }
       haloForWireRetrieving = 0;
+      
+      if(currentState == GameState.AttractingFish && currentRodState == ShakeDimention.STRONG_HOOKING){
+        if(player.hasHookedTheFish()){
+           setState(GameState.FishHooked);
+        }
+      }
     }
     
-    RodStatusData data = calculateRodStatusData();
+    fish.UpdateIntentionality(currentRodState);
     
+    RodStatusData data = calculateRodStatusData();
+        
     if(currentState == GameState.AttractingFish){
+     
+      // TODO Remove, it is for Debug
+      data.rawMotionData.speed = map(noise(frameCount * 0.1), 0, 1, -0.5, 0.5);
+      
       player.TornWireOnRodMovments(data.rawMotionData);
+    }
+    else if(currentState == GameState.FishHooked){
+      
+      // TODO
     }
     
     player.update();
@@ -123,7 +146,6 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   }
   
   
-
   // Metodo per avviare la sessione di gioco
   void StartGameWithSettings(PlayerInfo _playerInfo){
     currentSession = new SessionData();
@@ -146,7 +168,8 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
       }
     }
     
-    setState(GameState.Begin);
+    cachedState = GameState.Begin;
+    updateState();
   }
   
   void beginGameSession(){
@@ -155,6 +178,10 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     haloForWireRetrieving = NumFramesHaloExternUpdates;
     haloForRawMovements = NumFramesHaloExternUpdates;
     haloForShakeRodEvent = NumFramesHaloExternUpdates;
+    
+    currentRodState = ShakeDimention.NONE;
+    
+    hasFish = false;
     
     player.Restart();
     
@@ -165,13 +192,16 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
 
   // Metodo per impostare lo stato del gioco
   void setState(GameState newState) {
-    if (currentState != newState) {
+    cachedState = newState;
+  }
+  void updateState(){
+    if (currentState != cachedState) {
       GameState pre = currentState;
-      currentState = newState;
-      currentState = manageGameStates(pre, newState);
+      currentState = cachedState;
+      currentState = manageGameStates(pre, cachedState);
       
       // notify the modules of a relevant change in state
-      if(newState == GameState.FishHooked || newState == GameState.FishLost || newState == GameState.WireEnded){
+      if(cachedState == GameState.FishHooked || cachedState == GameState.FishLost || cachedState == GameState.WireEnded){
         for (AbstSensoryOutModule sensoryModule : sensoryModules) {
           switch (currentState) {
             case FishHooked:
@@ -181,7 +211,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
               sensoryModule.OnFishLost();
               break;
             case WireEnded:
-              if(player.hasFish()){
+              if(hasFish){
                 sensoryModule.OnFishCaught();
               }
               else{
@@ -198,6 +228,12 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     if(isFishHooked()){
       setState(GameState.FishLost);
     }
+  }
+  
+  void OnFishTasteBait(){
+     for (AbstSensoryOutModule sensoryModule : sensoryModules) {
+       sensoryModule.OnFishTasteBait();
+     }
   }
   
   RodStatusData calculateRodStatusData(){
@@ -251,6 +287,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
         break;
         
       case FishHooked:
+        hasFish = true;
         break;
    
       case FishLost:
@@ -276,7 +313,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
       case FishLost: currentSession.endReason = "FishLost";
         break;
       case WireEnded: 
-        if(player.hasFish()){
+        if(hasFish){
            currentSession.endReason = "FishCaught";
         }
         else{
@@ -348,6 +385,8 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
 
 GameManager globalGameManager;
 Player player;
+GameState currentState = GameState.Null; // Stato corrente del gioco
+GameState cachedState = GameState.Null;
 
 void setup() {
   size(1400, 1400, P3D);
@@ -362,8 +401,8 @@ void setup() {
 }
 
 void draw() {
-  
-  if(globalGameManager.currentState != GameState.Null && globalGameManager.currentState != GameState.EndExperience){
+ 
+  if(currentState != GameState.Null && currentState != GameState.EndExperience){
     
       background(85, 146, 200); // Colore azzurro per l'acqua  
       globalGameManager.gameLoop();

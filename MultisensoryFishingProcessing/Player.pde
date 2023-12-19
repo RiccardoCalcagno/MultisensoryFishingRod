@@ -2,14 +2,36 @@ import java.util.ArrayList;
 // Dichiarazione della classe Player
 class Player {
   
-  float multipliyerOfCollisionReaction = 4;
-  float stepTime = 0.01;
-  PVector gravity = new PVector(0, 0.098, 0); // Gravitational force in 3D
-  int totalNodes = 50;
-  float speedToReachTheIdleOrigin = 10;
-  float intensityOfRodMovments = 10;
-  float intensityOfRandomVariationsFormTheYAxisInRodPulling = 0.005;
+  // Bigger => More the wire should bounce in the moment in wich the fish touch it
+  float multipliyerOfCollisionReaction = 3;
+ 
+  // Gravitational force in 3D
+  PVector gravity = new PVector(0, 0.4, 0); 
   
+  // This should define the lenght of the rope, not the position of the hook, this would stay evrytime almost in the middel of the boundingBox
+  int totalNodes = 50;
+  
+  // This is a constant force that is appplied to the origin of the wire (top extream of it) in order to make it reace a default position if the user is not applying other forces by moving the phiscal rod
+  float speedToReachTheIdleOrigin = 50;
+  
+  // this is a coefficent to be fineTuned in order to intensify or decrese the force of the movements of the phisical rod, need to be adjusted in order not to make the hook be throunw out of the water
+  float intensityOfRodMovments = 30;
+  
+  // This is how much the pulling forces produced by the movement of the phisical rod should deviate from the vertical (Y) axis. (with some noise)
+  float intensityOfRandomVariationsFormTheYAxisInRodPulling = 0.5;
+  
+  // IN the periods in which the fish is pushing the wire it is repeditly biting (just a taste actually) the hook, but with a minimum delay between each bites, namely this value.
+  int numLoopsBetweenBites = 30;
+  
+  // if 1 => 1 goodShake = 1 catch, if 0 => 1 goodShake = 0 catch, in between => 1 goodShake = randomWithProbabilityOf(rarenessOfHooking) catch
+  float rarenessOfHooking = 0.8;
+  
+  
+  
+  // already fine tuned value, it express if the fish is been pushing the wire even if the mouth collider is slightly deteached from the hook
+  int numOfLoopsBetweenPushes = 5;
+  int counterOfLoopsBetweenPushes;
+  int counterOfLoopsBetweenBites;
   GameManager gameManager; // Manager del gioco
   PImage foodImg;
   int boxsize;
@@ -20,7 +42,6 @@ class Player {
   PVector origin;
   float scaleScene;
   PublicFish fish = null;
-  boolean hasFish;
   RawMotionData cachedRawMotionData = new RawMotionData();
   
   float ropeLenght(){
@@ -33,9 +54,6 @@ class Player {
     return PVector.sub(getHookPos(), nodes[0].position).normalize();
   }
   
-  boolean hasFish(){
-    return hasFish; 
-  }
  
 
   // Costruttore per Player
@@ -65,7 +83,7 @@ class Player {
     
      damageCounter = 100;
      
-     hasFish = false;
+     counterOfLoopsBetweenBites = numLoopsBetweenBites;
   }
 
   // Metodo per simulare l'evento di ritrazione del filo
@@ -84,6 +102,13 @@ class Player {
   void update(){
     if(fish == null){
      fish = gameManager.getFish(); 
+    }
+    
+    counterOfLoopsBetweenPushes--; 
+    counterOfLoopsBetweenBites--;
+    
+    if(counterOfLoopsBetweenBites == 0 && counterOfLoopsBetweenPushes > 0){
+      BiteTheHook();
     }
     
     applyForcesOfRod();
@@ -132,6 +157,14 @@ class Player {
       float distance = PVector.dist(node.position, mouthPos);
       
       if (distance < mouthRadius) {
+        
+        counterOfLoopsBetweenPushes = numOfLoopsBetweenPushes;
+        
+        if(counterOfLoopsBetweenBites < 0){
+          BiteTheHook();
+        }
+        
+        println(frameCount);
         // Calcola il vettore di spostamento per spostare la corda in base alla collisione
         PVector collisionNormal = PVector.sub(node.position, mouthPos).normalize();
         PVector collisionForce = collisionNormal.mult((mouthRadius - distance) * multipliyerOfCollisionReaction);
@@ -140,6 +173,22 @@ class Player {
         node.cacheForce(collisionForce);
       }
     }
+  }
+  
+  
+  boolean hasHookedTheFish(){
+    
+    if(counterOfLoopsBetweenBites >= 0){
+      
+      return random(0, 1) <= rarenessOfHooking;
+    }
+    return false;
+  }
+  
+  
+  void BiteTheHook(){
+    counterOfLoopsBetweenBites = numLoopsBetweenBites;
+    gameManager.OnFishTasteBait();
   }
     
   void applyPhisics() {

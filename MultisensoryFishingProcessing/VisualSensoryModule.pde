@@ -1,13 +1,17 @@
 class VisualSensoryModule extends AbstSensoryOutModule{ 
   
   
+  
+  int timeMouthOpen = 10;
+  
+  
   float numAlgaePerPxSquared = 0.0000004;
   int[] tintColor = new int[]{200, 220, 255};
   int resizeAlgaeWidth = 100;
   
   
   float scaleScene;
-  PImage sandImg, waterSurface, fishImg, fishFromTop, tallAlga, shortAlga;
+  PImage sandImg, waterSurface, fishImg, fishFromTop, tallAlga, shortAlga, fishOpenMouth;
   float fishWidth, fishHeight;
   float actualThetaY, actualThetaZ;
   PVector[] algaePos;
@@ -15,6 +19,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   float[] algaeRotation;
   
   int numAlgae;
+  int isEating = 0;
   
   float boxSize;
   float fieldSize;
@@ -32,11 +37,13 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     fishHeight = fish.fishHeight;
     fishImg = loadImage("fishNotCentered.png");
     tallAlga = loadImage("algaeTall.png");
+    fishOpenMouth = loadImage("fishOpenMouth.png");
     shortAlga = loadImage("algaeShort.png");
     tallAlga.resize((int)(resizeAlgaeWidth), (int)(4.51*resizeAlgaeWidth));
     shortAlga.resize((int)(resizeAlgaeWidth), (int)(2.438*resizeAlgaeWidth));
     
     fishImg.resize((int)fishWidth, (int)fishHeight);
+    fishOpenMouth.resize((int)fishWidth, (int)fishHeight);
     
     //TODO fishFromTop
 
@@ -57,14 +64,20 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     }
   }
   
+  void OnFishTasteBait(){
+    isEating= timeMouthOpen;
+  }
+  
   // this can be used als as draw cicle
   void OnRodStatusReading(RodStatusData dataSnapshot){
       
+    isEating--;
+    
     rotateCamera();
     
     drawBottom();
     
-    drawAlgae();
+    //drawAlgae();
     
     if(outputModulesManager.isFishHooked() == true){
       drawSceneFishHooked();
@@ -179,7 +192,14 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     
     fill(0);
     imageMode(CENTER);
-    image(fishImg, 0, 0); // Draw the fish image
+    
+    if(isEating > 0){
+      image(fishOpenMouth, 0, 0);
+    }
+    else{
+      image(fishImg, 0, 0);    
+    }
+
     
     popMatrix();
     
