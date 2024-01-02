@@ -77,7 +77,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     
     drawBottom();
     
-    //drawAlgae();
+    drawAlgae();
     
     if(outputModulesManager.isFishHooked() == true){
       drawSceneFishHooked();

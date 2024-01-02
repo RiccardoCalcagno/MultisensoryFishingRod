@@ -164,7 +164,6 @@ class Player {
           BiteTheHook();
         }
         
-        println(frameCount);
         // Calcola il vettore di spostamento per spostare la corda in base alla collisione
         PVector collisionNormal = PVector.sub(node.position, mouthPos).normalize();
         PVector collisionForce = collisionNormal.mult((mouthRadius - distance) * multipliyerOfCollisionReaction);

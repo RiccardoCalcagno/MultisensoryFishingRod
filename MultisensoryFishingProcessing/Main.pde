@@ -87,8 +87,6 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     
     summativeEndReasons = "";
     
-    sensoryInputModule = new SensoryInputModule(this);
-    
     currentState = GameState.Null;
   }
   
@@ -100,7 +98,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     
     hint(ENABLE_DEPTH_SORT);
     
-    if(haloForShakeRodEvent <= 0){
+    if(haloForShakeRodEvent > 0){
       currentRodState = cachedShakeRodEvent;
       for (AbstSensoryOutModule sensoryModule : sensoryModules) {
         if(prevCachedShakeRodEvent != ShakeDimention.NONE && cachedShakeRodEvent != ShakeDimention.NONE){
@@ -148,6 +146,11 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   
   // Metodo per avviare la sessione di gioco
   void StartGameWithSettings(PlayerInfo _playerInfo){
+    
+    //TODO Switch
+    //sensoryInputModule = new SensoryInputModule(this);
+    sensoryInputModule = globalDebugSensoryInputModule;
+    
     currentSession = new SessionData();
     currentSession.playerInfo = _playerInfo;
     for(int i=0; i<3; i++){
@@ -364,7 +367,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   
   
   void OnShakeEvent(ShakeDimention type){
-    if(prevCachedShakeRodEvent != cachedShakeRodEvent){
+    if(cachedShakeRodEvent != type){
       prevCachedShakeRodEvent = cachedShakeRodEvent;
       cachedShakeRodEvent = type;
       haloForShakeRodEvent = 1;
@@ -384,6 +387,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
 
 
 GameManager globalGameManager;
+DebugSensoryInputModule globalDebugSensoryInputModule;
 Player player;
 GameState currentState = GameState.Null; // Stato corrente del gioco
 GameState cachedState = GameState.Null;
@@ -393,6 +397,10 @@ void setup() {
   //hint(ENABLE_DEPTH_SORT);
   hint(DISABLE_OPENGL_ERRORS);
   globalGameManager = new GameManager();
+  
+  //TODO rremove it is only for debug
+  globalDebugSensoryInputModule = new DebugSensoryInputModule(globalGameManager);
+  
   player = new Player(globalGameManager);
   
   //createUI(globalGameManager);
@@ -410,10 +418,17 @@ void draw() {
   else{
     background(255); 
   }
+  
+  globalDebugSensoryInputModule.update();
 }
 
-
-
+void keyPressed(){
+  
+  globalDebugSensoryInputModule.OnkeyPressed(key);
+  
+}
+  
+  
 
 
 

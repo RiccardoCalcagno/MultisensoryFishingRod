@@ -2,10 +2,13 @@
 class Fish implements PublicFish{
   
    // coefficent expressing how much the valence of a certain shake is influencing the intentionality of the fish at each cicle
-  float intensityOfValenceOfShakesForAttraction = 0.01;
+  float intensityOfValenceOfShakesForAttraction = 0.001;
   
-  // Speed of the fish
+  // Speed of the fish on free condition
   float stepSize = 2; 
+  
+  // Speed of the fish when hooked
+  float stepSizeWhenHooked = 4;
   
   // threshold distance necessary to shape the speed of the fish in it environment, with food vision
   float distanceFromFoodWhenStartToDecellerate = 50;
@@ -18,6 +21,15 @@ class Fish implements PublicFish{
   
   // reaching this value with the counter: timeSinceAttractionWasPositive define the maximum extream of intentionality unlocked.
   int strinkingTimeToReachOptimumAttractability = 500;
+  
+  // Usefull To introduce the forgetting parameter of the fish
+  int timeOfLastInfluencingShake;
+  
+  // If no shake is introduced since numFramesAfterFishstartForgetting of frames, the intentionality of the fish start reaching the 0 with a certain speed (Forgetting)
+  int numFramesAfterFishstartForgetting = 500;
+  
+  // Speed of forgetting his intentionality
+  float speedOfForgettingIntentionality = 0.002;
   
   
   
@@ -62,16 +74,15 @@ class Fish implements PublicFish{
     pos = new PVector(random(-boxsize/2, boxsize/2), random(-boxsize/2, boxsize/2), random(-boxsize/2, boxsize/2));
     
     timeSinceAttractionWasPositive = 0;
+    timeOfLastInfluencingShake = 0;
     
-    intentionality = 0.7;
+    intentionality = 0;
   }
   
   
   void UpdatePosition() {
     
-    PVector deltaTarget = calculateDeltaTarget();
-
-    direction = adjustDirectionBasedOnTerget(deltaTarget); 
+    direction = calculateDeltaTarget();
     
     direction.setMag(adjustSpeed());
     
@@ -87,22 +98,47 @@ class Fish implements PublicFish{
   
   void UpdateIntentionality(ShakeDimention currentShake){
     
+    // The fish when at the hook move frenetically and randomly
+    if(gameManager.hasFish){
+      intentionality = 0;
+      return;
+    }
+    
+    // Each type of shake as a valence (a weight) that put in comparison (good-bad) the shakes together, 
+    // then intensityOfValenceOfShakesForAttraction is necessary to fine tuning all the intensity based on how much we want the intentionality to be responsive
     float valenceOfShake = shakesValenceForAttracting.get(currentShake.toString()) * intensityOfValenceOfShakesForAttraction;
     
-    intentionality += valenceOfShake;
-    
-    if(valenceOfShake < 0){
-      timeSinceAttractionWasPositive = 0;
+    if(valenceOfShake != 0){
+
+      intentionality += valenceOfShake;
+      
+      if(valenceOfShake < 0){
+        timeSinceAttractionWasPositive = 0;
+      }
+      else if(timeSinceAttractionWasPositive<strinkingTimeToReachOptimumAttractability){
+        timeSinceAttractionWasPositive++;
+      }
+      timeOfLastInfluencingShake = frameCount;
     }
-    else if(valenceOfShake > 0 && timeSinceAttractionWasPositive<strinkingTimeToReachOptimumAttractability){
-      timeSinceAttractionWasPositive++;
+    
+    // Fish is progressively forgetting about its past intentionality if the hook is not more highlighted by any shake of the rod
+    if(frameCount - timeOfLastInfluencingShake > numFramesAfterFishstartForgetting){
+       intentionality = lerp(intentionality, 0, speedOfForgettingIntentionality);
     }
     
-    float upperEndOfIntentionality = map(timeSinceAttractionWasPositive, 0, strinkingTimeToReachOptimumAttractability, 0.5, 0.9);
+    // The intentionality can grow till a bigger upper limit of the user is doing the correct movments for a longer time, 
+    // while as soon as he make a mistake the upper limit decrease immediately to its lowest, this because the fish got scared
+    float upperEndOfIntentionality = map(timeSinceAttractionWasPositive, 0, strinkingTimeToReachOptimumAttractability, 0.4, 0.8);
     
-    constrain(intentionality, -0.5, upperEndOfIntentionality);
+    constrain(intentionality, -0.3, upperEndOfIntentionality);
+        
+        
+    // Debug
+    if(valenceOfShake != 0 || frameCount - timeOfLastInfluencingShake > numFramesAfterFishstartForgetting){
+      println("Intent: "+intentionality+"         +Delta: "+valenceOfShake+"        tSincePositive: "+timeSinceAttractionWasPositive+"        MaxIntent: "+upperEndOfIntentionality);      
+    }
   }
-  
+
     
   PVector getFishRotation(){
     
@@ -139,42 +175,51 @@ class Fish implements PublicFish{
     noiseZ /= noisedistance;
     
     // Calculate the weighted combination of random movement and intentional movement
-    PVector deltaTarget = new PVector(
-      lerp(noiseX, deltaFood.x, intentionality),
-      lerp(noiseY, deltaFood.y, intentionality),
-      lerp(noiseZ, deltaFood.z, intentionality)
-      );
     
-    return deltaTarget;
-  }
-  
-  
-  PVector adjustDirectionBasedOnTerget(PVector deltaTarget){
-    
-    return deltaTarget.copy();
+    if(intentionality > 0){
+      return new PVector(
+        lerp(noiseX, deltaFood.x, intentionality),
+        lerp(noiseY, deltaFood.y, intentionality),
+        lerp(noiseZ, deltaFood.z, intentionality)
+        );
+    }
+    else{
+      return new PVector(
+        lerp(noiseX, -deltaFood.x, abs(intentionality)),
+        lerp(noiseY, -deltaFood.y, abs(intentionality)),
+        lerp(noiseZ, -deltaFood.z, abs(intentionality))
+        );
+    }
+
   }
   
   
   float adjustSpeed(){
-    PVector deltaFood = new PVector();
-    float foodDistance = calculateDeltaFood(deltaFood);
     
-    float coefficentOfSpeed = 1;
+    if(gameManager.hasFish == false){
+      
+      PVector deltaFood = new PVector();
+      float foodDistance = calculateDeltaFood(deltaFood);
+      float coefficentOfSpeed = 1;
+      // Decellerate fish when near to food
+      if(foodDistance < distanceFromFoodWhenStartToDecellerate){
+        
+        float coeff_HowMuchDivergingFormFood = 0;
+        PVector normDistanceFromFood = PVector.sub(deltaFood, direction);
+        float distanceInGeometricPhereOfFood = normDistanceFromFood.mag();
+        // max distence = sqrt(2*2+2*2+2*2) = sqrt(12)
+        coeff_HowMuchDivergingFormFood = distanceInGeometricPhereOfFood / sqrt(12);
+        
+        float coeff_HowMuchIsNearToFood = foodDistance / distanceFromFoodWhenStartToDecellerate;
+        
+        coefficentOfSpeed = map(coeff_HowMuchIsNearToFood, 0, 1, lerp(coeff_HowMuchDivergingFormFood, 1, 0.9), 1);
+      }
     
-    // Decellerate fish when near to food
-    if(foodDistance < distanceFromFoodWhenStartToDecellerate){
-      
-      float coeff_HowMuchDivergingFormFood = 0;
-      PVector normDistanceFromFood = PVector.sub(deltaFood, direction);
-      float distanceInGeometricPhereOfFood = normDistanceFromFood.mag();
-      // max distence = sqrt(2*2+2*2+2*2) = sqrt(12)
-      coeff_HowMuchDivergingFormFood = distanceInGeometricPhereOfFood / sqrt(12);
-      
-      float coeff_HowMuchIsNearToFood = foodDistance / distanceFromFoodWhenStartToDecellerate;
-      
-      coefficentOfSpeed = map(coeff_HowMuchIsNearToFood, 0, 1, lerp(coeff_HowMuchDivergingFormFood, 1, 0.9), 1);
+      return lerp(0, stepSize, coefficentOfSpeed);
     }
-    return lerp(0, stepSize, coefficentOfSpeed); 
+    else{
+      return stepSizeWhenHooked; 
+    } 
   }
   
   
