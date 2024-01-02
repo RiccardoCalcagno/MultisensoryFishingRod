@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Circuit Diagram, cdlibrary.dll 4.0.0.0 -->
+
+<svg
+   version="1.1"
+   width="360"
+   height="340"
+   id="svg86"
+   sodipodi:docname="circuit.svg"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs90">
+    <rect
+       x="27.47889"
+       y="25.838359"
+       width="25.838359"
+       height="19.276236"
+       id="rect390" />
+    <rect
+       x="183.73944"
+       y="63.160434"
+       width="42.243667"
+       height="34.861279"
+       id="rect353" />
+    <rect
+       x="107.04463"
+       y="76.28468"
+       width="59.879373"
+       height="42.243667"
+       id="rect297" />
+    <rect
+       x="191.9421"
+       y="199.73462"
+       width="49.626055"
+       height="18.866104"
+       id="rect250" />
+    <rect
+       x="191.94209"
+       y="199.73462"
+       width="53.317251"
+       height="33.630881"
+       id="rect250-1" />
+    <rect
+       x="191.94209"
+       y="199.73462"
+       width="49.626057"
+       height="18.866104"
+       id="rect250-6" />
+    <rect
+       x="191.94209"
+       y="199.73462"
+       width="49.626057"
+       height="18.866104"
+       id="rect250-3" />
+  </defs>
+  <sodipodi:namedview
+     id="namedview88"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="2.4382353"
+     inkscape:cx="182.30398"
+     inkscape:cy="165.69361"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg86" />
+  <line
+     x1="180"
+     y1="50"
+     x2="180"
+     y2="77"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line2" />
+  <line
+     x1="180"
+     y1="103"
+     x2="180"
+     y2="130"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line4" />
+  <ellipse
+     cx="180"
+     cy="90"
+     rx="12"
+     ry="12"
+     style="fill-opacity:0;fill:rgb(0, 0, 0);stroke:rgb(0, 0, 0);stroke-width:2"
+     id="ellipse6" />
+  <text
+     x="180"
+     y="90"
+     style="font-family:Arial;font-size:12px;text-anchor:middle"
+     dominant-baseline="middle"
+     transform="rotate(0, 180, 90)"
+     id="text8">M</text>
+  <line
+     x1="250"
+     y1="130"
+     x2="320"
+     y2="130"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line10" />
+  <line
+     x1="250"
+     y1="50"
+     x2="320"
+     y2="50"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line12" />
+  <line
+     x1="320"
+     y1="50"
+     x2="320"
+     y2="86"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line14" />
+  <line
+     x1="320"
+     y1="94"
+     x2="320"
+     y2="130"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line16" />
+  <line
+     x1="306"
+     y1="86"
+     x2="334"
+     y2="86"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line18" />
+  <line
+     x1="306"
+     y1="94"
+     x2="334"
+     y2="94"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line20" />
+  <text
+     x="300"
+     y="96"
+     style="font-family:Arial;font-size:11px;text-anchor:end"
+     dominant-baseline="middle"
+     id="text22"
+     transform="rotate(0, 300, 96)">100 nF</text>
+  <text
+     x="287.69601"
+     y="83.589867"
+     style="font-size:11px;font-family:Arial;text-anchor:end"
+     dominant-baseline="middle"
+     id="text24">C</text>
+  <line
+     x1="236"
+     y1="130"
+     x2="236"
+     y2="50"
+     style="stroke:#000000;stroke-width:2;stroke-linecap:square"
+     id="line26" />
+  <path
+     d="m 236,83 m -8,0 h 16 m -8,0 8,15 h -16 l 8,-15"
+     style="fill:#000000;fill-opacity:0;stroke:#000000;stroke-width:2;stroke-linecap:square"
+     id="path28" />
+  <line
+     x1="180"
+     y1="50"
+     x2="250"
+     y2="50"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line30" />
+  <line
+     x1="180"
+     y1="130"
+     x2="250"
+     y2="130"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line32" />
+  <line
+     x1="30"
+     y1="20"
+     x2="180"
+     y2="20"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line34" />
+  <line
+     x1="180"
+     y1="20"
+     x2="180"
+     y2="50"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line36" />
+  <line
+     x1="180"
+     y1="130"
+     x2="180"
+     y2="150"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line38" />
+  <line
+     x1="30"
+     y1="310"
+     x2="60"
+     y2="310"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line40" />
+  <line
+     x1="30"
+     y1="210"
+     x2="60"
+     y2="210"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line42" />
+  <line
+     x1="180"
+     y1="150"
+     x2="180"
+     y2="180"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line44" />
+  <line
+     x1="180"
+     y1="250"
+     x2="180"
+     y2="310"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line46" />
+  <line
+     x1="180"
+     y1="240"
+     x2="180"
+     y2="250"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line48" />
+  <line
+     x1="60"
+     y1="310"
+     x2="180"
+     y2="310"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line50" />
+  <line
+     x1="180"
+     y1="180"
+     x2="180"
+     y2="197"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line52" />
+  <line
+     x1="180"
+     y1="223"
+     x2="180"
+     y2="240"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line54" />
+  <line
+     x1="140"
+     y1="210"
+     x2="166"
+     y2="210"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line56" />
+  <line
+     x1="165.5"
+     y1="202"
+     x2="165.5"
+     y2="218"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:3"
+     id="line58" />
+  <line
+     x1="180"
+     y1="197"
+     x2="165.5"
+     y2="206"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line60" />
+  <line
+     x1="165.5"
+     y1="214"
+     x2="180"
+     y2="223"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line62" />
+  <ellipse
+     cx="170"
+     cy="210"
+     rx="16"
+     ry="16"
+     style="fill-opacity:0;fill:rgb(0, 0, 0);stroke:rgb(0, 0, 0);stroke-width:2"
+     id="ellipse64" />
+  <path
+     d="m 172.49553,219.74183 2.44874,-3.27106 3.6658,5.81689 -6.52314,-1.28577 1.22437,-1.63553"
+     style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.8703;stroke-linecap:square"
+     id="path66" />
+  <line
+     x1="60"
+     y1="210"
+     x2="80"
+     y2="210"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line68" />
+  <line
+     x1="120"
+     y1="210"
+     x2="140"
+     y2="210"
+     style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="line70" />
+  <path
+     d="M 80,210 L 82,210 L 85,203 L 91,217 L 97,203 L 103,217 L 109,203 L 115,217 L 118,210 L 120,210"
+     style="fill-opacity:0;fill:rgb(0, 0, 0);stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2"
+     id="path72" />
+  <text
+     x="100"
+     y="196"
+     style="font-family:Arial;font-size:11px;text-anchor:middle"
+     dominant-baseline="baseline"
+     transform="rotate(0, 100, 196)"
+     id="text74">4.7 kΩ</text>
+  <text
+     x="100"
+     y="184"
+     style="font-family:Arial;font-size:11px;text-anchor:middle"
+     dominant-baseline="baseline"
+     transform="rotate(0, 100, 184)"
+     id="text76">R</text>
+  <ellipse
+     cx="180"
+     cy="50"
+     rx="2"
+     ry="2"
+     style="fill-opacity:1;fill:rgb(0, 0, 0);stroke:rgb(0, 0, 0);stroke-width:2"
+     id="ellipse78" />
+  <ellipse
+     cx="180"
+     cy="130"
+     rx="2"
+     ry="2"
+     style="fill-opacity:1;fill:rgb(0, 0, 0);stroke:rgb(0, 0, 0);stroke-width:2"
+     id="ellipse80" />
+  <circle
+     cx="236"
+     cy="130"
+     style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:2"
+     id="ellipse82"
+     r="2" />
+  <circle
+     cx="236"
+     cy="50"
+     style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:2"
+     id="ellipse84"
+     r="2" />
+  <text
+     xml:space="preserve"
+     id="text248"
+     style="font-size:10.6667px;white-space:pre;shape-inside:url(#rect250);fill:#000000"
+     transform="translate(-2.0506634,4.1013269)"><tspan
+       x="191.94141"
+       y="209.46593"
+       id="tspan470">2N4424</tspan></text>
+  <text
+     xml:space="preserve"
+     id="text295"
+     style="font-size:10.6667px;text-align:center;white-space:pre;shape-inside:url(#rect297);fill:#000000"
+     transform="translate(3.3004594e-8,-4.1013269)"><tspan
+       x="117.81244"
+       y="86.01671"
+       id="tspan472">Leaded
+</tspan><tspan
+       x="112.98951"
+       y="99.350084"
+       id="tspan474">Vibration
+</tspan><tspan
+       x="118.85932"
+       y="112.68346"
+       id="tspan476">Motors</tspan></text>
+  <text
+     xml:space="preserve"
+     id="text351"
+     style="font-size:10.6667px;text-align:center;white-space:pre;shape-inside:url(#rect353);fill:#000000" />
+  <text
+     xml:space="preserve"
+     style="font-size:10.6667px;text-align:center;text-anchor:middle;fill:#000000"
+     x="187.02051"
+     y="72.18335"
+     id="text359"><tspan
+       sodipodi:role="line"
+       id="tspan357"
+       x="187.02051"
+       y="72.18335">+</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-size:10.6667px;text-align:center;text-anchor:middle;white-space:pre;inline-size:33.0714;fill:#000000"
+     x="187.84077"
+     y="113.72153"
+     id="text359-4"
+     transform="translate(0,-4.8709288)"><tspan
+       x="187.84077"
+       y="113.72153"
+       id="tspan478">_</tspan></text>
+  <text
+     xml:space="preserve"
+     id="text388"
+     style="font-size:10.6667px;text-align:center;white-space:pre;shape-inside:url(#rect390);fill:#000000"><tspan
+       x="33.36098"
+       y="35.569445"
+       id="tspan480">5V</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-size:10.6667px;text-align:center;text-anchor:middle;fill:#000000"
+     x="46.344994"
+     y="225.57297"
+     id="text396"><tspan
+       sodipodi:role="line"
+       id="tspan394"
+       x="46.344994"
+       y="225.57297">GPIO</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-size:10.6667px;text-align:center;text-anchor:middle;fill:#000000"
+     x="45.985523"
+     y="323.5947"
+     id="text400"><tspan
+       sodipodi:role="line"
+       id="tspan398"
+       x="45.985523"
+       y="323.5947">GND</tspan></text>
+</svg>
