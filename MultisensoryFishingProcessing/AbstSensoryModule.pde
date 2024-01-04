@@ -1,7 +1,9 @@
 interface PublicFish{
-  float fishWidth = 500, fishHeight = 131; 
+  float fishWidth = 700, fishHeight = 183; 
   // return a vector 3 of the position of the fish in the acquarium
   PVector getPos();
+  
+  PVector getDeltaPos();
   
   // Fish intentionality is a coefficent from 0 to 1 that tell how much willing is the fish to bite the hook... 0 => random movement, 1 => strait movement to the hook. 
   float getIntentionality();
@@ -18,6 +20,8 @@ interface OutputModulesManager{
   
   // Use it if you need to have some information about the fish
   PublicFish getFish();
+  
+  VerletNode[] getNodesOfWire();
 }
 
 abstract class AbstSensoryOutModule{

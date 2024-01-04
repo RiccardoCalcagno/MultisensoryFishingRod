@@ -3,20 +3,23 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   
   
   int timeMouthOpen = 10;
+  int heightOfWaterSurfare  = -30;
   
   
-  float numAlgaePerPxSquared = 0.0000004;
-  int[] tintColor = new int[]{200, 220, 255};
+  float numAlgaePerPxSquared = 0.00000024;
+  int[] tintColor = new int[]{220, 240, 255};
   int resizeAlgaeWidth = 100;
   
   
   float scaleScene;
-  PImage sandImg, waterSurface, fishImg, fishFromTop, tallAlga, shortAlga, fishOpenMouth;
+  PImage sandImg, waterSurface, fishImg, fishFromTop, tallAlga, shortAlga, fishOpenMouth, ombra;
+  float actualThetaY_bait, actualThetaZ_bait;  PImage foodImg;
   float fishWidth, fishHeight;
   float actualThetaY, actualThetaZ;
   PVector[] algaePos;
   int[] algaeType;
   float[] algaeRotation;
+  PublicFish fish;
   
   int numAlgae;
   int isEating = 0;
@@ -32,7 +35,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     // this coefficent allow us to take advantage of a good perspective of the camera and avoid the fish
     scaleScene =  (2.0 +(float)boxSize / (float)min(width, height)) / 3.0;
    
-    PublicFish fish = outputModulesManager.getFish();
+    fish = outputModulesManager.getFish();
     fishWidth = fish.fishWidth;
     fishHeight = fish.fishHeight;
     fishImg = loadImage("fishNotCentered.png");
@@ -45,12 +48,16 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     fishImg.resize((int)fishWidth, (int)fishHeight);
     fishOpenMouth.resize((int)fishWidth, (int)fishHeight);
     
+    ombra = loadImage("ombra.png");
+    foodImg = loadImage("food.png");
+    foodImg.resize(80, 120);
+    
     //TODO fishFromTop
 
     sandImg = loadImage("sand.jpg");
     sandImg.resize(2*width, 2*width);
     waterSurface  = loadImage("waterSurface.jpg");
-    waterSurface = getWithAlpha(waterSurface, 50);
+    //waterSurface = getWithAlpha(waterSurface, 50);
     //sandImg.resize(2*width, 2*width);
     
     numAlgae = (int)(fieldSize*fieldSize*numAlgaePerPxSquared);
@@ -62,6 +69,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
       algaeType[i] = int(random(2));
       algaeRotation[i] = random(0, PI/2);
     }
+  
   }
   
   void OnFishTasteBait(){
@@ -79,12 +87,9 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     
     drawAlgae();
     
-    if(outputModulesManager.isFishHooked() == true){
-      drawSceneFishHooked();
-    }
-    else{
-      drawSceneFishNotHooked();
-    }
+    drawSceneFish();
+    
+    drawWireAndBait(dataSnapshot.coefficentOfWireTension);
   }
   
   void drawAlgae(){
@@ -93,7 +98,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
       for(int j=0; j<2; j++){   
         pushMatrix();
         scale(scaleScene);
-        translate(width/2 + algaePos[i].x,  height,  algaePos[i].z);
+        translate(width/2 + algaePos[i].x,  height - heightOfWaterSurfare,  algaePos[i].z);
         rotateY(algaeRotation[i] + (PI/2)*(int(j)));
         rotateZ(PI);
         fill(0);
@@ -135,11 +140,11 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     
     scale(scaleScene);
     
-    translate(width/2,  0, 0);
+    translate(width/2,  0 + heightOfWaterSurfare, 0);
     rotateX(PI / 2.0);
     rotateZ(PI / 2.0);
     beginShape();
-    tint(tintColor[0], tintColor[1], tintColor[2]);  
+    tint(255, 255, 255, 150);  
     texture(waterSurface);
     vertex(-fieldSize/2, -fieldSize/2, -fieldSize/2, fieldSize/2);
     vertex(-fieldSize/2,fieldSize/2, fieldSize/2, fieldSize/2);
@@ -147,12 +152,13 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     vertex(fieldSize/2, -fieldSize/2, -fieldSize/2, -fieldSize/2);
     endShape();
     popMatrix();
-    
+    tint(tintColor[0], tintColor[1], tintColor[2], 255);  
+        
     pushMatrix();
 
     scale(scaleScene);
     
-    translate(width/2,  height, 0);
+    translate(width/2,  height - heightOfWaterSurfare, 0);
     rotateX(PI / 2.0);
     rotateZ(PI / 3.0);
     beginShape();
@@ -166,9 +172,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     popMatrix();
   }
   
-  void drawSceneFishNotHooked() {
-    
-    var fish = outputModulesManager.getFish();
+  void drawSceneFish() {
     var fishRotation = fish.getFishRotation();
     
     //var rotations = TrasformVectorInRotation(fishRotation, new PVector(1, 0, 0));//TrasformVectorInRotation(fishRotation, new PVector(1, 0, 0));
@@ -199,10 +203,14 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     else{
       image(fishImg, 0, 0);    
     }
-
-    
     popMatrix();
     
+    
+    float angleOfOblique = abs(PI/2 - PVector.angleBetween(fishRotation, new PVector(0,1,0)));
+    float widthShadow = PublicFish.fishWidth * map(angleOfOblique, 0, PI/2, 1, 0.4)/ 2;
+    
+    PVector posMiddleFish = PVector.sub(fish.getPos(), fishRotation.copy().setMag(PublicFish.fishWidth/4));
+    drawShadow(posMiddleFish, fish.getFishRotation(), widthShadow);
     
     
     /* FOR DEBUG
@@ -236,8 +244,68 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     
   }
   
-  void drawSceneFishHooked(){
-    
+  
+  void drawShadow(PVector pos, PVector forward, float biggerCorner){
+    PVector myforward = forward.copy();
+    myforward.y = 0;
+    ombra.resize((int)(biggerCorner*1.2), (int)(biggerCorner*0.4));
+    pushMatrix();
+    scale(scaleScene);
+    translate(width/2 + pos.x,  height - heightOfWaterSurfare - 2, pos.z);
+    rotateX(PI / 2.0);
+    rotateZ( PVector.angleBetween(new PVector(-1,0,0), myforward));
+    imageMode(CENTER);
+    tint(255, 255, 255, 100);  
+    image(ombra, 0, 0);   
+    tint(tintColor[0], tintColor[1], tintColor[2], 255);  
+    popMatrix();
   }
+  
+  
+  void drawWireAndBait(float wireFishTention) {
+    
+    VerletNode[] nodes = outputModulesManager.getNodesOfWire();
+        
+    pushMatrix();
+    scale(scaleScene);
+    translate(width/2, height/2, 0);
+    hint(ENABLE_STROKE_PURE);
+    for (int i = 0; i < nodes.length - 1; i++) {
+      colorMode(RGB);
+      strokeWeight(3);
+      stroke(255 * wireFishTention, 0, 0);
+      line(nodes[i].position.x, nodes[i].position.y, nodes[i].position.z,
+           nodes[i+1].position.x, nodes[i+1].position.y, nodes[i+1].position.z);
+    }
+    hint(DISABLE_STROKE_PURE);
+    popMatrix();    
+    
+    if(outputModulesManager.isFishHooked() == false){
+      pushMatrix();
+      scale(scaleScene);
+      PVector hookPos = nodes[nodes.length-1].position;
+      translate(width/2 + hookPos.x, height/2 + hookPos.y, hookPos.z);
+      
+      PVector directionLasts = PVector.sub(hookPos, nodes[nodes.length -2].position);
+      
+      float thetaY = atan2(directionLasts.x, directionLasts.z) - PI/2;
+      float thetaZ = atan2(directionLasts.y, directionLasts.x);
+      
+      actualThetaY_bait = lerp(actualThetaY_bait, thetaY, 0.05);
+      actualThetaZ_bait = lerp(actualThetaZ_bait, thetaZ, 0.05);
+          
+      rotateY(actualThetaY_bait);
+      rotateX(-PI);
+      rotateZ(actualThetaZ_bait);
+      
+      fill(0);
+      imageMode(CENTER);
+      image(foodImg, -35, 0); 
+      popMatrix();
+      
+      drawShadow(hookPos, directionLasts, 120);
+    }
+  }
+  
   
 }

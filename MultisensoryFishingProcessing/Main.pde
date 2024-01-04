@@ -77,7 +77,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   GameManager() {
     
     
-    boxsize = min(width, height) * 2 / 3; 
+    boxsize = (int)(min(width, height)*0.85);// * 2 / 3; 
     
     totalWeightedScore = 0.0;
     totalWeightedScoreCount = 0;
@@ -94,6 +94,10 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     
     updateState();
     
+    if(currentState != GameState.AttractingFish && currentState != GameState.FishHooked){
+      return;
+    }
+    
     fish.UpdatePosition();
     
     hint(ENABLE_DEPTH_SORT);
@@ -106,7 +110,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
         }
         sensoryModule.OnShakeOfRod(cachedShakeRodEvent); 
       }
-      haloForWireRetrieving = 0;
+      haloForShakeRodEvent = 0;
       
       if(currentState == GameState.AttractingFish && currentRodState == ShakeDimention.STRONG_HOOKING){
         if(player.hasHookedTheFish()){
@@ -119,17 +123,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     
     RodStatusData data = calculateRodStatusData();
         
-    if(currentState == GameState.AttractingFish){
-     
-      // TODO Remove, it is for Debug
-      data.rawMotionData.speed = map(noise(frameCount * 0.1), 0, 1, -0.5, 0.5);
-      
-      player.TornWireOnRodMovments(data.rawMotionData);
-    }
-    else if(currentState == GameState.FishHooked){
-      
-      // TODO
-    }
+    player.TornWireOnRodMovments(data.rawMotionData);
     
     player.update();
 
@@ -137,8 +131,6 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
 
       sensoryModule.OnRodStatusReading(data);
     }
-    
-    player.render();
     
     hint(DISABLE_DEPTH_SORT);
   }
@@ -227,6 +219,10 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     }
   }
   
+  void OnWireEnded(){
+    setState(GameState.WireEnded);
+  }
+  
   void OnWireBreaks(){
     if(isFishHooked()){
       setState(GameState.FishLost);
@@ -253,24 +249,9 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
       newData.speedOfWireRetrieving = cachedSpeedOfWireRetrieving;
       newData.rawMotionData = cachedRawMotionData;
       
-      if(isFishHooked() == false){
-        newData.coefficentOfWireTension = 0;
-      }
-      else{
-        float coeffOfTentionBasedOnFishDirection = PVector.angleBetween(player.getWireDirection(), fish.getDeltaPos()) / PI;
-        float coeffForRetreivingTheWire = (1 - newData.speedOfWireRetrieving) / 2.0;
-        
-        newData.coefficentOfWireTension = coeffOfTentionBasedOnFishDirection * coeffForRetreivingTheWire;
-      }
       
-      if(newData.coefficentOfWireTension > 0.2){
-        player.damageWire(newData.coefficentOfWireTension);
-      }
-      
-      wireCountdown -= newData.speedOfWireRetrieving;
-      if (wireCountdown <= 0) {
-        setState(GameState.WireEnded);
-      }
+      newData.coefficentOfWireTension = player.UpdateWireRetreival(newData.speedOfWireRetrieving);
+ 
       
       haloForWireRetrieving--;
       haloForRawMovements--;
@@ -287,10 +268,16 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
         break;
 
       case AttractingFish:
+      
+        // TODO Remove this is only for debug purposes
+        //setState(GameState.FishLost);
         break;
         
       case FishHooked:
         hasFish = true;
+        
+        // TODO Remove this is only for debug purposes
+        //setState(GameState.FishLost);
         break;
    
       case FishLost:
@@ -341,6 +328,8 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     
     summativeEndReasons += currentSession.endReason+" ";
     
+    println("Game Finished "+currentSession.endReason);
+    
     createAnswerToContinuePlayingUI(currentSession.endReason == "FishCaught");
   }
   
@@ -383,6 +372,10 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     cachedRawMotionData = data;
     haloForRawMovements = NumFramesHaloExternUpdates;
   }
+  
+  VerletNode[] getNodesOfWire(){
+    return player.nodes;
+  }
 };
 
 
@@ -393,7 +386,9 @@ GameState currentState = GameState.Null; // Stato corrente del gioco
 GameState cachedState = GameState.Null;
 
 void setup() {
-  size(1400, 1400, P3D);
+  background(99, 178, 240);
+  fullScreen(P3D);
+  //size(1400, 1400, P3D);
   //hint(ENABLE_DEPTH_SORT);
   hint(DISABLE_OPENGL_ERRORS);
   globalGameManager = new GameManager();
@@ -403,9 +398,9 @@ void setup() {
   
   player = new Player(globalGameManager);
   
-  //createUI(globalGameManager);
+  createUI(globalGameManager);
   //TODO Remove and decomment createUI, just for debug
-  globalGameManager.StartGameWithSettings(new PlayerInfo("testplayer", new boolean[] {true, true, true}));
+  //globalGameManager.StartGameWithSettings(new PlayerInfo("testplayer", new boolean[] {true, true, true}));
 }
 
 void draw() {
@@ -416,20 +411,18 @@ void draw() {
       globalGameManager.gameLoop();
   }
   else{
-    background(255); 
+    background(99, 178, 240);
   }
   
   globalDebugSensoryInputModule.update();
 }
 
 void keyPressed(){
-  
-  globalDebugSensoryInputModule.OnkeyPressed(key);
-  
+  globalDebugSensoryInputModule.OnkeyPressed(keyCode);
 }
-  
-  
-
+void keyReleased() {
+  globalDebugSensoryInputModule.OnkeyReleased(keyCode);
+}
 
 
 

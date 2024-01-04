@@ -31,6 +31,9 @@ class Fish implements PublicFish{
   // Speed of forgetting his intentionality
   float speedOfForgettingIntentionality = 0.002;
   
+  // this express a value of intentionality to reach the bottom of the see when the fish is hooked
+  float intentionToGoDownWhenHooked = 0.24;
+  
   
   
   PVector prevPos, pos, prevDirectionLerped = null;
@@ -38,6 +41,7 @@ class Fish implements PublicFish{
   int boxsize;
   float intentionality; // Intentionality of the fish (0 to 1)
   PVector direction = new PVector();
+  PVector fishShift = new PVector();
   
   GameManager gameManager;
   Player player;
@@ -47,7 +51,7 @@ class Fish implements PublicFish{
     return pos.copy();
   }
   PVector getDeltaPos(){
-    return direction.copy();
+    return direction.copy().add(fishShift);
   }
   float getIntentionality(){
     return intentionality;
@@ -80,26 +84,30 @@ class Fish implements PublicFish{
   }
   
   
+  
   void UpdatePosition() {
     
     direction = calculateDeltaTarget();
     
-    direction.setMag(adjustSpeed());
+    float speed = adjustSpeed();        
+    direction.setMag(speed);
     
-    pos.add(direction);
+    fishShift = player.NegotiateFishShift(direction);
+    
+    pos.add(PVector.add(direction, fishShift));
     
     // Constrain fish within the cube
     pos.x = constrain(pos.x, -boxsize/2, boxsize/2);
     pos.y = constrain(pos.y, -boxsize/2, boxsize/2);
     pos.z = constrain(pos.z, -boxsize/2, boxsize/2);
     
-    //DebugHeadColliderAndSpeedVector();
+    //DebugHeadColliderAndSpeedVector(); 
   }
   
   void UpdateIntentionality(ShakeDimention currentShake){
     
     // The fish when at the hook move frenetically and randomly
-    if(gameManager.hasFish){
+    if(gameManager.isFishHooked()){
       intentionality = 0;
       return;
     }
@@ -134,7 +142,7 @@ class Fish implements PublicFish{
         
         
     // Debug
-    if(valenceOfShake != 0 || frameCount - timeOfLastInfluencingShake > numFramesAfterFishstartForgetting){
+    if(abs(valenceOfShake)>0.0001 || frameCount - timeOfLastInfluencingShake > numFramesAfterFishstartForgetting){
       println("Intent: "+intentionality+"         +Delta: "+valenceOfShake+"        tSincePositive: "+timeSinceAttractionWasPositive+"        MaxIntent: "+upperEndOfIntentionality);      
     }
   }
@@ -142,7 +150,7 @@ class Fish implements PublicFish{
     
   PVector getFishRotation(){
     
-    PVector fishDeltaPos = getDeltaPos();
+    PVector fishDeltaPos = direction.copy();
     
     if(prevDirectionLerped != null){
       
@@ -161,8 +169,15 @@ class Fish implements PublicFish{
   
   
   PVector calculateDeltaTarget(){
+    float targetIntentionality = intentionality;
     PVector deltaFood = new PVector();
-    calculateDeltaFood(deltaFood);
+    if(gameManager.isFishHooked() == false){
+      calculateDeltaFood(deltaFood);
+    }
+    else{
+      deltaFood = new PVector(0,1,0); // tendency to stay in the bottom during the capturing
+      targetIntentionality = (pos.y > 0)? intentionToGoDownWhenHooked: map(pos.y, boxsize/2, 0, 0, intentionToGoDownWhenHooked);
+    }
     
     // Update fish's position based on intention
     float noiseScale = 0.01;
@@ -170,24 +185,25 @@ class Fish implements PublicFish{
     float noiseY = map(noise((frameCount + 1000) * noiseScale), 0, 1, -0.1, 0.1);
     float noiseZ = map(noise((frameCount + 2000) * noiseScale), 0, 1, -0.1, 0.1);
     float noisedistance = sqrt(noiseX*noiseX + noiseY*noiseY + noiseZ*noiseZ);
+
     noiseX /= noisedistance;
     noiseY /= noisedistance;
     noiseZ /= noisedistance;
     
     // Calculate the weighted combination of random movement and intentional movement
     
-    if(intentionality > 0){
+    if(targetIntentionality > 0){
       return new PVector(
-        lerp(noiseX, deltaFood.x, intentionality),
-        lerp(noiseY, deltaFood.y, intentionality),
-        lerp(noiseZ, deltaFood.z, intentionality)
+        lerp(noiseX, deltaFood.x, targetIntentionality),
+        lerp(noiseY, deltaFood.y, targetIntentionality),
+        lerp(noiseZ, deltaFood.z, targetIntentionality)
         );
     }
     else{
       return new PVector(
-        lerp(noiseX, -deltaFood.x, abs(intentionality)),
-        lerp(noiseY, -deltaFood.y, abs(intentionality)),
-        lerp(noiseZ, -deltaFood.z, abs(intentionality))
+        lerp(noiseX, -deltaFood.x, abs(targetIntentionality)),
+        lerp(noiseY, -deltaFood.y, abs(targetIntentionality)),
+        lerp(noiseZ, -deltaFood.z, abs(targetIntentionality))
         );
     }
 
@@ -196,7 +212,7 @@ class Fish implements PublicFish{
   
   float adjustSpeed(){
     
-    if(gameManager.hasFish == false){
+    if(gameManager.isFishHooked() == false){
       
       PVector deltaFood = new PVector();
       float foodDistance = calculateDeltaFood(deltaFood);
@@ -239,16 +255,20 @@ class Fish implements PublicFish{
   }
   
   
-  void DebugHeadColliderAndSpeedVector(){
+  void DebugHeadColliderAndSpeedVector(){ 
+    
+    // !!!ATTENTION!!!  Method extremely coupled with the module VisualSensoryModule, do not evolve it!
+    
+    float scaleScene =  (2.0 +(float)boxsize / (float)min(width, height)) / 3.0;
     PVector mouthPos = PVector.sub(pos, getFishRotation().setMag(PublicFish.fishHeight / 4));
     pushMatrix();
-    scale(player.scaleScene);
+    scale(scaleScene);
     translate(width/2 + mouthPos.x, height/2 + mouthPos.y, mouthPos.z);
     stroke(color(255, 0, 0));
     sphere(PublicFish.fishHeight / 4);
     popMatrix();
     pushMatrix();
-    scale(player.scaleScene);
+    scale(scaleScene);
     PVector enlargedDirection = direction.copy().mult(100);
     translate(width/2 + pos.x + enlargedDirection.x, height/2 + pos.y + enlargedDirection.y, pos.z + enlargedDirection.z);
     stroke(color(0, 255, 0));

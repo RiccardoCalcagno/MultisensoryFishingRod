@@ -43,58 +43,81 @@ class SensoryInputModule{
 class DebugSensoryInputModule extends SensoryInputModule{
   
   // Repetidly press one number between 1 an 7 (correspondent to the values of ShakeDimention) to trigger a burst of that kind of shake for all the time of the frequent digit
-  
-  int lastPress = 0;
-  char lastChar = ' ';
+  HashMap<Integer, Boolean> keysPressed = new HashMap<Integer, Boolean>();
+
+  boolean prevWasShake = false;
+  //int lastPress = 0;
+  //char lastChar = ' ';
   // use inputModuleManager to notify the game with all the data comming from the rod
   DebugSensoryInputModule(InputModuleManager _inputModuleManager){
     super(_inputModuleManager);
+    for (int i = 0; i < 256; i++) {
+      keysPressed.put(i, false);
+    }
   }
   
   void update(){
-    lastPress--;
-    if(lastPress == 0){
-      OnChar('1');
-    }
+    checkCombination();
+    
+    // Random movement for debug
+    var data = new RawMotionData(); data.speed = map(noise(frameCount * 0.1), 0, 1, -0.5, 0.5);
+    //inputModuleManager.OnRawMotionDetected(data);
   }
   
-  void OnkeyPressed(char keyPress){
+  void OnkeyPressed(int keyPress){
    
-    if(lastPress < 0 || lastChar != keyPress){
-      OnChar(keyPress);
-    }
-    
-    lastPress = 20;
+    keysPressed.put(keyPress, true);
   }
   
-  void OnChar(char keyPress){
-    
-    if(keyPress >= '1' && keyPress <= '7'){
-       switch(keyPress){
-       case '1':
-         inputModuleManager.OnShakeEvent(ShakeDimention.NONE);
-         break;
-       case '2':
-         inputModuleManager.OnShakeEvent(ShakeDimention.SUBTLE);
-         break;
-       case '3':
-         inputModuleManager.OnShakeEvent(ShakeDimention.LITTLE_ATTRACTING);
-         break;
-       case '4':
-         inputModuleManager.OnShakeEvent(ShakeDimention.LONG_ATTRACTING);
-         break;
-       case '5':
-         inputModuleManager.OnShakeEvent(ShakeDimention.LITTLE_NOT_ATTRACTING);
-         break;
-       case '6':
-         inputModuleManager.OnShakeEvent(ShakeDimention.STRONG_HOOKING);
-         break;
-       case '7':
-         inputModuleManager.OnShakeEvent(ShakeDimention.STRONG_NOT_HOOKING);
-         break;
-       }
-    }
-    
-    lastChar = keyPress;
+  void OnkeyReleased(int keyPress){
+    keysPressed.put(keyPress, false);
   }
+  
+  void checkCombination() {
+    // Verifica la combinazione di tasti
+    boolean ctrlPressed = keysPressed.get(17); // Codice tasto Ctrl
+    
+    if(ctrlPressed == true){
+      
+      if(prevWasShake){
+        inputModuleManager.OnShakeEvent(ShakeDimention.NONE);
+        prevWasShake = false;
+      }
+      for(int i = 49; i< 58; i++){
+        if(keysPressed.get(i)){
+          inputModuleManager.OnWeelActivated(map(i, 49, 57, -1, 1));
+        }
+      }
+    }
+    else{
+      if(keysPressed.get(48)){
+        inputModuleManager.OnShakeEvent(ShakeDimention.NONE); prevWasShake = false;
+      }
+      else if(keysPressed.get(49)){
+        inputModuleManager.OnShakeEvent(ShakeDimention.SUBTLE);        prevWasShake = true;
+      }
+      else if(keysPressed.get(50)){
+        inputModuleManager.OnShakeEvent(ShakeDimention.LITTLE_ATTRACTING);        prevWasShake = true;
+      }
+      else if(keysPressed.get(51)){
+        inputModuleManager.OnShakeEvent(ShakeDimention.LONG_ATTRACTING);        prevWasShake = true;
+      }
+      else if(keysPressed.get(52)){
+        inputModuleManager.OnShakeEvent(ShakeDimention.LITTLE_NOT_ATTRACTING);        prevWasShake = true;
+      }
+      else if(keysPressed.get(53)){
+        inputModuleManager.OnShakeEvent(ShakeDimention.STRONG_HOOKING);        prevWasShake = true;
+      }
+      else if(keysPressed.get(54)){
+        inputModuleManager.OnShakeEvent(ShakeDimention.STRONG_NOT_HOOKING);        prevWasShake = true;
+      }
+      else{
+        if(prevWasShake){
+          inputModuleManager.OnShakeEvent(ShakeDimention.NONE); prevWasShake = false;
+        }
+      }
+    }
+  }
+  
+  
 }

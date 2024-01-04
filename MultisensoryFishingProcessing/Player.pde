@@ -2,6 +2,9 @@ import java.util.ArrayList;
 // Dichiarazione della classe Player
 class Player {
   
+  //max damage supported by the wire
+  int maxDamage = 2000;//200;
+  
   // Bigger => More the wire should bounce in the moment in wich the fish touch it
   float multipliyerOfCollisionReaction = 3;
  
@@ -9,13 +12,13 @@ class Player {
   PVector gravity = new PVector(0, 0.4, 0); 
   
   // This should define the lenght of the rope, not the position of the hook, this would stay evrytime almost in the middel of the boundingBox
-  int totalNodes = 50;
+  int totalNodes = 200;
   
   // This is a constant force that is appplied to the origin of the wire (top extream of it) in order to make it reace a default position if the user is not applying other forces by moving the phiscal rod
-  float speedToReachTheIdleOrigin = 50;
+  float speedToReachTheIdleOrigin = 0.1;
   
   // this is a coefficent to be fineTuned in order to intensify or decrese the force of the movements of the phisical rod, need to be adjusted in order not to make the hook be throunw out of the water
-  float intensityOfRodMovments = 30;
+  float intensityOfRodMovments = 800;
   
   // This is how much the pulling forces produced by the movement of the phisical rod should deviate from the vertical (Y) axis. (with some noise)
   float intensityOfRandomVariationsFormTheYAxisInRodPulling = 0.5;
@@ -26,52 +29,64 @@ class Player {
   // if 1 => 1 goodShake = 1 catch, if 0 => 1 goodShake = 0 catch, in between => 1 goodShake = randomWithProbabilityOf(rarenessOfHooking) catch
   float rarenessOfHooking = 0.8;
   
+  // quantity of wire retreived at each step
+  float speedOfWireRetreiving = 0.6;
+  
+  // when the wire is idle which is the offset of the bait from the center of the room? (it should be a little bit below so that there is more wire to be retreived)
+  float YoffsetOfBaitFromCenterOfRoom = 90;
+  
   
   
   // already fine tuned value, it express if the fish is been pushing the wire even if the mouth collider is slightly deteached from the hook
   int numOfLoopsBetweenPushes = 5;
   int counterOfLoopsBetweenPushes;
   int counterOfLoopsBetweenBites;
+  float wireFishTention;
   GameManager gameManager; // Manager del gioco
-  PImage foodImg;
   int boxsize;
   float damageCounter;
-  float actualThetaY, actualThetaZ;
   VerletNode[] nodes;
   float nodeDistance = 15;
-  PVector origin;
-  float scaleScene;
+  float wireCountdown;
   PublicFish fish = null;
   RawMotionData cachedRawMotionData = new RawMotionData();
+  int timeSinceHooking;
   
-  float ropeLenght(){
-    return  nodeDistance * totalNodes;
-  }
+  
   PVector getHookPos(){
     return nodes[nodes.length -1].position.copy();
   }
-  PVector getWireDirection(){
-    return PVector.sub(getHookPos(), nodes[0].position).normalize();
+  float wireLengthWhenIdle(){
+    //We need to consider the gravity force that is streatching a little bit the wire
+    return totalNodes * nodeDistance * 1;
   }
   
- 
+  PVector wireDirection(){
+    return PVector.sub(getHookPos(), nodes[0].position).normalize();
+  }
+
+  PVector getOrigin(){
+    float offsetAfterHooking = 0;
+    if(timeSinceHooking > 0 && frameCount - timeSinceHooking < 100){
+       offsetAfterHooking = map(frameCount - timeSinceHooking, 0, 100, 0, boxsize/4);
+    }
+    else if(gameManager.isFishHooked()){
+      offsetAfterHooking = boxsize/4;
+    }
+    return new PVector (0, - wireLengthWhenIdle() + YoffsetOfBaitFromCenterOfRoom - wireCountdown + offsetAfterHooking, 0);
+  }
 
   // Costruttore per Player
   Player(GameManager _gameManager) {
     
-    foodImg = loadImage("food.png");
-    foodImg.resize(40, 60);
+    wireCountdown = 0;
     
     gameManager = _gameManager;
     
     boxsize = gameManager.getSizeOfAcquarium();
-    scaleScene = (2.0 +(float)boxsize / (float)min(width, height)) / 3.0;
-    
     nodes = new VerletNode[totalNodes];
     
-    origin = new PVector (0, - ropeLenght() + 90, 0); // Posizione del punto di ancoraggio (soffitto)
-    
-    PVector pos = origin.copy();
+    PVector pos = getOrigin();
     for (int i = 0; i < totalNodes; i++) {
       nodes[i] = new VerletNode(pos);
       pos.y += nodeDistance;
@@ -81,19 +96,89 @@ class Player {
   
   void Restart(){
     
-     damageCounter = 100;
+     wireCountdown = 0;
+    
+     damageCounter = maxDamage;
+     
+     wireFishTention = 0;
+     
+     timeSinceHooking = -1;
      
      counterOfLoopsBetweenBites = numLoopsBetweenBites;
   }
 
-  // Metodo per simulare l'evento di ritrazione del filo
-  void damageWire(float value) {
-    damageCounter -= value;
-    
-    if(damageCounter < 0){
-      gameManager.OnWireBreaks();
+
+
+
+  PVector NegotiateFishShift(PVector fishDesiredDelta){
+   
+    if(wireFishTention >0){
+      PVector fishDistance = PVector.sub(nodes[0].position, fish.getPos());
+      float wireDistanceIdle = wireLengthWhenIdle();
+      if(fishDistance.magSq() > wireDistanceIdle*wireDistanceIdle){
+        PVector wire_direction = wireDirection();
+        PVector projectionToWireDirection = PVector.mult(wire_direction, PVector.dot(fishDesiredDelta, wire_direction) / wire_direction.magSq());
+        PVector secondComponent = PVector.sub(fishDesiredDelta, projectionToWireDirection);  
+        
+        fishDistance.setMag(fishDistance.mag() - wireDistanceIdle);
+        fishDistance.add(secondComponent);
+        
+        return PVector.sub(fishDistance, fishDesiredDelta);
+      }
     }
+    return new PVector(0,0,0);
   }
+      
+      
+  // Metodo per simulare l'evento di ritrazione del filo
+  float UpdateWireRetreival(float speedOfWireRetrieving) {
+    
+    wireFishTention = 0;
+    float speedLimit = 1;
+    if(gameManager.isFishHooked() == true){
+      
+      if( PVector.dist(nodes[0].position, fish.getPos()) >=  wireLengthWhenIdle() && speedOfWireRetrieving < 0.5){
+        float coeffOfTentionBasedOnFishDirection = PVector.angleBetween(wireDirection(), fish.getDeltaPos()) / PI;
+        if(speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection < 0){  // it means that even that there was a wire giving out it was not compensating enough
+        
+        if(speedOfWireRetrieving<0 && coeffOfTentionBasedOnFishDirection> 0.5){
+          speedLimit = map(coeffOfTentionBasedOnFishDirection, 0.5, 1, 1, 0.7);
+        }
+        
+        wireFishTention = -(speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection)/2.0; // the max value for speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection is -2
+        }       
+      }
+    }
+    
+    if(wireFishTention > 0.1){
+      damageCounter -= wireFishTention;
+      
+      if(damageCounter < 0){
+        gameManager.OnWireBreaks();
+      }
+    }
+    
+    float ammountOfWireRetreived = -speedOfWireRetrieving*speedOfWireRetreiving * speedLimit;
+    
+    wireCountdown += ammountOfWireRetreived;
+    
+    if(abs(speedOfWireRetrieving)>0.001 || wireFishTention > 0){
+      println("speed: "+speedOfWireRetrieving+"         actualSpeed: "+ammountOfWireRetreived+"        tention: "+wireFishTention+"         damageCounter: "+damageCounter);      
+    }
+    
+    if (YoffsetOfBaitFromCenterOfRoom - wireCountdown < -boxsize /2) {
+      WireEnded();
+    }
+    
+    return wireFishTention;
+  }
+  
+  
+  
+  void WireEnded(){
+    gameManager.OnWireEnded();
+  }
+  
   
   void TornWireOnRodMovments(RawMotionData rawMotionData){
     cachedRawMotionData = rawMotionData;
@@ -107,13 +192,15 @@ class Player {
     counterOfLoopsBetweenPushes--; 
     counterOfLoopsBetweenBites--;
     
-    if(counterOfLoopsBetweenBites == 0 && counterOfLoopsBetweenPushes > 0){
+    if(gameManager.isFishHooked() == false && counterOfLoopsBetweenBites == 0 && counterOfLoopsBetweenPushes > 0){
       BiteTheHook();
     }
     
     applyForcesOfRod();
     
-    handleCollision();
+    if(gameManager.isFishHooked() == false){
+      handleCollision();
+    }
     
     applyPhisics();
     
@@ -121,18 +208,25 @@ class Player {
     for (VerletNode node : nodes) {
       node.applyCachedForces();
     }
-    
+    float rigidityOfRod = totalNodes * 2;
     // More iterations define the rigidity of the rope
-    for(int i=0; i<totalNodes * 2; i++){
-      applyConstraints();
+    for(int i=0; i<rigidityOfRod; i++){
+      for (int j = 0; j < nodes.length; j++) {
+        nodes[j].applyConstrains((j< nodes.length-1)? nodes[j + 1]: null, nodeDistance, (float)(i+1) / (float)rigidityOfRod);
+      }
     }
   }
   
   void applyForcesOfRod(){
     
      // Force that will guide the hook slowly towards the idle origin, in order to not make the hook disappear if the user pull too much the rod.
-     PVector towardsTheIdle = PVector.sub(origin.copy(), nodes[0].position).setMag(speedToReachTheIdleOrigin);
-     nodes[0].cacheForce(towardsTheIdle);
+     //PVector towardsTheIdle = PVector.sub(getOrigin(), nodes[0].position).setMag(speedToReachTheIdleOrigin);
+     //nodes[0].cacheForce(towardsTheIdle);
+     nodes[0].cacheTarget(getOrigin(), speedToReachTheIdleOrigin);
+     
+     if(gameManager.isFishHooked() == true){
+        nodes[nodes.length -1].cacheTarget(fish.getPos(), 0.6);
+     }
      
      // Force simulated by the motion of the rod
      if(abs(cachedRawMotionData.speed) > 0.1){
@@ -179,7 +273,10 @@ class Player {
     
     if(counterOfLoopsBetweenBites >= 0){
       
-      return random(0, 1) <= rarenessOfHooking;
+      if(random(0, 1) <= rarenessOfHooking){
+        timeSinceHooking = frameCount;
+        return true;
+      }
     }
     return false;
   }
@@ -202,66 +299,8 @@ class Player {
     }
   }
   
-  void applyConstraints() {
-    for (int i = 0; i < nodes.length - 1; i++) {
-      VerletNode node1 = nodes[i];
-      VerletNode node2 = nodes[i + 1];
-  
-      float dist = PVector.dist(node1.position, node2.position);
-      float difference = 0;
-      if (dist > 0) { 
-        difference = (nodeDistance - dist) / dist;
-      }
-      float assimmetryCoeff = 0.5;//map(i, 0, nodes.length - 2, 0.1, 0.5);
-      PVector translateGeneric = PVector.sub(node1.position, node2.position).mult(assimmetryCoeff * difference);
-      node1.position.add(translateGeneric);
-      node2.position.sub(translateGeneric);
-    }
-  }
-  
-  void render() {
-    pushMatrix();
-    scale(scaleScene);
-    translate(width/2, height/2, 0);
-    hint(ENABLE_STROKE_PURE);
-    for (int i = 0; i < nodes.length - 1; i++) {
-      if(nodes[i].position.y < -boxsize/2){
-       stroke(150); 
-      }
-      else{
-        stroke(0);
-      }
-      line(nodes[i].position.x, nodes[i].position.y, nodes[i].position.z,
-           nodes[i+1].position.x, nodes[i+1].position.y, nodes[i+1].position.z);
-    }
-    hint(DISABLE_STROKE_PURE);
-    
-    popMatrix();
-    
-    pushMatrix();
-    scale(scaleScene);
-    PVector hookPos = getHookPos();
-    translate(width/2 + hookPos.x, height/2 + hookPos.y, hookPos.z);
-    
-    PVector directionLasts = PVector.sub(hookPos, nodes[totalNodes -2].position);
-    
-    float thetaY = atan2(directionLasts.x, directionLasts.z) - PI/2;
-    float thetaX = atan2(-directionLasts.y, sqrt(directionLasts.z * directionLasts.z + directionLasts.x * directionLasts.x));
-    float thetaZ = atan2(directionLasts.y, directionLasts.x);
-    
-    actualThetaY = lerp(actualThetaY, thetaY, 0.05);
-    actualThetaZ = lerp(actualThetaZ, thetaZ, 0.05);
-    
-    rotateY(actualThetaY);
-    rotateX(-PI);
-    rotateZ(actualThetaZ);
-    
-    fill(0);
-    imageMode(CENTER);
-    image(foodImg, -20, 0); 
-    popMatrix();
-  }
 }
+
 
 
 
@@ -269,14 +308,22 @@ class VerletNode {
   PVector position;
   PVector oldPosition;
   ArrayList<PVector> lazyForcesToApply = new ArrayList<PVector>();
+  PVector lazyTargetToApply = null;
+  float intensityOfTarget;
+  
   
   VerletNode(PVector startPos) {
-    position = startPos.get();
-    oldPosition = startPos.get();
+    position = startPos.copy();
+    oldPosition = startPos.copy();
   }
   
   void cacheForce(PVector force){
     lazyForcesToApply.add(force);
+  }
+  
+  void cacheTarget(PVector target, float intensity){
+    lazyTargetToApply = target;
+    intensityOfTarget = constrain(intensity, 0, 1);
   }
   
   void applyCachedForces(){
@@ -285,6 +332,30 @@ class VerletNode {
        position.add(force);
     }
     lazyForcesToApply.clear();
+  }
+  
+  void applyConstrains(VerletNode next, float nodeDistance, float iterationPercentage){
+    
+      if(next != null){
+        float dist = PVector.dist(position, next.position);
+        float difference = 0;
+        if (dist > 0) { 
+          difference = (nodeDistance - dist) / dist;
+        }
+        PVector translateGeneric = PVector.sub(position, next.position).mult(0.5 * difference);
+        position.add(translateGeneric);
+        next.position.sub(translateGeneric); 
+      }
+      
+      if(lazyTargetToApply != null) {
+        PVector delta = new PVector();
+        delta.lerp(PVector.sub(lazyTargetToApply, position), intensityOfTarget);
+        position.add(delta);
+        
+        if(iterationPercentage > 0.99999){
+          lazyTargetToApply = null;
+        }
+      }
   }
   
   void updatePosition(PVector newPos) {
