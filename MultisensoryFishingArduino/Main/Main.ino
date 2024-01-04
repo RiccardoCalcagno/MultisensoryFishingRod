@@ -26,9 +26,7 @@ struct PinConfig {
 AsyncUDP udp_tx, udp_rx;
 struct WriteConfig {
   const char * rawEnc="raw/enc:%d\n";
-  const char * rawAccX="raw/acx:%d\n";
-  const char * rawAccY="raw/acy:%d\n";
-  const char * rawAccZ="raw/acz:%d\n";
+  const char * rawAcc="raw/acc:%d;%d;%d\n";
 } WRITE;
 
 // I2C vars
@@ -129,7 +127,7 @@ void setup()
 
 int8_t countEnc=0, dirEnc=0, ADSreading=3, readyAcc=0;
 uint16_t valAccX, valAccY, valAccZ;
-uint32_t timeEncSend=0, timeEncRead=0;
+uint32_t timeEncSend=0, timeEncRead=0, timeAcc=0;
 uint8_t stateEnc=0, prevStateEnc=0;
 
 void loop()
@@ -137,7 +135,7 @@ void loop()
     /*** SENSOR READINGS/WRITINGS ***/
 
     // Rotary encoder reads every 0.5 ms
-    if(micros()-timeEncRead>500)
+    if(micros()-timeEncRead>=500)
     {
       stateEnc = digitalRead(PIN.EncP1);
       if(!stateEnc && prevStateEnc)
@@ -149,8 +147,8 @@ void loop()
       timeEncRead=micros();
     }
 
-    // Accelerometer ASAP (every ~10ms, ADS timings)
-    if(!readyAcc)
+    // Accelerometer every ~50ms, ADS timings (10-11ms)
+    if(!readyAcc && millis()-timeAcc>=38)
     {
       switch(ADSreading)
       {
@@ -187,19 +185,18 @@ void loop()
     /*** COMPUTATION AND SENDINGS ***/
 
     // Compute and send velocity of the rod every 200 ms
-    if(millis()-timeEncSend>200)
+    if(millis()-timeEncSend>=200)
     {
       udp_tx.printf(WRITE.rawEnc, countEnc*dirEnc); //ticks per 200ms
       countEnc=0;
       timeEncSend=millis();
     }
 
-    // Send acceleration on x y z when it's ready
-    if(readyAcc)
+    // Send acceleration on x y z when it's ready (every ~50ms)
+    if(readyAcc && millis()-timeAcc>=50)
     {
-      udp_tx.printf(WRITE.rawAccX, valAccX);
-      udp_tx.printf(WRITE.rawAccY, valAccY);
-      udp_tx.printf(WRITE.rawAccZ, valAccZ);
+      udp_tx.printf(WRITE.rawAcc, valAccX, valAccY, valAccZ);
+      timeAcc=millis();
       readyAcc=0;
     }
 
