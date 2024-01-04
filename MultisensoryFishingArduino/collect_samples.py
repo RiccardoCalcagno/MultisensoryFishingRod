@@ -4,6 +4,7 @@ import os
 import socket
 import time
 import re
+DATA_PER_SAMPLE = 100
 
 # Setup an UDP server on 6969 port
 server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -15,13 +16,21 @@ df = pd.DataFrame(columns=["aX", "aY", "aZ"])
 times = []
 
 # Stop until enter is pressed
-print("Press ENTER to start recording (then CTRL+C to stop it)...")
+print("Press ENTER to start recording...")
 input()
 print("Start Recording")
+
+while True:
+    try:
+        data, addr = server.recvfrom(1024)
+    except BlockingIOError:
+        break
+
 start_time = round(time.time() * 1000)
+count = 0
 
 try:
-    while True:
+    while count < DATA_PER_SAMPLE:
         try:
             data, addr = server.recvfrom(1024)
             data = data.decode("utf-8")
@@ -33,10 +42,12 @@ try:
                 valsplit = val.split(";")
                 df.loc[len(df)] = [int(valsplit[0]), int(valsplit[1]), int(valsplit[2])]
                 times.append(round(time.time() * 1000) - start_time)
+                count+=1
         except BlockingIOError:
             pass
 except KeyboardInterrupt:
-    print("Stop Recording")
+    pass    
+print("Stop Recording")
 
 # Plot the data
 plt.plot(times, df["aX"], label="aX", color="red")
