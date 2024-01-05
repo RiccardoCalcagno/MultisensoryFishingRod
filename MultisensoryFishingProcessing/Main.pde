@@ -75,8 +75,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
 
   // Costruttore per GameManager
   GameManager() {
-    
-    
+        
     boxsize = (int)(min(width, height)*0.85);// * 2 / 3; 
     
     totalWeightedScore = 0.0;
