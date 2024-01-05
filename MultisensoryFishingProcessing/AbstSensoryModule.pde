@@ -1,12 +1,14 @@
 interface PublicFish{
+  float fishWidth = 700, fishHeight = 183; 
   // return a vector 3 of the position of the fish in the acquarium
-  float[] getPos();
+  PVector getPos();
   
-  // return a vector 3 of delta position between the current frame and the previous;
-  float[] getDeltaPos();
+  PVector getDeltaPos();
   
   // Fish intentionality is a coefficent from 0 to 1 that tell how much willing is the fish to bite the hook... 0 => random movement, 1 => strait movement to the hook. 
   float getIntentionality();
+  
+  PVector getFishRotation();
 }
 
 
@@ -18,6 +20,8 @@ interface OutputModulesManager{
   
   // Use it if you need to have some information about the fish
   PublicFish getFish();
+  
+  VerletNode[] getNodesOfWire();
 }
 
 abstract class AbstSensoryOutModule{
@@ -36,14 +40,11 @@ abstract class AbstSensoryOutModule{
   // event fired when the fish is touching the hook. I (Riccardo) change its movemnts in the way that 1 event of tasting the bait has at least 0.8 sec of distance between each others
   void OnFishTasteBait(){}
   
-  
   void OnFishHooked(){}
   
   void OnFishLost(){}
-  
   void OnFishCaught(){}
-  
-  void OnWireEnded(){}
+  void OnWireEndedWithNoFish(){}
 }
 
 enum ShakeDimention{
