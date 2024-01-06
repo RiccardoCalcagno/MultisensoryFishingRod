@@ -22,6 +22,8 @@ interface OutputModulesManager{
   PublicFish getFish();
   
   VerletNode[] getNodesOfWire();
+  
+  PVector getCameraPosition();
 }
 
 abstract class AbstSensoryOutModule{

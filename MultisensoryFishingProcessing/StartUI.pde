@@ -94,7 +94,7 @@ void createAnswerToContinuePlayingUI(boolean haveWon) {
   newPanel.setText("Continue?");
   newPanel.setTextAlign(GAlign.CENTER, GAlign.MIDDLE);
 
-  endMessage = new GLabel(this, 20 * scala, 30 * scala, 260 * scala, 40 * scala);
+  endMessage = new GLabel(this, 20 * scala, 25 * scala, 260 * scala, 40 * scala);
   if(haveWon){
     endMessage.setText("YOU HAVE WON!");
   }
@@ -103,7 +103,7 @@ void createAnswerToContinuePlayingUI(boolean haveWon) {
   }
   endMessage.setTextAlign(GAlign.CENTER, GAlign.MIDDLE);
 
-  questionLabel = new GLabel(this, 20 * scala, 30 * scala, 260 * scala, 40 * scala);
+  questionLabel = new GLabel(this, 20 * scala, 50 * scala, 260 * scala, 40 * scala);
   questionLabel.setText("Would you like to continue playing?");
   questionLabel.setTextAlign(GAlign.CENTER, GAlign.MIDDLE);
 

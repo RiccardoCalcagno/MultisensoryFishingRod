@@ -1,0 +1,99 @@
+import processing.serial.*;
+
+class CameraMovement implements CameraStreamReader {
+
+  float scaleX = 1.5;
+  float scaleY = 1.5;
+  float scaleZ = 2;
+
+  GameManager gameManager;
+  PApplet parent;
+  processing.serial.Serial myPort;
+  ServerThread server;
+
+  PVector cameraPosition;
+
+  CameraMovement(GameManager _gameManager, PApplet _parent) {
+    gameManager = _gameManager;
+    parent = _parent;
+    cameraPosition = new PVector(width/2, height/2.0, width);
+  }
+
+  void OnData(String data) {
+    if (data != "") {
+      var numbers = float(split(data, ','));
+      cameraPosition = MapDataToCamPosition(numbers);
+    }
+  }
+
+  PVector getCameraPosition() {
+    return cameraPosition;
+  }
+
+  void TryConnectToFacePoseProvider() {
+
+    String portName = "COM2"; // Cambia con la tua porta seriale
+    int baudRate = 115200; // Cambia con il baud rate corretto
+
+    myPort = new processing.serial.Serial(parent, portName, baudRate);
+
+    server = new ServerThread(myPort, this);
+    server.start();
+  }
+
+  PVector MapDataToCamPosition(float[] data) {
+    float x = width/2.0 - data[0]*scaleX;
+    float y = height/2.0 + data[1]*scaleY;
+    float z = width/2.0 + data[2]*scaleZ;
+    println(x, y, z);
+    return PVector.lerp(cameraPosition, new PVector(x, y, z), 0.5);
+  }
+}
+
+
+
+
+
+static class ServerThread extends Thread {
+
+  processing.serial.Serial myPort;
+  CameraStreamReader cameraStreamReader;
+
+  boolean isReceiving = false;
+  String currentMessage = "";
+  Boolean serverExit = false;
+
+  public ServerThread(processing.serial.Serial _myPort, CameraStreamReader _cameraStreamReader) {
+    super();
+    cameraStreamReader = _cameraStreamReader;
+    myPort = _myPort;
+  }
+
+  public void run() {
+    try {
+      println("running thread");
+      while (!serverExit) {
+        while (myPort.available() > 0) {
+          char inChar = (char)myPort.read();
+          if (inChar == '_') {
+            cameraStreamReader.OnData(currentMessage);
+            isReceiving = true;
+            currentMessage = "";
+          } else {
+            currentMessage+=inChar;
+          }
+        }
+        sleep(1);
+      }
+      println("STOPPING PORT ");
+      myPort.stop();
+    }
+    catch(Exception se) {
+      println("EXCEPTION ", se);
+      myPort.stop();
+    }
+  }
+}
+interface CameraStreamReader {
+  void OnData(String data);
+}

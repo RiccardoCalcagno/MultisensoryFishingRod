@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import processing.serial.*; 
+
 
 
 // Dichiarazione di una classe astratta per il GameManager
@@ -53,6 +55,8 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   int getSizeOfAcquarium(){
     return boxsize;
   }
+  
+  CameraMovement cameraMovement;
   
 
   int NumFramesHaloExternUpdates = 5;
@@ -276,7 +280,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
         hasFish = true;
         
         // TODO Remove this is only for debug purposes
-        //setState(GameState.FishLost);
+        setState(GameState.FishLost);
         break;
    
       case FishLost:
@@ -353,6 +357,10 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     
   }
   
+  PVector getCameraPosition(){
+    return cameraMovement.getCameraPosition();
+  }
+  
   
   void OnShakeEvent(ShakeDimention type){
     if(cachedShakeRodEvent != type){
@@ -386,8 +394,8 @@ GameState cachedState = GameState.Null;
 
 void setup() {
   background(99, 178, 240);
-  fullScreen(P3D);
-  //size(1400, 1400, P3D);
+  //fullScreen(P3D);
+  size(1400, 1400, P3D);
   //hint(ENABLE_DEPTH_SORT);
   hint(DISABLE_OPENGL_ERRORS);
   globalGameManager = new GameManager();
@@ -396,6 +404,11 @@ void setup() {
   globalDebugSensoryInputModule = new DebugSensoryInputModule(globalGameManager);
   
   player = new Player(globalGameManager);
+  
+  globalGameManager.cameraMovement = new CameraMovement(globalGameManager, this);
+  globalGameManager.cameraMovement.TryConnectToFacePoseProvider();
+  
+  
   
   createUI(globalGameManager);
   //TODO Remove and decomment createUI, just for debug
@@ -422,7 +435,6 @@ void keyPressed(){
 void keyReleased() {
   globalDebugSensoryInputModule.OnkeyReleased(keyCode);
 }
-
 
 
 //   ------------------------- Utilities -----------------------------

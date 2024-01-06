@@ -143,13 +143,13 @@ class Fish implements PublicFish{
         
     // Debug
     if(abs(valenceOfShake)>0.0001 || frameCount - timeOfLastInfluencingShake > numFramesAfterFishstartForgetting){
-      println("Intent: "+intentionality+"         +Delta: "+valenceOfShake+"        tSincePositive: "+timeSinceAttractionWasPositive+"        MaxIntent: "+upperEndOfIntentionality);      
+      //println("Intent: "+intentionality+"         +Delta: "+valenceOfShake+"        tSincePositive: "+timeSinceAttractionWasPositive+"        MaxIntent: "+upperEndOfIntentionality);      
     }
   }
 
     
   PVector getFishRotation(){
-    
+
     PVector fishDeltaPos = direction.copy();
     
     if(prevDirectionLerped != null){

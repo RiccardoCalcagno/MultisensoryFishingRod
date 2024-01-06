@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<cameras>
+  <_><name>"Integrated Camera"</name>
+    <resolutions>
+      <_><res>"320x240"</res></_>
+      <_><res>"640x480"</res></_>
+      <_><res>"848x480"</res></_>
+      <_><res>"960x540"</res></_>
+      <_><res>"-1x-1"</res></_></resolutions></_></cameras>
+</opencv_storage>

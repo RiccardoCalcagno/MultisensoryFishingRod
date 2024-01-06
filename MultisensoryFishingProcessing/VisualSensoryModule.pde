@@ -12,7 +12,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   
   
   float scaleScene;
-  PImage sandImg, waterSurface, fishImg, fishFromTop, tallAlga, shortAlga, fishOpenMouth, ombra;
+  PImage sandImg, waterSurface, fishImg, fishFromTop, tallAlga, shortAlga, fishOpenMouth;
   float actualThetaY_bait, actualThetaZ_bait;  PImage foodImg;
   float fishWidth, fishHeight;
   float actualThetaY, actualThetaZ;
@@ -47,8 +47,6 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     
     fishImg.resize((int)fishWidth, (int)fishHeight);
     fishOpenMouth.resize((int)fishWidth, (int)fishHeight);
-    
-    ombra = loadImage("ombra.png");
     foodImg = loadImage("food.png");
     foodImg.resize(80, 120);
     
@@ -117,13 +115,9 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   
   void rotateCamera(){
     //scale(scaleScene);
-    float angle = (TWO_PI / 100) * millis() / 1000.0;   
-    
-    float cameraX = (width/2) + (width) * cos(angle);
-    float cameraZ = (width) * sin(angle);
+    var cameraPosition = outputModulesManager.getCameraPosition();
     // Imposta la posizione della camera
-    camera(cameraX, height/2.0, cameraZ, width/2, height/2, 0, 0, 1, 0);
-    
+    camera(cameraPosition.x, cameraPosition.y, cameraPosition.z, width/2, height/2, 0, 0, 1, 0);
     /* FOR DEBUG
     if((frameCount / 100) %2 == 0){
       camera(width/2,  height/2, width/2, width/2, height/2, 0, 0, 1, 0);
@@ -248,16 +242,22 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   void drawShadow(PVector pos, PVector forward, float biggerCorner){
     PVector myforward = forward.copy();
     myforward.y = 0;
-    ombra.resize((int)(biggerCorner*1.2), (int)(biggerCorner*0.4));
+    //ombra.resize();
     pushMatrix();
     scale(scaleScene);
     translate(width/2 + pos.x,  height - heightOfWaterSurfare - 2, pos.z);
     rotateX(PI / 2.0);
-    rotateZ( PVector.angleBetween(new PVector(-1,0,0), myforward));
-    imageMode(CENTER);
-    tint(255, 255, 255, 100);  
-    image(ombra, 0, 0);   
-    tint(tintColor[0], tintColor[1], tintColor[2], 255);  
+    float rotationAngle = PVector.angleBetween(new PVector(-1,0,0), myforward);
+    if(PVector.angleBetween(new PVector(0,0,-1), myforward) > PI/2){
+      rotationAngle = PI - rotationAngle;
+    }
+    rotateZ(rotationAngle);
+    //imageMode(CENTER);
+    noStroke();
+    fill(0, 0, 0, 60);  
+    ellipse(0,0,(int)(biggerCorner*1.2), (int)(biggerCorner*0.5));
+    //image(ombra, 0, 0);   
+    //tint(tintColor[0], tintColor[1], tintColor[2], 255);  
     popMatrix();
   }
   
@@ -303,7 +303,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
       image(foodImg, -35, 0); 
       popMatrix();
       
-      drawShadow(hookPos, directionLasts, 120);
+      drawShadow(hookPos, (new Vec3(directionLasts)).rotateX(PI/2), 120);
     }
   }
   
