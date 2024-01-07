@@ -23,6 +23,7 @@ model = tf.keras.models.load_model('model_6_1_2024')
 
 
 LABELS = [
+    "none",
     "little_attracting",
     "little_NOT_attracting",
     "long_attracting",
