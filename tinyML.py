@@ -19,7 +19,7 @@ send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
 # # Load the TinyML model
-model = tf.keras.models.load_model('model_6_1_2024')
+model = tf.keras.models.load_model('model_7_1_2024')
 
 
 LABELS = [
