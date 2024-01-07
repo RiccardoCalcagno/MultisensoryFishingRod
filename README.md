@@ -14,12 +14,12 @@ Check if you have active the serial pair of ports (even virtual) COM1 & COM2
 If you have Windows 10 or Windows 11 they are not available, that's why you need to create a virtual pair of serial ports. You can do it with the free software:
 [https://www.hhdsoftware.com/virtual-serial-port-tools](www.hhdsoftware.com)
 
-###Install dependencies 
+### Install dependencies 
 Run the .bat file in the Root called: install_dipendencies.bat
 
-###Run Main program
+### Run Main program
 Remember to activate the webcam first
 Run the .bat file in the Root called: Main.bat
 
-###Exit
+### Exit
 Digit "q" in the consoles opened
