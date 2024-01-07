@@ -1,22 +1,26 @@
 import processing.serial.*;
+import processing.net.*;
 
 class CameraMovement implements CameraStreamReader {
 
   float scaleX = 1.5;
   float scaleY = 1.5;
   float scaleZ = 2;
+  
 
   GameManager gameManager;
   PApplet parent;
   processing.serial.Serial myPort;
-  ServerThread server;
+  CameraServerThread server;
 
   PVector cameraPosition;
+  PVector lastPosRequired;
 
   CameraMovement(GameManager _gameManager, PApplet _parent) {
     gameManager = _gameManager;
     parent = _parent;
     cameraPosition = new PVector(width/2, height/2.0, width);
+    lastPosRequired = cameraPosition.copy();
   }
 
   void OnData(String data) {
@@ -27,7 +31,14 @@ class CameraMovement implements CameraStreamReader {
   }
 
   PVector getCameraPosition() {
-    return cameraPosition;
+    
+    if(PVector.dist(lastPosRequired, cameraPosition) > 20){
+      lastPosRequired = PVector.lerp(lastPosRequired, cameraPosition, 0.08);
+    }
+    else{
+     lastPosRequired = cameraPosition;
+    }
+    return lastPosRequired;
   }
 
   void TryConnectToFacePoseProvider() {
@@ -37,7 +48,10 @@ class CameraMovement implements CameraStreamReader {
 
     myPort = new processing.serial.Serial(parent, portName, baudRate);
 
-    server = new ServerThread(myPort, this);
+    server = new CameraServerThread(myPort, this);
+    //server = new CameraServerThread(this, parent);
+    
+    
     server.start();
   }
 
@@ -45,16 +59,15 @@ class CameraMovement implements CameraStreamReader {
     float x = width/2.0 - data[0]*scaleX;
     float y = height/2.0 + data[1]*scaleY;
     float z = width/2.0 + data[2]*scaleZ;
-    println(x, y, z);
     return PVector.lerp(cameraPosition, new PVector(x, y, z), 0.5);
   }
+  
 }
 
 
 
 
-
-static class ServerThread extends Thread {
+static class CameraServerThread extends Thread {
 
   processing.serial.Serial myPort;
   CameraStreamReader cameraStreamReader;
@@ -63,7 +76,7 @@ static class ServerThread extends Thread {
   String currentMessage = "";
   Boolean serverExit = false;
 
-  public ServerThread(processing.serial.Serial _myPort, CameraStreamReader _cameraStreamReader) {
+  public CameraServerThread(processing.serial.Serial _myPort, CameraStreamReader _cameraStreamReader) {
     super();
     cameraStreamReader = _cameraStreamReader;
     myPort = _myPort;
@@ -71,7 +84,6 @@ static class ServerThread extends Thread {
 
   public void run() {
     try {
-      println("running thread");
       while (!serverExit) {
         while (myPort.available() > 0) {
           char inChar = (char)myPort.read();
@@ -93,6 +105,7 @@ static class ServerThread extends Thread {
       myPort.stop();
     }
   }
+  
 }
 interface CameraStreamReader {
   void OnData(String data);
