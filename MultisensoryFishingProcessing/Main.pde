@@ -80,7 +80,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   // Costruttore per GameManager
   GameManager() {
         
-    boxsize = (int)(min(width, height)*0.85);// * 2 / 3; 
+    boxsize = (int)(min(width, height));// * 2 / 3; 
     
     totalWeightedScore = 0.0;
     totalWeightedScoreCount = 0;
@@ -280,7 +280,7 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
         hasFish = true;
         
         // TODO Remove this is only for debug purposes
-        setState(GameState.FishLost);
+        //setState(GameState.FishLost);
         break;
    
       case FishLost:
@@ -396,7 +396,6 @@ void setup() {
   background(99, 178, 240);
   //fullScreen(P3D);
   size(1400, 1400, P3D);
-  //hint(ENABLE_DEPTH_SORT);
   hint(DISABLE_OPENGL_ERRORS);
   globalGameManager = new GameManager();
   
@@ -407,7 +406,6 @@ void setup() {
   
   globalGameManager.cameraMovement = new CameraMovement(globalGameManager, this);
   globalGameManager.cameraMovement.TryConnectToFacePoseProvider();
-  
   
   
   createUI(globalGameManager);

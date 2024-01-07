@@ -10,6 +10,9 @@ import atexit
 import psutil
 
 
+global socket
+global ser
+
 def launch_exe():
     # Sostituisci 'percorso_del_tuo_file.exe' con il percorso del tuo file exe
     script_dir = os.getcwd() #os.path.dirname(os.path.abspath(__file__))
@@ -45,8 +48,6 @@ def signal_handler(sig, frame):
     exit(0)
 
 def main():
-
-    import zmq
     port = "5000"
 
     context = zmq.Context()
@@ -83,7 +84,14 @@ def main():
 
 if __name__ == '__main__':
     #print(serial.tools.list_ports.comports())
-    ser = serial.Serial('COM1', baudrate=115200)
+    try:
+        ser = serial.Serial('COM1', baudrate=115200)
+        if ser.isOpen():
+            ser.close()
+            ser.open()
+            print("taken posses of pre-opened COM1")
+    except:
+        print("error starting serial COM1")
     start_exe_thread()
     atexit.register(cleanup)
     signal.signal(signal.SIGINT, signal_handler)

@@ -1,10 +1,8 @@
 class VisualSensoryModule extends AbstSensoryOutModule{ 
   
   
-  
   int timeMouthOpen = 10;
   int heightOfWaterSurfare  = -30;
-  
   
   float numAlgaePerPxSquared = 0.00000024;
   int[] tintColor = new int[]{220, 240, 255};
@@ -288,7 +286,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
       
       PVector directionLasts = PVector.sub(hookPos, nodes[nodes.length -2].position);
       
-      float thetaY = atan2(directionLasts.x, directionLasts.z) - PI/2;
+      float thetaY = atan2(directionLasts.x, directionLasts.z);
       float thetaZ = atan2(directionLasts.y, directionLasts.x);
       
       actualThetaY_bait = lerp(actualThetaY_bait, thetaY, 0.05);

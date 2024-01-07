@@ -33,7 +33,7 @@ class CameraMovement implements CameraStreamReader {
   PVector getCameraPosition() {
     
     if(PVector.dist(lastPosRequired, cameraPosition) > 20){
-      lastPosRequired = PVector.lerp(lastPosRequired, cameraPosition, 0.08);
+      lastPosRequired = PVector.lerp(lastPosRequired, cameraPosition, 0.1);
     }
     else{
      lastPosRequired = cameraPosition;

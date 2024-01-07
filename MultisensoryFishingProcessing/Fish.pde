@@ -98,7 +98,9 @@ class Fish implements PublicFish{
     
     // Constrain fish within the cube
     pos.x = constrain(pos.x, -boxsize/2, boxsize/2);
-    pos.y = constrain(pos.y, -boxsize/2, boxsize/2);
+    if(player.countDownForCapturingAnimation == -1){
+      pos.y = constrain(pos.y, -boxsize/2, boxsize/2);      
+    }
     pos.z = constrain(pos.z, -boxsize/2, boxsize/2);
     
     //DebugHeadColliderAndSpeedVector(); 
@@ -143,7 +145,7 @@ class Fish implements PublicFish{
         
     // Debug
     if(abs(valenceOfShake)>0.0001 || frameCount - timeOfLastInfluencingShake > numFramesAfterFishstartForgetting){
-      //println("Intent: "+intentionality+"         +Delta: "+valenceOfShake+"        tSincePositive: "+timeSinceAttractionWasPositive+"        MaxIntent: "+upperEndOfIntentionality);      
+      println("Intent: "+nf(intentionality, 1, 2)+" in [-0.3, "+nf(upperEndOfIntentionality, 1, 2)+"]");      
     }
   }
 

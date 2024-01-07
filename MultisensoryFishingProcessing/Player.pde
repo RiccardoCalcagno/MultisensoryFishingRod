@@ -23,22 +23,24 @@ class Player {
   // This is how much the pulling forces produced by the movement of the phisical rod should deviate from the vertical (Y) axis. (with some noise)
   float intensityOfRandomVariationsFormTheYAxisInRodPulling = 0.5;
   
-  // IN the periods in which the fish is pushing the wire it is repeditly biting (just a taste actually) the hook, but with a minimum delay between each bites, namely this value.
-  int numLoopsBetweenBites = 30;
+  // Average the periods in which the fish is pushing the wire it is repeditly biting (just a taste actually) the hook, 
+  // but with a minimum delay between each bites, namely this value. Expect a random variance of +- 0.2*numLoopsBetweenBites
+  int numLoopsBetweenBites = 50;
+  
+  // Dial this one to require to the user more or less reactivness to the fish tasting
+  int numOfLoopsBetweenPushes = 5;
   
   // if 1 => 1 goodShake = 1 catch, if 0 => 1 goodShake = 0 catch, in between => 1 goodShake = randomWithProbabilityOf(rarenessOfHooking) catch
   float rarenessOfHooking = 0.8;
   
   // quantity of wire retreived at each step
-  float speedOfWireRetreiving = 0.6;
+  float maxSpeedOfWireRetreiving = 0.8;
   
   // when the wire is idle which is the offset of the bait from the center of the room? (it should be a little bit below so that there is more wire to be retreived)
-  float YoffsetOfBaitFromCenterOfRoom = 90;
+  float YoffsetOfBaitFromCenterOfRoom = 30;
   
   
   
-  // already fine tuned value, it express if the fish is been pushing the wire even if the mouth collider is slightly deteached from the hook
-  int numOfLoopsBetweenPushes = 5;
   int counterOfLoopsBetweenPushes;
   int counterOfLoopsBetweenBites;
   float wireFishTention;
@@ -51,6 +53,7 @@ class Player {
   PublicFish fish = null;
   RawMotionData cachedRawMotionData = new RawMotionData();
   int timeSinceHooking;
+  int countDownForCapturingAnimation;
   
   
   PVector getHookPos(){
@@ -79,22 +82,25 @@ class Player {
   // Costruttore per Player
   Player(GameManager _gameManager) {
     
-    wireCountdown = 0;
-    
     gameManager = _gameManager;
     
     boxsize = gameManager.getSizeOfAcquarium();
-    nodes = new VerletNode[totalNodes];
-    
-    PVector pos = getOrigin();
-    for (int i = 0; i < totalNodes; i++) {
-      nodes[i] = new VerletNode(pos);
-      pos.y += nodeDistance;
-    }
     // Inizializzazione delle variabili del giocatore
   }
   
   void Restart(){
+    
+      wireCountdown = 0;
+      
+      countDownForCapturingAnimation = -1;
+    
+      nodes = new VerletNode[totalNodes];
+      
+      PVector pos = getOrigin();
+      for (int i = 0; i < totalNodes; i++) {
+        nodes[i] = new VerletNode(pos);
+        pos.y += nodeDistance;
+      }
     
      wireCountdown = 0;
     
@@ -133,6 +139,18 @@ class Player {
   // Metodo per simulare l'evento di ritrazione del filo
   float UpdateWireRetreival(float speedOfWireRetrieving) {
     
+    
+    if(countDownForCapturingAnimation > 0){
+      wireCountdown += maxSpeedOfWireRetreiving * 15;
+      countDownForCapturingAnimation-=1;
+      return 0.1;
+    }
+    else if(countDownForCapturingAnimation == 0){
+      WireEnded();
+      return 0;
+    }
+    
+    
     wireFishTention = 0;
     float speedLimit = 1;
     if(gameManager.isFishHooked() == true){
@@ -158,16 +176,16 @@ class Player {
       }
     }
     
-    float ammountOfWireRetreived = -speedOfWireRetrieving*speedOfWireRetreiving * speedLimit;
+    float ammountOfWireRetreived = -speedOfWireRetrieving * maxSpeedOfWireRetreiving * speedLimit;
     
     wireCountdown += ammountOfWireRetreived;
     
     if(abs(speedOfWireRetrieving)>0.001 || wireFishTention > 0){
-      println("speed: "+speedOfWireRetrieving+"         actualSpeed: "+ammountOfWireRetreived+"        tention: "+wireFishTention+"         damageCounter: "+damageCounter);      
+      println("WireRetreived: "+nf(ammountOfWireRetreived, 2, 2)+" missingWire: "+nf((YoffsetOfBaitFromCenterOfRoom - wireCountdown +boxsize /2), 1, 2)+"damageCounter: "+nf(damageCounter, 10, 1));      
     }
     
     if (YoffsetOfBaitFromCenterOfRoom - wireCountdown < -boxsize /2) {
-      WireEnded();
+      countDownForCapturingAnimation = 140;
     }
     
     return wireFishTention;
@@ -220,9 +238,8 @@ class Player {
   void applyForcesOfRod(){
     
      // Force that will guide the hook slowly towards the idle origin, in order to not make the hook disappear if the user pull too much the rod.
-     //PVector towardsTheIdle = PVector.sub(getOrigin(), nodes[0].position).setMag(speedToReachTheIdleOrigin);
-     //nodes[0].cacheForce(towardsTheIdle);
-     nodes[0].cacheTarget(getOrigin(), speedToReachTheIdleOrigin);
+     nodes[0].cacheTarget(getOrigin(), (countDownForCapturingAnimation == -1)? speedToReachTheIdleOrigin: 1);
+     
      
      if(gameManager.isFishHooked() == true){
         nodes[nodes.length -1].cacheTarget(fish.getPos(), 0.6);
@@ -250,14 +267,15 @@ class Player {
    
       float distance = PVector.dist(node.position, mouthPos);
       
-      if (distance < mouthRadius) {
-        
+      if((i == nodes.length -1) & (distance < mouthRadius*1.3)){
         counterOfLoopsBetweenPushes = numOfLoopsBetweenPushes;
         
         if(counterOfLoopsBetweenBites < 0){
           BiteTheHook();
         }
+      }
         
+      if (distance < mouthRadius) {
         // Calcola il vettore di spostamento per spostare la corda in base alla collisione
         PVector collisionNormal = PVector.sub(node.position, mouthPos).normalize();
         PVector collisionForce = collisionNormal.mult((mouthRadius - distance) * multipliyerOfCollisionReaction);
@@ -283,7 +301,7 @@ class Player {
   
   
   void BiteTheHook(){
-    counterOfLoopsBetweenBites = numLoopsBetweenBites;
+    counterOfLoopsBetweenBites = int(numLoopsBetweenBites * random(0.8, 1.2));
     gameManager.OnFishTasteBait();
   }
     
@@ -295,7 +313,7 @@ class Player {
       node.cacheForce(PVector.sub(node.position, node.oldPosition));
       
       // Add gravity force
-      node.cacheForce( ((i >= nodes.length -1)? gravity.copy().mult(20): gravity));
+      node.cacheForce( ((i >= nodes.length -1)? gravity.copy().mult(60): gravity));
     }
   }
   
