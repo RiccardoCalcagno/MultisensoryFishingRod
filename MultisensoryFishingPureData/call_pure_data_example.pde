@@ -12,11 +12,10 @@ void setup() {
   String pdPath = ".";
   String patchPath = "/play_pitched_whip.pd";
   launch(pdPath, patchPath);
-  
-  OscMessage myMessage = new OscMessage("/test");
-  myMessage.add(4.0); /* add an int to the osc message */
-  oscP5.send(myMessage, myRemoteLocation);
 }
 
 void draw() { 
+  OscMessage myMessage = new OscMessage("/test");
+  myMessage.add(4.0); /* add an int to the osc message */
+  oscP5.send(myMessage, myRemoteLocation);
 }
