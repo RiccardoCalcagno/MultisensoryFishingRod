@@ -1,0 +1,13 @@
+#N canvas 2575 -417 450 300 10;
+#X obj 183 196 dac~;
+#X obj 183 171 readsf~;
+#X obj 66 48 oscparse;
+#X obj 66 89 unpack symbol symbol;
+#X msg 183 114 open \$1 \, 1;
+#X obj 66 10 netreceive -u -b 3001;
+#X connect 1 0 0 0;
+#X connect 1 0 0 1;
+#X connect 2 0 3 0;
+#X connect 3 1 4 0;
+#X connect 4 0 1 0;
+#X connect 5 0 2 0;
