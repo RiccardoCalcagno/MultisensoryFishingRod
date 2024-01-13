@@ -1,20 +1,40 @@
 import processing.serial.*;
 import processing.net.*;
 
+
+
+// ------------------------------------------------------------------------------------------------
+//                     CAMERA MOVEMENT / POSITION PROVIDER - GUI AWARE 
+// ------------------------------------------------------------------------------------------------
+
+interface CameraStreamReader {
+  void OnData(String data);
+}
+
 class CameraMovement implements CameraStreamReader {
 
+  
+  // ------------------------------------------- FINE-TUNABLES CONSTANTS -------------------------------------------  
+    
   float scaleX = 1.5;
   float scaleY = 1.5;
   float scaleZ = 2;
   
+  
+  // ------------------------------------------- FIELDS -------------------------------------------  
+  
+  PVector cameraPosition;
+  PVector lastPosRequired;
 
+  // ------------------------------------------- DEPENDENCIES -------------------------------------------  
+  
   GameManager gameManager;
   PApplet parent;
   processing.serial.Serial myPort;
   CameraServerThread server;
 
-  PVector cameraPosition;
-  PVector lastPosRequired;
+
+
 
   CameraMovement(GameManager _gameManager, PApplet _parent) {
     gameManager = _gameManager;
@@ -66,6 +86,9 @@ class CameraMovement implements CameraStreamReader {
 
 
 
+// ------------------------------------------------------------------------------------------------
+//                     COMUNICATION UTILITY WITH THE CAMERA MOVMENT PROCESS
+// ------------------------------------------------------------------------------------------------
 
 static class CameraServerThread extends Thread {
 
@@ -106,7 +129,4 @@ static class CameraServerThread extends Thread {
     }
   }
   
-}
-interface CameraStreamReader {
-  void OnData(String data);
 }

@@ -1,6 +1,13 @@
 
 class Fish implements PublicFish{
   
+  // ------------------------------------------------------------------------------------------------
+  //                                             PERSISTENCE 
+  // ------------------------------------------------------------------------------------------------
+  
+  
+  // ------------------------------------------- FINE-TUNABLES CONSTANTS -------------------------------------------  
+    
    // coefficent expressing how much the valence of a certain shake is influencing the intentionality of the fish at each cicle
   float intensityOfValenceOfShakesForAttraction = 0.001;
   
@@ -13,17 +20,8 @@ class Fish implements PublicFish{
   // threshold distance necessary to shape the speed of the fish in it environment, with food vision
   float distanceFromFoodWhenStartToDecellerate = 50;
   
-  // dictionary (initialized in the constructor) defining the valence of each type of shake in regart to how much it should attract or distantiate the fish
-  FloatDict shakesValenceForAttracting = new FloatDict();
-  
-  //timeSinceAttractionWasPositive indicate the number of cicle of positive attraction not interrupted by any episodes of negative attraction
-  int timeSinceAttractionWasPositive;
-  
   // reaching this value with the counter: timeSinceAttractionWasPositive define the maximum extream of intentionality unlocked.
   int strinkingTimeToReachOptimumAttractability = 500;
-  
-  // Usefull To introduce the forgetting parameter of the fish
-  int timeOfLastInfluencingShake;
   
   // If no shake is introduced since numFramesAfterFishstartForgetting of frames, the intentionality of the fish start reaching the 0 with a certain speed (Forgetting)
   int numFramesAfterFishstartForgetting = 500;
@@ -34,8 +32,23 @@ class Fish implements PublicFish{
   // this express a value of intentionality to reach the bottom of the see when the fish is hooked
   float intentionToGoDownWhenHooked = 0.24;
   
+  // set this values to adjust the degree in wich a certain shake is attracting - scaring the fish 
+  public void setShakeAttractionMapping(){
+    shakesValenceForAttracting.set("NONE", 0);
+    shakesValenceForAttracting.set("SUBTLE", 0.1);
+    shakesValenceForAttracting.set("LITTLE_ATTRACTING", 1);
+    shakesValenceForAttracting.set("LONG_ATTRACTING", 0.7);
+    shakesValenceForAttracting.set("LITTLE_NOT_ATTRACTING", -0.4);
+    shakesValenceForAttracting.set("STRONG_HOOKING", -2.5);
+    shakesValenceForAttracting.set("STRONG_NOT_HOOKING", -3);
+  }
   
   
+  // ------------------------------------------- FIELDS -------------------------------------------  
+  
+  int timeSinceAttractionWasPositive; //timeSinceAttractionWasPositive indicate the number of cicle of positive attraction not interrupted by any episodes of negative attraction
+  int timeOfLastInfluencingShake; // Usefull To introduce the forgetting parameter of the fish
+  FloatDict shakesValenceForAttracting = new FloatDict();
   PVector prevPos, pos, prevDirectionLerped = null;
   float actualThetaX, actualThetaY, actualThetaZ;
   int boxsize;
@@ -43,9 +56,14 @@ class Fish implements PublicFish{
   PVector direction = new PVector();
   PVector fishShift = new PVector();
   
+  
+  // ------------------------------------------- FDEPENDENCIES -------------------------------------------  
+    
   GameManager gameManager;
   Player player;
   
+  
+  // ------------------------------------------- INTERFACE's GETTERS -------------------------------------------
   
   PVector getPos(){
     return pos.copy();
@@ -57,21 +75,46 @@ class Fish implements PublicFish{
     return intentionality;
   }
   
+  PVector getFishRotation(){
+
+    PVector fishDeltaPos = direction.copy();
+    
+    if(prevDirectionLerped != null){
+      
+      prevDirectionLerped = PVector.lerp(prevDirectionLerped, fishDeltaPos, 0.01);
+    }
+    else{
+      prevDirectionLerped = fishDeltaPos;
+    }
+    
+    prevDirectionLerped.normalize();
+    constrain(prevDirectionLerped.y, -0.35, 0.35);
+    prevDirectionLerped.normalize();
+    
+    return prevDirectionLerped;
+  }
+  
+  
+  // ------------------------------------------------------------------------------------------------
+  //                                             CONSTRUCTOR 
+  // ------------------------------------------------------------------------------------------------
+  
+  
   Fish(GameManager _gameManager, Player _player) {
     
-    shakesValenceForAttracting.set("NONE", 0);
-    shakesValenceForAttracting.set("SUBTLE", 0.1);
-    shakesValenceForAttracting.set("LITTLE_ATTRACTING", 1);
-    shakesValenceForAttracting.set("LONG_ATTRACTING", 0.7);
-    shakesValenceForAttracting.set("LITTLE_NOT_ATTRACTING", -0.4);
-    shakesValenceForAttracting.set("STRONG_HOOKING", -2.5);
-    shakesValenceForAttracting.set("STRONG_NOT_HOOKING", -3);
-    
+    setShakeAttractionMapping();
     gameManager = _gameManager;
     player = _player;
      
     boxsize = gameManager.getSizeOfAcquarium();
   }
+  
+  
+  
+  // ------------------------------------------------------------------------------------------------
+  //                                             LIFE CICLE 
+  // ------------------------------------------------------------------------------------------------
+  
   
   void Restart(){
    
@@ -82,7 +125,6 @@ class Fish implements PublicFish{
     
     intentionality = 0;
   }
-  
   
   
   void UpdatePosition() {
@@ -149,26 +191,6 @@ class Fish implements PublicFish{
     }
   }
 
-    
-  PVector getFishRotation(){
-
-    PVector fishDeltaPos = direction.copy();
-    
-    if(prevDirectionLerped != null){
-      
-      prevDirectionLerped = PVector.lerp(prevDirectionLerped, fishDeltaPos, 0.01);
-    }
-    else{
-      prevDirectionLerped = fishDeltaPos;
-    }
-    
-    prevDirectionLerped.normalize();
-    constrain(prevDirectionLerped.y, -0.35, 0.35);
-    prevDirectionLerped.normalize();
-    
-    return prevDirectionLerped;
-  }
-  
   
   PVector calculateDeltaTarget(){
     float targetIntentionality = intentionality;
