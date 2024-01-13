@@ -22,7 +22,7 @@ void createUI(WIMPUIManager _manager) {
   
   G4P.setGlobalColorScheme(GCScheme.BLUE_SCHEME); // Imposta lo schema di colori G4P
 
-panel = new GPanel(this, width/2 - 150* scala, height/2 - 150* scala, 300 * scala, 300 * scala);
+  panel = new GPanel(this, width/2 - 150* scala, height/2 - 150* scala, 300 * scala, 300 * scala);
   panel.setText("Multisensory Fishing");
   panel.setTextAlign(GAlign.CENTER, GAlign.MIDDLE);
 
@@ -87,6 +87,9 @@ void disposeUI() {
 
 
 void createAnswerToContinuePlayingUI(boolean haveWon) {
+  
+    camera(width/2, height/2.0, 0, width/2, height/2, 0, 0, 1, 0);
+    
   newPanel = new GPanel(this, width/2 - 150* scala, height/2 - 100* scala, 300 * scala, 200 * scala);
   newPanel.setText("Continue?");
   newPanel.setTextAlign(GAlign.CENTER, GAlign.MIDDLE);
@@ -143,7 +146,7 @@ void disposeNewUI() {
 
 
 
-void writeCSVRow(String playerName, float score, int numOfGames, boolean sight, boolean audio, boolean haptic) {
+void writeCSVRow(String playerName, float score, int numOfGames, boolean sight, boolean audio, boolean haptic, String endReason) {
   String filename = "output.csv";
   boolean fileExists = new File(dataPath(filename)).exists();
 
@@ -152,11 +155,11 @@ void writeCSVRow(String playerName, float score, int numOfGames, boolean sight, 
 
     // Se il file non esiste, scrive l'intestazione
     if (!fileExists) {
-      csvWriter.println("PlayerName,Score,numOfGames,sight,audio,haptic");
+      csvWriter.println("PlayerName,Score,numOfGames,sight,audio,haptic,endReason");
     }
 
     // Scrive i valori della riga nel file CSV
-    csvWriter.println(playerName + "," + score + "," + numOfGames + "," + sight + "," + audio + "," + haptic);
+    csvWriter.println(playerName + "," + score + "," + numOfGames + "," + sight + "," + audio + "," + haptic + "," + endReason);
 
     csvWriter.flush();
     csvWriter.close();

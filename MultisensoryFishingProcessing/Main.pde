@@ -3,7 +3,6 @@ import java.util.ArrayList;
 
 // Dichiarazione di una classe astratta per il GameManager
 interface WIMPUIManager {
-  void handleWireCountdown(int value);
   
   void StartGameWithSettings(PlayerInfo playerInfo);
   
@@ -12,19 +11,16 @@ interface WIMPUIManager {
 
 // Definizione dell'enumerazione per lo stato del gioco
 enum GameState {
-  Null,
+  Null, 
   Begin, 
-  ColdAttractingFish, 
-  HotAttractingFish,
-  FishNibbing, 
-  FishHooked, 
-  FishOpposingForce, 
+  AttractingFish, 
+  FishHooked,
   FishLost, 
-  WireEnded, 
-  FishCaught, 
-  End,
-  EndExperience
+  WireEnded,  
+  End, 
+  EndExperience 
 }
+
 
 class SessionData {
   float sessionPerformanceWeight;
@@ -42,31 +38,35 @@ class PlayerInfo {
   }
 }
 
-
 // Implementazione della classe GameManager che eredita da AbstGameManager
 class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleManager {
-  int wireCountdown; // Conto alla rovescia del filo
-  GameState currentState; // Stato corrente del gioco
+  
+  float wireCountdown; // Conto alla rovescia del filo
   SessionData currentSession;
+  ShakeDimention currentRodState;
   float totalWeightedScore; // Punteggio totale ponderato
   int totalWeightedScoreCount; // Contatore per il punteggio totale
   int boxsize;
+  String summativeEndReasons;
   Fish fish;
   Player player;
   int getSizeOfAcquarium(){
     return boxsize;
   }
+  
 
   int NumFramesHaloExternUpdates = 5;
-  int haloForWireRetrieving, haloForRawMovements;
+  int haloForWireRetrieving, haloForRawMovements, haloForShakeRodEvent;
   float cachedSpeedOfWireRetrieving = 0;
+  ShakeDimention cachedShakeRodEvent = ShakeDimention.NONE, prevCachedShakeRodEvent = ShakeDimention.NONE;
   RawMotionData cachedRawMotionData = new RawMotionData();
+  boolean hasFish;
   
   ArrayList<AbstSensoryOutModule> sensoryModules = new ArrayList<AbstSensoryOutModule>();
   SensoryInputModule sensoryInputModule;
   
   boolean isFishHooked(){
-    return currentState == GameState.FishHooked || currentState == GameState.FishOpposingForce;
+    return currentState == GameState.FishHooked;
   };
   PublicFish getFish(){
     return fish;
@@ -75,103 +75,75 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
 
   // Costruttore per GameManager
   GameManager() {
-    
-    SerializationUtility serial = new SerializationUtility(this);
-    boxsize = min(width, height) / 2; 
-    
-    haloForWireRetrieving = NumFramesHaloExternUpdates;
-    haloForRawMovements = NumFramesHaloExternUpdates;
+        
+    boxsize = (int)(min(width, height)*0.85);// * 2 / 3; 
     
     totalWeightedScore = 0.0;
     totalWeightedScoreCount = 0;
     
     player = new Player(this);
-    fish = new Fish(this);
+    fish = new Fish(this, player);
     
-    sensoryInputModule = new SensoryInputModule(this);
+    summativeEndReasons = "";
     
     currentState = GameState.Null;
   }
   
-
-  
-  
-  void OnShakeEvent(ShakeDimention type){
-    for (AbstSensoryOutModule sensoryModule : sensoryModules) {
-        sensoryModule.OnShakeOfRod(type);
-    }
-  }
-  
-  void OnWeelActivated(float speedOfWireRetrieving){
-    cachedSpeedOfWireRetrieving = speedOfWireRetrieving;
-    haloForWireRetrieving = NumFramesHaloExternUpdates;
-  }
-  
-  void OnRawMotionDetected(RawMotionData data){
-    cachedRawMotionData = data;
-    haloForRawMovements = NumFramesHaloExternUpdates;
-  }
-  
-  void OnWireBreaks(){
-    if(isFishHooked()){
-      setState(GameState.FishLost);
-    }
-  }
-  
   void gameLoop(){
+    
+    updateState();
+    
+    if(currentState != GameState.AttractingFish && currentState != GameState.FishHooked){
+      return;
+    }
     
     fish.UpdatePosition();
     
+    hint(ENABLE_DEPTH_SORT);
+    
+    if(haloForShakeRodEvent > 0){
+      currentRodState = cachedShakeRodEvent;
+      for (AbstSensoryOutModule sensoryModule : sensoryModules) {
+        if(prevCachedShakeRodEvent != ShakeDimention.NONE && cachedShakeRodEvent != ShakeDimention.NONE){
+          sensoryModule.OnShakeOfRod(ShakeDimention.NONE); 
+        }
+        sensoryModule.OnShakeOfRod(cachedShakeRodEvent); 
+      }
+      haloForShakeRodEvent = 0;
+      
+      if(currentState == GameState.AttractingFish && currentRodState == ShakeDimention.STRONG_HOOKING){
+        if(player.hasHookedTheFish()){
+           setState(GameState.FishHooked);
+        }
+      }
+    }
+    
+    fish.UpdateIntentionality(currentRodState);
+    
     RodStatusData data = calculateRodStatusData();
+        
+    player.TornWireOnRodMovments(data.rawMotionData);
+    
+    player.update();
+
     for (AbstSensoryOutModule sensoryModule : sensoryModules) {
 
       sensoryModule.OnRodStatusReading(data);
     }
     
+    hint(DISABLE_DEPTH_SORT);
   }
   
   
-  RodStatusData calculateRodStatusData(){
-      
-      if(haloForWireRetrieving <= 0){
-        cachedSpeedOfWireRetrieving = 0;
-      }
-      if(haloForRawMovements <= 0){
-        cachedRawMotionData = new RawMotionData();
-      }
-    
-      RodStatusData newData = new RodStatusData();
-      
-      newData.speedOfWireRetrieving = cachedSpeedOfWireRetrieving;
-      newData.rawMotionData = cachedRawMotionData;
-      
-      if(isFishHooked() == false){
-        newData.coefficentOfWireTension = 0;
-      }
-      else{
-        float coeffOfTentionBasedOnFishDirection = minAngleBetweenVectors(player.wireDirection, fish.getDeltaPos()) / PI;
-        float coeffForRetreivingTheWire = (1 -newData.speedOfWireRetrieving) / 2.0;
-        
-        newData.coefficentOfWireTension = coeffOfTentionBasedOnFishDirection * coeffForRetreivingTheWire;
-      }
-      
-      if(newData.coefficentOfWireTension > 0.2){
-        player.damageWire(newData.coefficentOfWireTension);
-      }
-      
-      haloForWireRetrieving--;
-      haloForRawMovements--;
-    
-      return newData;
-  }
-  
-  
-
   // Metodo per avviare la sessione di gioco
   void StartGameWithSettings(PlayerInfo _playerInfo){
+    
+    //TODO Switch
+    //sensoryInputModule = new SensoryInputModule(this);
+    sensoryInputModule = globalDebugSensoryInputModule;
+    
     currentSession = new SessionData();
     currentSession.playerInfo = _playerInfo;
-    
     for(int i=0; i<3; i++){
       if(_playerInfo.selectedModalities[i]){
         AbstSensoryOutModule moduleToAdd = null; 
@@ -190,28 +162,102 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
       }
     }
     
-    setState(GameState.Begin);
-    // Inizializzare i gestori e la sessione di gioco
-    // Esempio: inizializzare Player, Fish, sistema di punteggio, ecc.
+    cachedState = GameState.Begin;
+    updateState();
   }
-
-  // Metodo per gestire il conto alla rovescia del filo
-  void handleWireCountdown(int valueFromEvent) {
-    wireCountdown -= valueFromEvent;
-    if (wireCountdown <= 0) {
-      // Transizione allo stato di End quando il conto alla rovescia del filo raggiunge 0
-      setState(GameState.WireEnded);
-    }
+  
+  void beginGameSession(){
+    wireCountdown = 1000.0;
+    
+    haloForWireRetrieving = NumFramesHaloExternUpdates;
+    haloForRawMovements = NumFramesHaloExternUpdates;
+    haloForShakeRodEvent = NumFramesHaloExternUpdates;
+    
+    currentRodState = ShakeDimention.NONE;
+    
+    hasFish = false;
+    
+    player.Restart();
+    
+    fish.Restart();
+    
+    setState(GameState.AttractingFish);
   }
 
   // Metodo per impostare lo stato del gioco
   void setState(GameState newState) {
-    if (currentState != newState) {
+    cachedState = newState;
+  }
+  void updateState(){
+    if (currentState != cachedState) {
       GameState pre = currentState;
-      currentState = newState;
-      currentState = manageGameStates(pre, newState);
+      currentState = cachedState;
+      currentState = manageGameStates(pre, cachedState);
+      
+      // notify the modules of a relevant change in state
+      if(cachedState == GameState.FishHooked || cachedState == GameState.FishLost || cachedState == GameState.WireEnded){
+        for (AbstSensoryOutModule sensoryModule : sensoryModules) {
+          switch (currentState) {
+            case FishHooked:
+              sensoryModule.OnFishHooked();
+              break;
+            case FishLost:
+              sensoryModule.OnFishLost();
+              break;
+            case WireEnded:
+              if(hasFish){
+                sensoryModule.OnFishCaught();
+              }
+              else{
+                sensoryModule.OnWireEndedWithNoFish();
+              }
+              break;
+          }
+        }
+      }
     }
   }
+  
+  void OnWireEnded(){
+    setState(GameState.WireEnded);
+  }
+  
+  void OnWireBreaks(){
+    if(isFishHooked()){
+      setState(GameState.FishLost);
+    }
+  }
+  
+  void OnFishTasteBait(){
+     for (AbstSensoryOutModule sensoryModule : sensoryModules) {
+       sensoryModule.OnFishTasteBait();
+     }
+  }
+  
+  RodStatusData calculateRodStatusData(){
+      
+      if(haloForWireRetrieving <= 0){
+        cachedSpeedOfWireRetrieving = 0;
+      }
+      if(haloForRawMovements <= 0){
+        cachedRawMotionData = new RawMotionData();
+      }
+    
+      RodStatusData newData = new RodStatusData();
+      
+      newData.speedOfWireRetrieving = cachedSpeedOfWireRetrieving;
+      newData.rawMotionData = cachedRawMotionData;
+      
+      
+      newData.coefficentOfWireTension = player.UpdateWireRetreival(newData.speedOfWireRetrieving);
+ 
+      
+      haloForWireRetrieving--;
+      haloForRawMovements--;
+    
+      return newData;
+  }
+
 
   // Metodo per gestire gli stati del gioco e le transizioni
   GameState manageGameStates(GameState preState, GameState newState) {
@@ -220,22 +266,28 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
         beginGameSession();
         break;
 
-      case ColdAttractingFish:
-        // Logica per lo stato ColdAttractingFish
-        break;
-
-      // Implementare la logica per gli altri stati allo stesso modo
+      case AttractingFish:
       
+        // TODO Remove this is only for debug purposes
+        //setState(GameState.FishLost);
+        break;
+        
+      case FishHooked:
+        hasFish = true;
+        
+        // TODO Remove this is only for debug purposes
+        //setState(GameState.FishLost);
+        break;
+   
       case FishLost:
       case WireEnded:
-      case FishCaught:
         OnReasonToEnd(currentState);
         break;
-
+        
       case End:
-        // Logica per terminare la sessione di gioco
         endGameSession();
         break;
+        
       case EndExperience:
         EndExperience();
         break;
@@ -244,21 +296,20 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     return newState;
   }
   
-  void beginGameSession(){
-    wireCountdown = 1000;
-  }
-  
   void OnReasonToEnd(GameState reason){
     
     switch(reason){
       case FishLost: currentSession.endReason = "FishLost";
         break;
-      case WireEnded: currentSession.endReason = "WireEnded";
-        break;
-      case FishCaught: currentSession.endReason = "FishCaught";
+      case WireEnded: 
+        if(hasFish){
+           currentSession.endReason = "FishCaught";
+        }
+        else{
+           currentSession.endReason = "WireEndedWithoutFish"; 
+        }
         break;
     }  
-    
     
     setState(GameState.End);
   }
@@ -266,13 +317,17 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
   // Metodo per terminare la sessione di gioco
   void endGameSession() {
     
-    // last edit to the values
+    // TODO last edit to the values
     currentSession.sessionPerformanceWeight = random(0.0, 1.0);
     currentSession.sessionPerformanceValue = int(random(0, 2));
   
     float weightedScore = currentSession.sessionPerformanceValue * currentSession.sessionPerformanceWeight;
     totalWeightedScore += weightedScore;
     totalWeightedScoreCount++;
+    
+    summativeEndReasons += currentSession.endReason+" ";
+    
+    println("Game Finished "+currentSession.endReason);
     
     createAnswerToContinuePlayingUI(currentSession.endReason == "FishCaught");
   }
@@ -293,65 +348,176 @@ class GameManager implements WIMPUIManager, OutputModulesManager, InputModuleMan
     } else {
       score = totalWeightedScore / totalWeightedScoreCount; // Calcola la media ponderata
     }
+    summativeEndReasons = summativeEndReasons.substring(0, summativeEndReasons.length() -1);
+    writeCSVRow(currentSession.playerInfo.playerName, score, totalWeightedScoreCount, selectedModalities[0], selectedModalities[1], selectedModalities[2], summativeEndReasons);
     
-    writeCSVRow(currentSession.playerInfo.playerName, score, totalWeightedScoreCount, selectedModalities[0], selectedModalities[1], selectedModalities[2]);
-    
+  }
+  
+  
+  void OnShakeEvent(ShakeDimention type){
+    if(cachedShakeRodEvent != type){
+      prevCachedShakeRodEvent = cachedShakeRodEvent;
+      cachedShakeRodEvent = type;
+      haloForShakeRodEvent = 1;
+    }
+  }
+  
+  void OnWeelActivated(float speedOfWireRetrieving){
+    cachedSpeedOfWireRetrieving = speedOfWireRetrieving;
+    haloForWireRetrieving = NumFramesHaloExternUpdates;
+  }
+  
+  void OnRawMotionDetected(RawMotionData data){
+    cachedRawMotionData = data;
+    haloForRawMovements = NumFramesHaloExternUpdates;
+  }
+  
+  VerletNode[] getNodesOfWire(){
+    return player.nodes;
   }
 };
 
 
 GameManager globalGameManager;
+DebugSensoryInputModule globalDebugSensoryInputModule;
 Player player;
+GameState currentState = GameState.Null; // Stato corrente del gioco
+GameState cachedState = GameState.Null;
 
 void setup() {
-  size(1400, 1400, P3D);
+  background(99, 178, 240);
+  fullScreen(P3D);
+  //size(1400, 1400, P3D);
+  //hint(ENABLE_DEPTH_SORT);
+  hint(DISABLE_OPENGL_ERRORS);
   globalGameManager = new GameManager();
+  
+  //TODO rremove it is only for debug
+  globalDebugSensoryInputModule = new DebugSensoryInputModule(globalGameManager);
+  
   player = new Player(globalGameManager);
   
   createUI(globalGameManager);
+  //TODO Remove and decomment createUI, just for debug
+  //globalGameManager.StartGameWithSettings(new PlayerInfo("testplayer", new boolean[] {true, true, true}));
 }
 
 void draw() {
-  
-  if(globalGameManager.currentState != GameState.Null && globalGameManager.currentState != GameState.EndExperience){
+ 
+  if(currentState != GameState.Null && currentState != GameState.EndExperience){
+    
+      background(85, 146, 200); // Colore azzurro per l'acqua  
       globalGameManager.gameLoop();
   }
   else{
-    background(255); 
+    background(99, 178, 240);
   }
+  
+  globalDebugSensoryInputModule.update();
 }
 
-
-
-
+void keyPressed(){
+  globalDebugSensoryInputModule.OnkeyPressed(keyCode);
+}
+void keyReleased() {
+  globalDebugSensoryInputModule.OnkeyReleased(keyCode);
+}
 
 
 
 //   ------------------------- Utilities -----------------------------
 
-float minAngleBetweenVectors(float[] v1, float[] v2) {
-  // Calcolo del prodotto scalare tra i due vettori
-  float dotProduct = dotProduct(v1, v2);
-  
-  // Calcolo delle magnitudini dei due vettori
-  float magV1 = magnitude(v1);
-  float magV2 = magnitude(v2);
-  
-  // Calcolo del coseno dell'angolo tra i due vettori
-  float cosAngle = dotProduct / (magV1 * magV2);
-  
-  // Calcolo dell'angolo in radianti
-  float angle = acos(cosAngle);
-  
-  return angle;
+
+PImage getWithAlpha(PImage in, float alpha) {
+  PImage out = in.get();
+  for (int i=0; i<out.pixels.length; i++) {
+    color c = out.pixels[i];
+    float r = red(c);
+    float g = green(c);
+    float b = blue(c);
+    out.pixels[i] = color(r,g,b, alpha);
+  }
+  return out;
 }
 
-// Funzione per calcolare il prodotto scalare tra due vettori
-float dotProduct(float[] v1, float[] v2) {
-  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-}
 
-// Funzione per calcolare la magnitudine di un vettore
-float magnitude(float[] v) {
-  return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+
+// Classe di potenziamento di PVector, per le rotazioni in 3D
+class Vec3 extends PVector {
+
+  Vec3() { super(); }
+  Vec3(float x, float y) { super(x, y); }
+  Vec3(float x, float y, float z) { super(x, y, z); }
+  Vec3(PVector v) { super(); set(v); }
+
+  String toString() {
+    return String.format("[ %+.2f, %+.2f, %+.2f ]",
+      x, y, z);
+  }
+
+  PVector rotate(float angle) {
+    return rotateZ(angle);
+  }
+
+  PVector rotateX(float angle) {
+    float cosa = cos(angle);
+    float sina = sin(angle);
+    float tempy = y;
+    y = cosa * y - sina * z;
+    z = cosa * z + sina * tempy;
+    return this;
+  }
+
+  PVector rotateY(float angle) {
+    float cosa = cos(angle);
+    float sina = sin(angle);
+    float tempz = z;
+    z = cosa * z - sina * x;
+    x = cosa * x + sina * tempz;
+    return this;
+  }
+
+  PVector rotateZ(float angle) {
+    float cosa = cos(angle);
+    float sina = sin(angle);
+    float tempx = x;
+    x = cosa * x - sina * y;
+    y = cosa * y + sina * tempx;
+    return this;
+  }
+  
+  PMatrix3D lookAt(PVector target) {
+     return lookAt(target, new PVector(0.0, 1.0, 0.0), new PMatrix3D());
+   }
+
+   PMatrix3D lookAt(PVector target, PVector up) {
+     return lookAt(target, up, new PMatrix3D());
+   }
+
+   PMatrix3D lookAt(PVector target, PMatrix3D out) {
+      return lookAt(target, new PVector(0.0, 1.0, 0.0), out);
+    }
+
+   PMatrix3D lookAt(PVector target, PVector up, PMatrix3D out) {
+    PVector k = PVector.sub(target, this);
+    float m = k.magSq();
+    if(m < EPSILON) {
+      return out;
+    }
+    k.mult(1.0 / sqrt(m));
+
+    PVector i = new PVector();
+    PVector.cross(up, k, i);
+    i.normalize();
+
+    PVector j = new PVector();
+    PVector.cross(k, i, j);
+    j.normalize();
+
+    out.set(i.x, j.x, k.x, 0.0,
+      i.y, j.y, k.y, 0.0,
+      i.z, j.z, k.z, 0.0,
+      0.0, 0.0, 0.0, 1.0);
+    return out;
+  }
 }
