@@ -1,27 +1,13 @@
 class VisualSensoryModule extends AbstSensoryOutModule{ 
   
-  // ------------------------------------------------------------------------------------------------
-  //                                             PERSISTENCE 
-  // ------------------------------------------------------------------------------------------------
   
-  
-  // ------------------------------------------- FINE-TUNABLES CONSTANTS -------------------------------------------  
-  
-  // Time with which the mouth of the fish will stay open, it has just a grafical meaning
   int timeMouthOpen = 10;
+  int heightOfWaterSurfare  = -30;
   
-  // The void space (water) on top and under the box where the fish can swim (defined by boxSize)
-  int verticalPaddingOfVisualBox  = -30;
-  
-  // Change the density of the algae spowned
   float numAlgaePerPxSquared = 0.00000024;
-  
-  // Change the size of the algae
+  int[] tintColor = new int[]{220, 240, 255};
   int resizeAlgaeWidth = 100;
   
-  
-  
-  // ------------------------------------------- FIELDS -------------------------------------------  
   
   float scaleScene;
   PImage sandImg, waterSurface, fishImg, fishFromTop, tallAlga, shortAlga, fishOpenMouth;
@@ -31,22 +17,13 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   PVector[] algaePos;
   int[] algaeType;
   float[] algaeRotation;
-  int[] tintColor = new int[]{220, 240, 255};
+  PublicFish fish;
+  
   int numAlgae;
   int isEating = 0;
+  
   float boxSize;
   float fieldSize;
-  
-  
-  // ------------------------------------------- DEPENDENCIES -------------------------------------------  
-  
-  PublicFish fish; 
-  // outputModulesManager outputModulesManager, in  the abstract class
-  
-  
-  // ------------------------------------------------------------------------------------------------
-  //                                             CONSTRUCTOR 
-  // ------------------------------------------------------------------------------------------------
   
   VisualSensoryModule(OutputModulesManager outputModulesManager){
     super(outputModulesManager);
@@ -59,23 +36,23 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     fish = outputModulesManager.getFish();
     fishWidth = fish.fishWidth;
     fishHeight = fish.fishHeight;
-    fishImg = loadImage("images/fishNotCentered.png");
-    tallAlga = loadImage("images/algaeTall.png");
-    fishOpenMouth = loadImage("images/fishOpenMouth.png");
-    shortAlga = loadImage("images/algaeShort.png");
+    fishImg = loadImage("fishNotCentered.png");
+    tallAlga = loadImage("algaeTall.png");
+    fishOpenMouth = loadImage("fishOpenMouth.png");
+    shortAlga = loadImage("algaeShort.png");
     tallAlga.resize((int)(resizeAlgaeWidth), (int)(4.51*resizeAlgaeWidth));
     shortAlga.resize((int)(resizeAlgaeWidth), (int)(2.438*resizeAlgaeWidth));
     
     fishImg.resize((int)fishWidth, (int)fishHeight);
     fishOpenMouth.resize((int)fishWidth, (int)fishHeight);
-    foodImg = loadImage("images/food.png");
+    foodImg = loadImage("food.png");
     foodImg.resize(80, 120);
     
     //TODO fishFromTop
 
-    sandImg = loadImage("images/sand.jpg");
+    sandImg = loadImage("sand.jpg");
     sandImg.resize(2*width, 2*width);
-    waterSurface  = loadImage("images/waterSurface.jpg");
+    waterSurface  = loadImage("waterSurface.jpg");
     //waterSurface = getWithAlpha(waterSurface, 50);
     //sandImg.resize(2*width, 2*width);
     
@@ -88,13 +65,8 @@ class VisualSensoryModule extends AbstSensoryOutModule{
       algaeType[i] = int(random(2));
       algaeRotation[i] = random(0, PI/2);
     }
+  
   }
-  
-  
-  // ------------------------------------------------------------------------------------------------
-  //                                       OVERWRITTEN METHODS 
-  // ------------------------------------------------------------------------------------------------
-  
   
   void OnFishTasteBait(){
     isEating= timeMouthOpen;
@@ -116,20 +88,13 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     drawWireAndBait(dataSnapshot.coefficentOfWireTension);
   }
   
-  
-  
-  // ------------------------------------------------------------------------------------------------
-  //                                       DRAWING METHODS
-  // ------------------------------------------------------------------------------------------------
-  
-  
   void drawAlgae(){
     
     for(int i=0; i<numAlgae; i++){
       for(int j=0; j<2; j++){   
         pushMatrix();
         scale(scaleScene);
-        translate(width/2 + algaePos[i].x,  height - verticalPaddingOfVisualBox,  algaePos[i].z);
+        translate(width/2 + algaePos[i].x,  height - heightOfWaterSurfare,  algaePos[i].z);
         rotateY(algaeRotation[i] + (PI/2)*(int(j)));
         rotateZ(PI);
         fill(0);
@@ -159,7 +124,6 @@ class VisualSensoryModule extends AbstSensoryOutModule{
       camera(width/2,  0, 110, width/2, height/2, 0, 0, 1, 0);
     }*/
   }
-  
 
   void drawBottom(){
     textureWrap(REPEAT); 
@@ -168,7 +132,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     
     scale(scaleScene);
     
-    translate(width/2,  0 + verticalPaddingOfVisualBox, 0);
+    translate(width/2,  0 + heightOfWaterSurfare, 0);
     rotateX(PI / 2.0);
     rotateZ(PI / 2.0);
     beginShape();
@@ -186,7 +150,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
 
     scale(scaleScene);
     
-    translate(width/2,  height - verticalPaddingOfVisualBox, 0);
+    translate(width/2,  height - heightOfWaterSurfare, 0);
     rotateX(PI / 2.0);
     rotateZ(PI / 3.0);
     beginShape();
@@ -279,7 +243,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     //ombra.resize();
     pushMatrix();
     scale(scaleScene);
-    translate(width/2 + pos.x,  height - verticalPaddingOfVisualBox - 2, pos.z);
+    translate(width/2 + pos.x,  height - heightOfWaterSurfare - 2, pos.z);
     rotateX(PI / 2.0);
     float rotationAngle = PVector.angleBetween(new PVector(-1,0,0), myforward);
     if(PVector.angleBetween(new PVector(0,0,-1), myforward) > PI/2){

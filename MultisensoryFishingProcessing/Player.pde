@@ -2,13 +2,6 @@ import java.util.ArrayList;
 // Dichiarazione della classe Player
 class Player {
   
-  // ------------------------------------------------------------------------------------------------
-  //                                             PERSISTENCE 
-  // ------------------------------------------------------------------------------------------------
-  
-  
-  // ------------------------------------------- FINE-TUNABLES CONSTANTS -------------------------------------------  
-  
   //max damage supported by the wire
   int maxDamage = 2000;//200;
   
@@ -47,29 +40,22 @@ class Player {
   float YoffsetOfBaitFromCenterOfRoom = 30;
   
   
-  // ------------------------------------------- FIELDS -------------------------------------------  
   
   int counterOfLoopsBetweenPushes;
   int counterOfLoopsBetweenBites;
   float wireFishTention;
+  GameManager gameManager; // Manager del gioco
   int boxsize;
   float damageCounter;
   VerletNode[] nodes;
   float nodeDistance = 15;
   float wireCountdown;
+  PublicFish fish = null;
   RawMotionData cachedRawMotionData = new RawMotionData();
   int timeSinceHooking;
   int countDownForCapturingAnimation;
   
   
-  // ------------------------------------------- DEPENDENCIES -------------------------------------------  
-    
-  GameManager gameManager; // Manager del gioco
-  PublicFish fish = null;
-  
-  
-  // ------------------------------------------- INTERFACE's GETTERS -------------------------------------------
-    
   PVector getHookPos(){
     return nodes[nodes.length -1].position.copy();
   }
@@ -92,11 +78,6 @@ class Player {
     }
     return new PVector (0, - wireLengthWhenIdle() + YoffsetOfBaitFromCenterOfRoom - wireCountdown + offsetAfterHooking, 0);
   }
-  
-  
-  // ------------------------------------------------------------------------------------------------
-  //                                             CONSTRUCTOR 
-  // ------------------------------------------------------------------------------------------------
 
   // Costruttore per Player
   Player(GameManager _gameManager) {
@@ -106,11 +87,6 @@ class Player {
     boxsize = gameManager.getSizeOfAcquarium();
     // Inizializzazione delle variabili del giocatore
   }
-  
-  
-  // ------------------------------------------------------------------------------------------------
-  //                                             LIFE CYCLE 
-  // ------------------------------------------------------------------------------------------------
   
   void Restart(){
     
@@ -136,6 +112,8 @@ class Player {
      
      counterOfLoopsBetweenBites = numLoopsBetweenBites;
   }
+
+
 
 
   PVector NegotiateFishShift(PVector fishDesiredDelta){
@@ -168,7 +146,7 @@ class Player {
       return 0.1;
     }
     else if(countDownForCapturingAnimation == 0){
-      gameManager.OnWireEnded();
+      WireEnded();
       return 0;
     }
     
@@ -214,6 +192,10 @@ class Player {
   }
   
   
+  
+  void WireEnded(){
+    gameManager.OnWireEnded();
+  }
   
   
   void TornWireOnRodMovments(RawMotionData rawMotionData){
@@ -305,7 +287,7 @@ class Player {
   }
   
   
-  boolean HasHookedTheFish(){
+  boolean hasHookedTheFish(){
     
     if(counterOfLoopsBetweenBites >= 0){
       
@@ -333,5 +315,69 @@ class Player {
       // Add gravity force
       node.cacheForce( ((i >= nodes.length -1)? gravity.copy().mult(60): gravity));
     }
+  }
+  
+}
+
+
+
+
+class VerletNode {
+  PVector position;
+  PVector oldPosition;
+  ArrayList<PVector> lazyForcesToApply = new ArrayList<PVector>();
+  PVector lazyTargetToApply = null;
+  float intensityOfTarget;
+  
+  
+  VerletNode(PVector startPos) {
+    position = startPos.copy();
+    oldPosition = startPos.copy();
+  }
+  
+  void cacheForce(PVector force){
+    lazyForcesToApply.add(force);
+  }
+  
+  void cacheTarget(PVector target, float intensity){
+    lazyTargetToApply = target;
+    intensityOfTarget = constrain(intensity, 0, 1);
+  }
+  
+  void applyCachedForces(){
+    oldPosition = position.copy();
+    for (PVector force : lazyForcesToApply) {
+       position.add(force);
+    }
+    lazyForcesToApply.clear();
+  }
+  
+  void applyConstrains(VerletNode next, float nodeDistance, float iterationPercentage){
+    
+      if(next != null){
+        float dist = PVector.dist(position, next.position);
+        float difference = 0;
+        if (dist > 0) { 
+          difference = (nodeDistance - dist) / dist;
+        }
+        PVector translateGeneric = PVector.sub(position, next.position).mult(0.5 * difference);
+        position.add(translateGeneric);
+        next.position.sub(translateGeneric); 
+      }
+      
+      if(lazyTargetToApply != null) {
+        PVector delta = new PVector();
+        delta.lerp(PVector.sub(lazyTargetToApply, position), intensityOfTarget);
+        position.add(delta);
+        
+        if(iterationPercentage > 0.99999){
+          lazyTargetToApply = null;
+        }
+      }
+  }
+  
+  void updatePosition(PVector newPos) {
+    oldPosition.set(position);
+    position.set(newPos);
   }
 }

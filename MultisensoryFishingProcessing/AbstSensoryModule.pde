@@ -72,3 +72,17 @@ class RodStatusData{
   // Check RawMotionData in SensoryInputModule script
   RawMotionData rawMotionData;
 }
+
+
+
+
+
+
+
+/*
+     ---------------------    Concretizations of AbstSensoryOutModule      -------------------------
+     
+     TODO, divided tasks, implemented in other file-scripts
+      
+    !!!!!!!!  Make use of the SerializationUtility static class and its methods to properly serialize the data to forward !!!!!!!!!!
+*/
