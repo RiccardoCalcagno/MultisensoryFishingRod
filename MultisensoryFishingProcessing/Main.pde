@@ -1,11 +1,15 @@
 import java.util.ArrayList;
 import processing.serial.*; 
+import java.util.Map;
 
 
 // ------------------------------------------------------------------------------------------------
 //                                         NATIVE MAIN
 // ------------------------------------------------------------------------------------------------
 
+HashMap<GameEvent, int[]> debuggingScoresDic;
+HashMap<GameEvent, Float> debuggingScoresSumWithWeight;
+HashMap<GameEvent, Integer> debuggingScoresSum;
 
 GameManager globalGameManager;
       //TODO rremove it is only for debug
@@ -55,9 +59,28 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   // ------------------------------------------- FINE-TUNABLES CONSTANTS -------------------------------------------  
   int NumFramesHaloExternUpdates = 5; 
   
+  public void InitializeGameEventsScoreMapping(){
+    
+    // ATTRACTING FISH
+    gameEventsToScore.set("CheckpointInContinuousGoodShakesPeriod_Shade", 0); // for a period of all continuative good shakes defined by Fish.strinkingTimeToReachOptimumAttractability this event is fired 3 times, for the last 3 intervalls of the 5 ones
+    gameEventsToScore.set("AttractingShake", 0);
+    gameEventsToScore.set("ComplexAttractingShake", 0);
+    gameEventsToScore.set("BadScaringShake", 0);
+    gameEventsToScore.set("FishStartForgetting", 0);
 
+    // HOOKING FISH
+    gameEventsToScore.set("TheFishTastedTheBait", 0);
+    gameEventsToScore.set("UserDidNotAnsweredToFishBite", 0);
+    gameEventsToScore.set("NiceShakeItMightHaveCoughtIt", 0);
+    
+    // RETREIVING FISH
+    gameEventsToScore.set("WireInTention_Shade", 0);
+    gameEventsToScore.set("Good_LeavingWireWhileTention_Shade", 0);
+  }
 
   // ------------------------------------------- FIELDS -------------------------------------------
+  
+  FloatDict gameEventsToScore = new FloatDict();
   boolean hasFish;
   float wireCountdown; // Conto alla rovescia del filo
   SessionData currentSession;
@@ -109,6 +132,7 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   GameManager(PApplet _parent) {
     parent = _parent;
     currentState = GameState.Null; cachedState = GameState.Null;
+    InitializeGameEventsScoreMapping();
     
     cameraMovement = new CameraMovement(this, parent);
     cameraMovement.TryConnectToFacePoseProvider();
@@ -273,6 +297,10 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   // Invoked at the start of each GamePlay, reset the game logic 
   void beginGameSession(){
     
+    debuggingScoresDic = new HashMap<GameEvent, int[]>();
+    debuggingScoresSumWithWeight = new HashMap<GameEvent, Float>();
+    debuggingScoresSum = new HashMap<GameEvent, Integer>();
+    
     cachedRawMotionData = new RawMotionData();
     cachedSpeedOfWireRetrieving = 0;
     cachedShakeRodEvent = ShakeDimention.NONE; prevCachedShakeRodEvent = ShakeDimention.NONE;
@@ -319,13 +347,13 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     
     camera(width/2, height/2.0, 0, width/2, height/2, 0, 0, 1, 0);
     
-    // TODO last edit to the values
-    currentSession.sessionPerformanceValue = int(random(0, 2));
     currentSession.endTime = frameCount;
     
     println("Game Finished "+currentSession.endReason);
     
-    writeCSVRow(currentSession); 
+    String written = writeCSVRow(currentSession); 
+    
+    Debug_PlotEventsInTime(written);
         
     createAnswerToContinuePlayingUI(currentSession.endReason == "FishCaught");
   }
@@ -378,7 +406,6 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     }
   }
   
-  
   RodStatusData calculateRodStatusData(){
       
       if(haloForWireRetrieving <= 0){
@@ -403,6 +430,115 @@ class GameManager implements OutputModulesManager, InputModuleManager {
       return newData;
   }
   
+  
+  public void SetGameEventForScoring(GameEvent event){SetGameEventForScoring(event, 1);}
+  public void SetGameEventForScoring(GameEvent event, float contingentAlteration){
+    float increment = gameEventsToScore.get(event.toString()) * contingentAlteration;
+   
+    int[] preValue = new int[]{};
+    float preValueWeight = 0;
+    int preValueSum = 0;
+    if(debuggingScoresDic.containsKey(event) == true){
+      preValue = debuggingScoresDic.get(event);
+      preValueWeight = (float)debuggingScoresSumWithWeight.get(event);
+      preValueSum = (int)debuggingScoresSum.get(event);
+    }
+    preValue = append(preValue, frameCount);
+    debuggingScoresSumWithWeight.put(event, (Float)(preValueWeight + contingentAlteration));
+    debuggingScoresSum.put(event, (Integer)(preValueSum+1));
+    debuggingScoresDic.put(event, preValue);
+    println(debuggingScoresDic.get(event).length);
+    
+    switch(event){
+     case CheckpointInContinuousGoodShakesPeriod_Shade:
+     case AttractingShake:
+     case ComplexAttractingShake:
+     case BadScaringShake:
+     case FishStartForgetting:
+       currentSession.AttractingFishScore+=increment;
+     break;
+     case TheFishTastedTheBait:
+     case UserDidNotAnsweredToFishBite:
+     case NiceShakeItMightHaveCoughtIt:
+       currentSession.HookingFishScore+=increment;
+     break;
+     case WireInTention_Shade:
+     case Good_LeavingWireWhileTention_Shade:
+       currentSession.RetreivingFishScore+=increment;
+     break;
+    }
+  }
+  
+  
+  public void Debug_PlotEventsInTime(String writtenInFile){
+    int max = -1;
+    for (Map.Entry entry : debuggingScoresDic.entrySet()) {
+            int[] value = debuggingScoresDic.get((GameEvent)entry.getKey());
+            if(value.length > 0 && max < value[value.length -1]){
+              max = value[value.length -1];
+            }
+    }
+    int min = currentSession.startTime;
+    
+    String toFile = "###############################################################################################################################################\n New Game: "
+    +writtenInFile+"\n###############################################################################################################################################\n";
+    
+    toFile+=Debug_PlotForOneEvent(GameEvent.CheckpointInContinuousGoodShakesPeriod_Shade, min, max);
+    toFile+=Debug_PlotForOneEvent(GameEvent.AttractingShake, min, max);
+    toFile+=Debug_PlotForOneEvent(GameEvent.ComplexAttractingShake, min, max);
+    toFile+=Debug_PlotForOneEvent(GameEvent.BadScaringShake, min, max);
+    toFile+=Debug_PlotForOneEvent(GameEvent.FishStartForgetting, min, max);
+    toFile+="\n";
+    toFile+=Debug_PlotForOneEvent(GameEvent.TheFishTastedTheBait, min, max);
+    toFile+=Debug_PlotForOneEvent(GameEvent.UserDidNotAnsweredToFishBite, min, max);
+    toFile+=Debug_PlotForOneEvent(GameEvent.NiceShakeItMightHaveCoughtIt, min, max);
+    toFile+="\n";
+    toFile+=Debug_PlotForOneEvent(GameEvent.WireInTention_Shade, min, max);
+    toFile+=Debug_PlotForOneEvent(GameEvent.Good_LeavingWireWhileTention_Shade, min, max);
+    toFile+="\n";
+    
+    writeDebugEndGame(toFile);
+  }
+  
+  String Debug_PlotForOneEvent(GameEvent event, int min, int max){
+    String toOutPut="\n"+event.toString()+", count:"+ debuggingScoresSum.get(event)+", with weight: "+debuggingScoresSumWithWeight.get(event)+", timeLine: \n";
+    int[] times = debuggingScoresDic.get(event);
+    if(times == null){
+      times = new int[] {};
+    }
+    for(int i=0; i<times.length; i++){
+      times[i] = int(map(times[i], min, max, 0, 219));
+    }
+    int[][] frequ = new int[220][3];
+    int[] countA = new int[220];
+    for(int i=0; i<220; i++){
+      int count = 0;
+      for(int j=0; j<times.length; j++){
+        if(times[j] == i)
+          count++;
+      }
+      countA[i] = count;
+      int cent = int(count / 100);
+      int dec = int( (count%100) / 10);
+      int unit = count%10;
+      frequ[i] = new int[] { cent, dec, unit};
+    }
+    
+    for(int i=0; i<3; i++){
+      String text = "";
+      for(int j=0; j<220; j++){
+        char carattere = '-';
+        if(frequ[j][i] > 0 || countA[j] > 0){
+          carattere = (char(frequ[j][i] + 48));
+        }
+        text+=carattere;
+      }
+      toOutPut+=text+"\n";
+    }
+    
+    return toOutPut;
+  }
+    
   
   // ------------------------------------------------------------------------------------------------
   //                                 HANDLES FOR EXERNAL TRIGGERING EVENTS
@@ -468,6 +604,19 @@ enum GameState {
 }
 
 
+enum GameEvent{
+   CheckpointInContinuousGoodShakesPeriod_Shade,
+   AttractingShake,
+   ComplexAttractingShake,
+   BadScaringShake,
+   FishStartForgetting,
+   WireInTention_Shade,
+   Good_LeavingWireWhileTention_Shade,
+   TheFishTastedTheBait,
+   UserDidNotAnsweredToFishBite,
+   NiceShakeItMightHaveCoughtIt,
+}
+
 class SessionData {
   public SessionData(){
     ResetGameData();
@@ -475,13 +624,17 @@ class SessionData {
   
   int startTime;
   int endTime;
-  int sessionPerformanceValue;
+  float AttractingFishScore;
+  float HookingFishScore;
+  float RetreivingFishScore;
   String dateTime = "";
   String endReason;
   PlayerInfo playerInfo;
   
   public void ResetGameData(){
-    sessionPerformanceValue = 0;
+    AttractingFishScore = 0;
+    HookingFishScore = 0;
+    RetreivingFishScore = 0;
     startTime = frameCount;
     endReason = "";
     dateTime = day()+"/"+month()+"/"+year()+" - "+hour()+"h:"+minute()+"min";

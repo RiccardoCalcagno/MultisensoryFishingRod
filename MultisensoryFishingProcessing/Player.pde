@@ -32,10 +32,10 @@ class Player {
   
   // Average the periods in which the fish is pushing the wire it is repeditly biting (just a taste actually) the hook, 
   // but with a minimum delay between each bites, namely this value. Expect a random variance of +- 0.2*numLoopsBetweenBites
-  int numLoopsBetweenBites = 50;
+  int numLoopsBetweenBites = 80;
   
   // Dial this one to require to the user more or less reactivness to the fish tasting
-  int numOfLoopsBetweenPushes = 5;
+  int numLoopsForReactivness = 50; 
   
   // if 1 => 1 goodShake = 1 catch, if 0 => 1 goodShake = 0 catch, in between => 1 goodShake = randomWithProbabilityOf(rarenessOfHooking) catch
   float rarenessOfHooking = 0.8;
@@ -51,15 +51,21 @@ class Player {
   
   int counterOfLoopsBetweenPushes;
   int counterOfLoopsBetweenBites;
+  int counterForReactivness;
+  int numOfLoopsBetweenPushes = 5;
   float wireFishTention;
   int boxsize;
   float damageCounter;
   VerletNode[] nodes;
+  boolean hasFailedBecauseTheRandomness = false;
   float nodeDistance = 15;
   float wireCountdown;
   RawMotionData cachedRawMotionData = new RawMotionData();
   int timeSinceHooking;
   int countDownForCapturingAnimation;
+  float timeSpentLookingUp;
+  float timespentLookingDown;
+  
   
   
   // ------------------------------------------- DEPENDENCIES -------------------------------------------  
@@ -135,6 +141,10 @@ class Player {
      timeSinceHooking = -1;
      
      counterOfLoopsBetweenBites = numLoopsBetweenBites;
+     counterForReactivness =-1;
+     
+     timeSpentLookingUp=0;
+     timespentLookingDown=0;
   }
 
 
@@ -177,24 +187,58 @@ class Player {
     float speedLimit = 1;
     if(gameManager.isFishHooked() == true){
       
-      if( PVector.dist(nodes[0].position, fish.getPos()) >=  wireLengthWhenIdle() && speedOfWireRetrieving < 0.5){
-        float coeffOfTentionBasedOnFishDirection = PVector.angleBetween(wireDirection(), fish.getDeltaPos()) / PI;
-        if(speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection < 0){  // it means that even that there was a wire giving out it was not compensating enough
+      float coeffOfTentionBasedOnFishDirection = PVector.angleBetween(wireDirection(), fish.getDeltaPos()) / PI;
+      
+      
+      if(coeffOfTentionBasedOnFishDirection > 0.5){
+        timeSpentLookingUp+=1;
+      }
+      else{
+        timespentLookingDown+=1;
+      }
+      float percentageOfTimePulling = 0.5;
+      if(timespentLookingDown+timeSpentLookingUp > 100){
+        percentageOfTimePulling = timespentLookingDown / (timespentLookingDown+timeSpentLookingUp);
+      }
+      
         
-        if(speedOfWireRetrieving<0 && coeffOfTentionBasedOnFishDirection> 0.5){
-          speedLimit = map(coeffOfTentionBasedOnFishDirection, 0.5, 1, 1, 0.7);
+      if( PVector.dist(nodes[0].position, fish.getPos()) >=  wireLengthWhenIdle()){
+  
+        if(speedOfWireRetrieving < 0.5){
+               
+          if(speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection < 0){  // it means that even that there was a wire giving out it was not compensating enough
+          
+          if(speedOfWireRetrieving<0 && coeffOfTentionBasedOnFishDirection> 0.5){
+            speedLimit = map(coeffOfTentionBasedOnFishDirection, 0.5, 1, 1, 0.7);
+          }
+          
+          wireFishTention = -(speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection)/2.0; // the max value for speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection is -2
+          }       
         }
         
-        wireFishTention = -(speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection)/2.0; // the max value for speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection is -2
-        }       
+        if(speedOfWireRetrieving > 0){
+          float weight = map(wireFishTention, 0, 1, 1, 0.5);
+          if(percentageOfTimePulling > 0.6){
+            weight*= map(percentageOfTimePulling, 0.6, 0.8, 1.5, 2);
+          }
+          gameManager.SetGameEventForScoring(GameEvent.Good_LeavingWireWhileTention_Shade, weight);
+        }
       }
-    }
     
-    if(wireFishTention > 0.1){
-      damageCounter -= wireFishTention;
-      
-      if(damageCounter < 0){
-        gameManager.OnWireBreaks();
+      if(wireFishTention > 0.1){
+        
+        // Calculate the decrement for the score
+        if(wireFishTention > 0.4){
+          float weight = map(wireFishTention, 0.4, 1, 0.4, 1);
+          weight*= map(percentageOfTimePulling, 0.4, 0.6, 1.1, 0.9);
+          gameManager.SetGameEventForScoring(GameEvent.WireInTention_Shade, weight);
+        }
+        
+        damageCounter -= wireFishTention;
+        
+        if(damageCounter < 0){
+          gameManager.OnWireBreaks();
+        }
       }
     }
     
@@ -227,8 +271,19 @@ class Player {
     
     counterOfLoopsBetweenPushes--; 
     counterOfLoopsBetweenBites--;
+    counterForReactivness--;
     
-    if(gameManager.isFishHooked() == false && counterOfLoopsBetweenBites == 0 && counterOfLoopsBetweenPushes > 0){
+    if(counterForReactivness == 0){
+      if(gameManager.isFishHooked() == false && hasFailedBecauseTheRandomness == false){
+        gameManager.SetGameEventForScoring(GameEvent.UserDidNotAnsweredToFishBite);
+      }
+      else if(gameManager.isFishHooked() == true || hasFailedBecauseTheRandomness == true){
+        gameManager.SetGameEventForScoring(GameEvent.NiceShakeItMightHaveCoughtIt);
+      }
+      hasFailedBecauseTheRandomness = false;
+    }
+    
+    if(gameManager.isFishHooked() == false && counterOfLoopsBetweenBites <= 0 && counterOfLoopsBetweenPushes > 0){
       BiteTheHook();
     }
     
@@ -287,10 +342,6 @@ class Player {
       
       if((i == nodes.length -1) & (distance < mouthRadius*1.3)){
         counterOfLoopsBetweenPushes = numOfLoopsBetweenPushes;
-        
-        if(counterOfLoopsBetweenBites < 0){
-          BiteTheHook();
-        }
       }
         
       if (distance < mouthRadius) {
@@ -307,11 +358,14 @@ class Player {
   
   boolean HasHookedTheFish(){
     
-    if(counterOfLoopsBetweenBites >= 0){
+    if(counterForReactivness > 0){
       
       if(random(0, 1) <= rarenessOfHooking){
         timeSinceHooking = frameCount;
         return true;
+      }
+      else{
+        hasFailedBecauseTheRandomness = true;
       }
     }
     return false;
@@ -319,6 +373,8 @@ class Player {
   
   
   void BiteTheHook(){
+    gameManager.SetGameEventForScoring(GameEvent.TheFishTastedTheBait);
+    counterForReactivness = numLoopsForReactivness;
     counterOfLoopsBetweenBites = int(numLoopsBetweenBites * random(0.8, 1.2));
     gameManager.OnFishTasteBait();
   }

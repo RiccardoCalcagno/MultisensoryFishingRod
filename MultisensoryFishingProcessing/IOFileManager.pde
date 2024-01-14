@@ -1,8 +1,10 @@
 import java.io.*;
 
-void writeCSVRow(SessionData sessionData) {
+String writeCSVRow(SessionData sessionData) {
   String playerName = sessionData.playerInfo.playerName;
-  float score = sessionData.sessionPerformanceValue;
+  float attractingFishScore = sessionData.AttractingFishScore;
+  float hookingFishScore = sessionData.HookingFishScore;
+  float retreivingFishScore = sessionData.RetreivingFishScore;
   boolean sight = sessionData.playerInfo.selectedModalities[0];
   boolean audio = sessionData.playerInfo.selectedModalities[1];
   boolean haptic = sessionData.playerInfo.selectedModalities[2];
@@ -10,6 +12,7 @@ void writeCSVRow(SessionData sessionData) {
   String dateTime = sessionData.dateTime;
   float sessionTime = (float(sessionData.endTime - sessionData.startTime) / frameRate);
   
+  String output="";
   String filename = "output.csv";
   boolean fileExists = new File(dataPath(filename)).exists();
   
@@ -20,11 +23,34 @@ void writeCSVRow(SessionData sessionData) {
 
     // Se il file non esiste, scrive l'intestazione
     if (lines == null || lines.length == 0) {
-      csvWriter.println("DateTime,PlayerName,SessionDuration,Score,sight,audio,haptic,endReason");
+      csvWriter.println("DateTime,PlayerName,SessionDuration,AttractingFishScore,HookingFishScore,RetreivingFishScore,sight,audio,haptic,endReason");
     }
 
     // Scrive i valori della riga nel file CSV
-    csvWriter.println(dateTime + "," + playerName + "," + sessionTime + "," + score  + "," + sight + "," + audio + "," + haptic + "," + endReason);
+    output = dateTime + "," + playerName + "," + sessionTime + "," + attractingFishScore + "," + hookingFishScore + "," + retreivingFishScore + "," + sight + "," + audio + "," + haptic + "," + endReason;
+    csvWriter.println(output);
+
+    csvWriter.flush();
+    csvWriter.close();
+    println("Riga scritta con successo in " + filename);
+  } catch (IOException e) {
+    println("Si è verificato un errore durante la scrittura del file CSV: " + e);
+  }
+  
+  return output;
+}
+
+
+void writeDebugEndGame(String text) {
+  
+  String filename = "DebugGames.txt";
+  boolean fileExists = new File(dataPath(filename)).exists();
+  
+  try {
+    PrintWriter csvWriter = new PrintWriter(new FileWriter(dataPath(filename), true));
+
+    csvWriter.println(text);
+    csvWriter.println("");
 
     csvWriter.flush();
     csvWriter.close();

@@ -21,7 +21,7 @@ class Fish implements PublicFish{
   float distanceFromFoodWhenStartToDecellerate = 50;
   
   // reaching this value with the counter: timeSinceAttractionWasPositive define the maximum extream of intentionality unlocked.
-  int strinkingTimeToReachOptimumAttractability = 500;
+  int strinkingTimeToReachOptimumAttractability = 500; /// ATTENTION: Needs to be a multiple of 5
   
   // If no shake is introduced since numFramesAfterFishstartForgetting of frames, the intentionality of the fish start reaching the 0 with a certain speed (Forgetting)
   int numFramesAfterFishstartForgetting = 500;
@@ -55,7 +55,7 @@ class Fish implements PublicFish{
   float intentionality; // Intentionality of the fish (0 to 1)
   PVector direction = new PVector();
   PVector fishShift = new PVector();
-  
+
   
   // ------------------------------------------- FDEPENDENCIES -------------------------------------------  
     
@@ -80,7 +80,6 @@ class Fish implements PublicFish{
     PVector fishDeltaPos = direction.copy();
     
     if(prevDirectionLerped != null){
-      
       prevDirectionLerped = PVector.lerp(prevDirectionLerped, fishDeltaPos, 0.01);
     }
     else{
@@ -156,6 +155,23 @@ class Fish implements PublicFish{
       return;
     }
     
+    switch(currentShake){
+     case LITTLE_ATTRACTING:
+       gameManager.SetGameEventForScoring(GameEvent.AttractingShake);
+       break;
+     case LONG_ATTRACTING:
+       gameManager.SetGameEventForScoring(GameEvent.ComplexAttractingShake);
+       break;
+     case STRONG_HOOKING:
+     case STRONG_NOT_HOOKING:
+       gameManager.SetGameEventForScoring(GameEvent.BadScaringShake);
+       break;
+     case NONE:
+     case SUBTLE:
+     case LITTLE_NOT_ATTRACTING:
+       break;
+    }
+    
     // Each type of shake as a valence (a weight) that put in comparison (good-bad) the shakes together, 
     // then intensityOfValenceOfShakesForAttraction is necessary to fine tuning all the intensity based on how much we want the intentionality to be responsive
     float valenceOfShake = shakesValenceForAttracting.get(currentShake.toString()) * intensityOfValenceOfShakesForAttraction;
@@ -168,13 +184,19 @@ class Fish implements PublicFish{
         timeSinceAttractionWasPositive = 0;
       }
       else if(timeSinceAttractionWasPositive<strinkingTimeToReachOptimumAttractability){
+        
         timeSinceAttractionWasPositive++;
+        float wieight = map(int(timeSinceAttractionWasPositive / int(strinkingTimeToReachOptimumAttractability / 5)), 2.0, 5.0, 0.0, 1.0);
+        if(wieight > 0.1){
+          gameManager.SetGameEventForScoring(GameEvent.CheckpointInContinuousGoodShakesPeriod_Shade, wieight);
+        }
       }
       timeOfLastInfluencingShake = frameCount;
     }
     
     // Fish is progressively forgetting about its past intentionality if the hook is not more highlighted by any shake of the rod
     if(frameCount - timeOfLastInfluencingShake > numFramesAfterFishstartForgetting){
+       gameManager.SetGameEventForScoring(GameEvent.FishStartForgetting);
        intentionality = lerp(intentionality, 0, speedOfForgettingIntentionality);
     }
     
@@ -183,7 +205,6 @@ class Fish implements PublicFish{
     float upperEndOfIntentionality = map(timeSinceAttractionWasPositive, 0, strinkingTimeToReachOptimumAttractability, 0.4, 0.8);
     
     constrain(intentionality, -0.3, upperEndOfIntentionality);
-        
         
     // Debug
     if(abs(valenceOfShake)>0.0001 || frameCount - timeOfLastInfluencingShake > numFramesAfterFishstartForgetting){
