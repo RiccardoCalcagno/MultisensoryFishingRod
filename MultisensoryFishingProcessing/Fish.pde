@@ -15,7 +15,7 @@ class Fish implements PublicFish{
   float stepSize = 2; 
   
   // Speed of the fish when hooked
-  float stepSizeWhenHooked = 4;
+  float stepSizeWhenHooked = 4;  
   
   // threshold distance necessary to shape the speed of the fish in it environment, with food vision
   float distanceFromFoodWhenStartToDecellerate = 50;
@@ -30,7 +30,7 @@ class Fish implements PublicFish{
   float speedOfForgettingIntentionality = 0.002;
   
   // this express a value of intentionality to reach the bottom of the see when the fish is hooked
-  float intentionToGoDownWhenHooked = 0.24;
+  float intentionToGoDownWhenHooked = 0.24; //TODO REMPLACE
   
   // set this values to adjust the degree in wich a certain shake is attracting - scaring the fish 
   public void setShakeAttractionMapping(){
@@ -128,9 +128,13 @@ class Fish implements PublicFish{
   
   void UpdatePosition() {
     
-    direction = calculateDeltaTarget();
+    float speed = 0; 
     
-    float speed = adjustSpeed();        
+    if(gameManager.debugUtility.debugLevels.get(DebugType.FishMovement) == true){
+      direction = calculateDeltaTarget(); 
+      speed = adjustSpeed();    
+    }
+ 
     direction.setMag(speed);
     
     fishShift = player.NegotiateFishShift(direction);
@@ -140,11 +144,11 @@ class Fish implements PublicFish{
     // Constrain fish within the cube
     pos.x = constrain(pos.x, -boxsize/2, boxsize/2);
     if(player.countDownForCapturingAnimation == -1){
-      pos.y = constrain(pos.y, -boxsize/2, boxsize/2);      
+      pos.y = constrain(pos.y, -boxsize/2, boxsize/2);
     }
     pos.z = constrain(pos.z, -boxsize/2, boxsize/2);
     
-    //DebugHeadColliderAndSpeedVector(); 
+    //DebugHeadColliderAndSpeedVector();
   }
   
   void UpdateIntentionality(ShakeDimention currentShake){
@@ -207,8 +211,8 @@ class Fish implements PublicFish{
     constrain(intentionality, -0.3, upperEndOfIntentionality);
         
     // Debug
-    if(abs(valenceOfShake)>0.0001 || frameCount - timeOfLastInfluencingShake > numFramesAfterFishstartForgetting){
-      println("Intent: "+nf(intentionality, 1, 2)+" in [-0.3, "+nf(upperEndOfIntentionality, 1, 2)+"]");      
+    if(gameManager.debugUtility.debugLevels.get(DebugType.ConsoleIntentionAndTension) == true && ( abs(valenceOfShake)>0.0001 || frameCount - timeOfLastInfluencingShake > numFramesAfterFishstartForgetting)){
+      gameManager.debugUtility.Println("Intent: "+nf(intentionality, 1, 2)+" in [-0.3, "+nf(upperEndOfIntentionality, 1, 2)+"]");      
     }
   }
 

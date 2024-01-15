@@ -7,13 +7,8 @@ import java.util.Map;
 //                                         NATIVE MAIN
 // ------------------------------------------------------------------------------------------------
 
-HashMap<GameEvent, int[]> debuggingScoresDic;
-HashMap<GameEvent, Float> debuggingScoresSumWithWeight;
-HashMap<GameEvent, Integer> debuggingScoresSum;
 
 GameManager globalGameManager;
-      //TODO rremove it is only for debug
-      DebugSensoryInputModule globalDebugSensoryInputModule;
 
 void setup() {
   background(99, 178, 240);
@@ -21,24 +16,31 @@ void setup() {
   size(1400, 1400, P3D);
   hint(DISABLE_OPENGL_ERRORS);
 
-  globalGameManager = new GameManager(this);
-      //TODO rremove it is only for debug
-      globalDebugSensoryInputModule = new DebugSensoryInputModule(globalGameManager); 
+  HashMap<DebugType, Boolean> debugLevel = new HashMap<DebugType, Boolean>(); 
+  debugLevel.put(DebugType.IOFile, true);
+  debugLevel.put(DebugType.FishMovement, true);
+  debugLevel.put(DebugType.InputAsKeyboard, true);
+  debugLevel.put(DebugType.ConsoleAll, true);
+  debugLevel.put(DebugType.ConsoleIntentionAndTension, true);
+  
+  
+  globalGameManager = new GameManager(this, debugLevel);
+  
+  
   globalGameManager.startExperience();
 }
 
 void draw() {
   globalGameManager.gameLoop(); 
-      globalDebugSensoryInputModule.update();
 }
-      //TODO rremove it is only for debug
-      void keyPressed(){
-        globalDebugSensoryInputModule.OnkeyPressed(keyCode);
-      }
-      //TODO rremove it is only for debug
-      void keyReleased() {
-        globalDebugSensoryInputModule.OnkeyReleased(keyCode);
-      }
+//TODO rremove it is only for debug
+void keyPressed(){
+  globalGameManager.debugUtility.OnkeyPressed(keyCode);
+}
+//TODO rremove it is only for debug
+void keyReleased() {
+  globalGameManager.debugUtility.OnkeyReleased(keyCode);
+}
 
 
 
@@ -95,31 +97,29 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   
   
   // ------------------------------------------- DIPENDENCIES -------------------------------------------
-  Fish fish;
+  public Fish fish;
   Player player;
   PApplet parent;
   CameraMovement cameraMovement;
   ArrayList<AbstSensoryOutModule> sensoryModules;
   SensoryInputModule sensoryInputModule = null;
-
+  DebugUtility debugUtility;
 
   
   // ------------------------------------------- INTERFACE's GETTERS -------------------------------------------
   
   boolean isFishHooked(){
     return currentState == GameState.FishHooked;
-  };
+  }
   PublicFish getFish(){
     return fish;
   }
   int getSizeOfAcquarium(){
     return boxsize;
   }
-  
   PVector getCameraPosition(){
     return cameraMovement.getCameraPosition();
   }
-  
   VerletNode[] getNodesOfWire(){
     return player.nodes;
   }
@@ -129,7 +129,10 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   //                                             CONSTRUCTOR 
   // ------------------------------------------------------------------------------------------------
   
-  GameManager(PApplet _parent) {
+  GameManager(PApplet _parent, HashMap<DebugType, Boolean> debugLevels) {
+    
+    debugUtility = new DebugUtility(_parent, this, debugLevels);   
+    
     parent = _parent;
     currentState = GameState.Null; cachedState = GameState.Null;
     InitializeGameEventsScoreMapping();
@@ -200,6 +203,9 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     }
     
     hint(DISABLE_DEPTH_SORT);
+    
+    
+    debugUtility.Draw();
   }
   
   
@@ -224,7 +230,7 @@ class GameManager implements OutputModulesManager, InputModuleManager {
       case AttractingFish:
       
         // TODO Remove this is only for debug purposes
-        //setState(GameState.FishLost);
+        //setState(GameState.FishHooked);
         break;
         
       case FishHooked:
@@ -267,9 +273,12 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   // Method triggered after the User press Play on the UI, see the script WIMP_GUI.pde
   void StartGameWithSettings(PlayerInfo _playerInfo){
     
-    //TODO Switch
-    //if(sensoryInputModule == null) sensoryInputModule = new SensoryInputModule(this);
-    sensoryInputModule = globalDebugSensoryInputModule;
+    if(debugUtility.debugLevels.get(DebugType.IOFile) == true){
+      sensoryInputModule = debugUtility.globalDebugSensoryInputModule;   
+    }
+    else{
+      sensoryInputModule = new SensoryInputModule(this);
+    }
    
     currentSession.playerInfo =_playerInfo;
     
@@ -297,9 +306,9 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   // Invoked at the start of each GamePlay, reset the game logic 
   void beginGameSession(){
     
-    debuggingScoresDic = new HashMap<GameEvent, int[]>();
-    debuggingScoresSumWithWeight = new HashMap<GameEvent, Float>();
-    debuggingScoresSum = new HashMap<GameEvent, Integer>();
+    debugUtility.debuggingScoresDic = new HashMap<GameEvent, int[]>();
+    debugUtility.debuggingScoresSumWithWeight = new HashMap<GameEvent, Float>();
+    debugUtility.debuggingScoresSum = new HashMap<GameEvent, Integer>();
     
     cachedRawMotionData = new RawMotionData();
     cachedSpeedOfWireRetrieving = 0;
@@ -353,7 +362,7 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     
     String written = writeCSVRow(currentSession); 
     
-    Debug_PlotEventsInTime(written);
+    debugUtility.Debug_PlotEventsInTime(currentSession, written);
         
     createAnswerToContinuePlayingUI(currentSession.endReason == "FishCaught");
   }
@@ -435,19 +444,7 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   public void SetGameEventForScoring(GameEvent event, float contingentAlteration){
     float increment = gameEventsToScore.get(event.toString()) * contingentAlteration;
    
-    int[] preValue = new int[]{};
-    float preValueWeight = 0;
-    int preValueSum = 0;
-    if(debuggingScoresDic.containsKey(event) == true){
-      preValue = debuggingScoresDic.get(event);
-      preValueWeight = (float)debuggingScoresSumWithWeight.get(event);
-      preValueSum = (int)debuggingScoresSum.get(event);
-    }
-    preValue = append(preValue, frameCount);
-    debuggingScoresSumWithWeight.put(event, (Float)(preValueWeight + contingentAlteration));
-    debuggingScoresSum.put(event, (Integer)(preValueSum+1));
-    debuggingScoresDic.put(event, preValue);
-    println(debuggingScoresDic.get(event).length);
+    debugUtility.SetGameEventForScoring(event, contingentAlteration);
     
     switch(event){
      case CheckpointInContinuousGoodShakesPeriod_Shade:
@@ -470,74 +467,7 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   }
   
   
-  public void Debug_PlotEventsInTime(String writtenInFile){
-    int max = -1;
-    for (Map.Entry entry : debuggingScoresDic.entrySet()) {
-            int[] value = debuggingScoresDic.get((GameEvent)entry.getKey());
-            if(value.length > 0 && max < value[value.length -1]){
-              max = value[value.length -1];
-            }
-    }
-    int min = currentSession.startTime;
-    
-    String toFile = "###############################################################################################################################################\n New Game: "
-    +writtenInFile+"\n###############################################################################################################################################\n";
-    
-    toFile+=Debug_PlotForOneEvent(GameEvent.CheckpointInContinuousGoodShakesPeriod_Shade, min, max);
-    toFile+=Debug_PlotForOneEvent(GameEvent.AttractingShake, min, max);
-    toFile+=Debug_PlotForOneEvent(GameEvent.ComplexAttractingShake, min, max);
-    toFile+=Debug_PlotForOneEvent(GameEvent.BadScaringShake, min, max);
-    toFile+=Debug_PlotForOneEvent(GameEvent.FishStartForgetting, min, max);
-    toFile+="\n";
-    toFile+=Debug_PlotForOneEvent(GameEvent.TheFishTastedTheBait, min, max);
-    toFile+=Debug_PlotForOneEvent(GameEvent.UserDidNotAnsweredToFishBite, min, max);
-    toFile+=Debug_PlotForOneEvent(GameEvent.NiceShakeItMightHaveCoughtIt, min, max);
-    toFile+="\n";
-    toFile+=Debug_PlotForOneEvent(GameEvent.WireInTention_Shade, min, max);
-    toFile+=Debug_PlotForOneEvent(GameEvent.Good_LeavingWireWhileTention_Shade, min, max);
-    toFile+="\n";
-    
-    writeDebugEndGame(toFile);
-  }
-  
-  String Debug_PlotForOneEvent(GameEvent event, int min, int max){
-    String toOutPut="\n"+event.toString()+", count:"+ debuggingScoresSum.get(event)+", with weight: "+debuggingScoresSumWithWeight.get(event)+", timeLine: \n";
-    int[] times = debuggingScoresDic.get(event);
-    if(times == null){
-      times = new int[] {};
-    }
-    for(int i=0; i<times.length; i++){
-      times[i] = int(map(times[i], min, max, 0, 219));
-    }
-    int[][] frequ = new int[220][3];
-    int[] countA = new int[220];
-    for(int i=0; i<220; i++){
-      int count = 0;
-      for(int j=0; j<times.length; j++){
-        if(times[j] == i)
-          count++;
-      }
-      countA[i] = count;
-      int cent = int(count / 100);
-      int dec = int( (count%100) / 10);
-      int unit = count%10;
-      frequ[i] = new int[] { cent, dec, unit};
-    }
-    
-    for(int i=0; i<3; i++){
-      String text = "";
-      for(int j=0; j<220; j++){
-        char carattere = '-';
-        if(frequ[j][i] > 0 || countA[j] > 0){
-          carattere = (char(frequ[j][i] + 48));
-        }
-        text+=carattere;
-      }
-      toOutPut+=text+"\n";
-    }
-    
-    return toOutPut;
-  }
+ 
     
   
   // ------------------------------------------------------------------------------------------------

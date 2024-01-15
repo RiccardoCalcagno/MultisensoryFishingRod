@@ -39,23 +39,3 @@ String writeCSVRow(SessionData sessionData) {
   
   return output;
 }
-
-
-void writeDebugEndGame(String text) {
-  
-  String filename = "DebugGames.txt";
-  boolean fileExists = new File(dataPath(filename)).exists();
-  
-  try {
-    PrintWriter csvWriter = new PrintWriter(new FileWriter(dataPath(filename), true));
-
-    csvWriter.println(text);
-    csvWriter.println("");
-
-    csvWriter.flush();
-    csvWriter.close();
-    println("Riga scritta con successo in " + filename);
-  } catch (IOException e) {
-    println("Si è verificato un errore durante la scrittura del file CSV: " + e);
-  }
-}

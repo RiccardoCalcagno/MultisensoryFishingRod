@@ -71,7 +71,7 @@ class Player {
   // ------------------------------------------- DEPENDENCIES -------------------------------------------  
     
   GameManager gameManager; // Manager del gioco
-  PublicFish fish = null;
+  Fish fish = null;
   
   
   // ------------------------------------------- INTERFACE's GETTERS -------------------------------------------
@@ -150,7 +150,8 @@ class Player {
 
   PVector NegotiateFishShift(PVector fishDesiredDelta){
    
-    if(wireFishTention >0){
+    //if(wireFishTention >0){
+    if(fish != null){
       PVector fishDistance = PVector.sub(nodes[0].position, fish.getPos());
       float wireDistanceIdle = wireLengthWhenIdle();
       if(fishDistance.magSq() > wireDistanceIdle*wireDistanceIdle){
@@ -246,8 +247,8 @@ class Player {
     
     wireCountdown += ammountOfWireRetreived;
     
-    if(abs(speedOfWireRetrieving)>0.001 || wireFishTention > 0){
-      println("WireRetreived: "+nf(ammountOfWireRetreived, 2, 2)+" missingWire: "+nf((YoffsetOfBaitFromCenterOfRoom - wireCountdown +boxsize /2), 1, 2)+"damageCounter: "+nf(damageCounter, 10, 1));      
+    if(gameManager.debugUtility.debugLevels.get(DebugType.ConsoleIntentionAndTension) == true && (abs(speedOfWireRetrieving)>0.001 || wireFishTention > 0)){
+      gameManager.debugUtility.Println("WireRetreived: "+nf(ammountOfWireRetreived, 2, 2)+" missingWire: "+nf((YoffsetOfBaitFromCenterOfRoom - wireCountdown +boxsize /2), 1, 2)+"damageCounter: "+nf(damageCounter, 10, 1));      
     }
     
     if (YoffsetOfBaitFromCenterOfRoom - wireCountdown < -boxsize /2) {
@@ -266,8 +267,11 @@ class Player {
   
   void update(){
     if(fish == null){
-     fish = gameManager.getFish(); 
+     fish = gameManager.fish; 
+     println("pesce"+(fish == null));
     }
+    
+    println(nfp(getOrigin().y,4,2)+"     "+nfp(wireLengthWhenIdle(), 4, 2)+"     "+nfp(fish.fishShift.y, 2, 2)+"     "+nfp(fish.direction.y, 2, 2));
     
     counterOfLoopsBetweenPushes--; 
     counterOfLoopsBetweenBites--;
