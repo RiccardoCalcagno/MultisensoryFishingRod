@@ -179,7 +179,7 @@ class DebugSensoryInputModule extends SensoryInputModule{
     checkCombination();
     
     // Random movement for debug
-    var data = new RawMotionData(); data.speed = map(noise(frameCount * 0.1), 0, 1, -0.5, 0.5);
+    //var data = new RawMotionData(); data.speed = map(noise(frameCount * 0.1), 0, 1, -0.5, 0.5);
     //inputModuleManager.OnRawMotionDetected(data);
   }
   

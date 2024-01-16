@@ -70,10 +70,11 @@ public class CallPureData {
   }
 }
 
+/*
 void setup() {
   CallPureData cpd = new CallPureData();
   cpd.test();
 }
 
 void draw() { 
-}
+}*/

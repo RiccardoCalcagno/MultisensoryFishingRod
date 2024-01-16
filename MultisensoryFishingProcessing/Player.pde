@@ -323,11 +323,10 @@ class Player {
      }
      
      // Force simulated by the motion of the rod
-     if(abs(cachedRawMotionData.speed) > 0.1){
-       Vec3 rodPullingVector = new Vec3(0, -cachedRawMotionData.speed*intensityOfRodMovments, 0);
-       
-       rodPullingVector.rotateX(map(noise(frameCount * 0.01), 0, 1, -intensityOfRandomVariationsFormTheYAxisInRodPulling, intensityOfRandomVariationsFormTheYAxisInRodPulling)); 
-       rodPullingVector.rotateY(map(noise((frameCount+ 1000) * 0.01), 0, 1, -intensityOfRandomVariationsFormTheYAxisInRodPulling, intensityOfRandomVariationsFormTheYAxisInRodPulling)); 
+     if(abs(cachedRawMotionData.acc_x)+abs(cachedRawMotionData.acc_y)+abs(cachedRawMotionData.acc_z) > 0.1){
+       Vec3 rodPullingVector = new Vec3(-cachedRawMotionData.acc_x*intensityOfRodMovments, -cachedRawMotionData.acc_y*intensityOfRodMovments, -cachedRawMotionData.acc_z*intensityOfRodMovments);
+       //rodPullingVector.rotateX(map(noise(frameCount * 0.01), 0, 1, -intensityOfRandomVariationsFormTheYAxisInRodPulling, intensityOfRandomVariationsFormTheYAxisInRodPulling)); 
+       //rodPullingVector.rotateY(map(noise((frameCount+ 1000) * 0.01), 0, 1, -intensityOfRandomVariationsFormTheYAxisInRodPulling, intensityOfRandomVariationsFormTheYAxisInRodPulling)); 
        nodes[0].cacheForce(rodPullingVector); 
      }
   }
