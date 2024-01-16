@@ -43,35 +43,42 @@ public class CallPureData {
 
   void test() {
     playAnySound(Sound.BREAK);
+    delay(500);    
+    playPitchedWhip(1.0, 1.0);
     delay(500);
-    playPitchedWhip(4.0);
-    delay(500);
-    playPitchedWhip(-4.0);
-    delay(500);
-
-    playTwoSongs(0.0, 0.5);
-    delay(2000);
-    float volume1 = 0.0;
-    float volume2 = 0.5;
-
     for (int i = 0; i <= 5; i++) {
-      playTwoSongs(volume1, volume2);
-      volume1 += 0.1;
-      volume2 -= 0.1;
-      delay(25);
+    playPitchedWhip(4.0, 0.1);
+      delay(250);
+      playPitchedWhip(-4.0, 0.1);
+      delay(250);
     }
-    delay(5000);
-    playTwoSongs(0.0, 0.0);
+    playPitchedWhip(4.0, 1.0);
+    delay(500);
+
+    //playTwoSongs(0.0, 0.5);
+    //delay(2000);
+    //float volume1 = 0.0;
+    //float volume2 = 0.5;
+//
+    //for (int i = 0; i <= 5; i++) {
+    //  playTwoSongs(volume1, volume2);
+    //  volume1 += 0.1;
+    //  volume2 -= 0.1;
+    //  delay(25);
+    //}
+    //delay(5000);
+    //playTwoSongs(0.0, 0.0);
   }
 
 
-  public void playPitchedWhip(Float pitch) {
+  public void playPitchedWhip(float pitch, float volume) {
     // Launch the Pd patch
     String pdPath = ".";
     launch(pdPath, SKETCH_PATH_PITCHED_WHIP);
     
     OscMessage myMessage = new OscMessage("/pitch");
     myMessage.add(pitch);
+    myMessage.add(volume);
     oscP5.send(myMessage, whipPort);
   }
 
