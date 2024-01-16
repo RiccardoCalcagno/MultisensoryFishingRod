@@ -18,7 +18,7 @@ class CameraMovement implements CameraStreamReader {
     
   float scaleX = 1.5;
   float scaleY = 1.5;
-  float scaleZ = 2;
+  float scaleZ = 1.5;
   
   
   // ------------------------------------------- FIELDS -------------------------------------------  
@@ -52,8 +52,8 @@ class CameraMovement implements CameraStreamReader {
 
   PVector getCameraPosition() {
     
-    if(PVector.dist(lastPosRequired, cameraPosition) > 20){
-      lastPosRequired = PVector.lerp(lastPosRequired, cameraPosition, 0.1);
+    if(PVector.dist(lastPosRequired, cameraPosition) > 50){ //20){      // TODO Remove
+      lastPosRequired = PVector.lerp(lastPosRequired, cameraPosition, 0.2);
     }
     else{
      lastPosRequired = cameraPosition;
