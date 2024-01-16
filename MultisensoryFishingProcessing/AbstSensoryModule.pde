@@ -36,6 +36,8 @@ abstract class AbstSensoryOutModule{
   // Once per gameLoop
   void OnRodStatusReading(RodStatusData dataSnapshot){}
   
+  void ResetGame(){}
+  
   // Asyncronous meningful events
   void OnShakeOfRod(ShakeDimention rodShakeType){}
   

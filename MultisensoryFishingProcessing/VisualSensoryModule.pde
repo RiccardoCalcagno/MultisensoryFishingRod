@@ -14,7 +14,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   int verticalPaddingOfVisualBox  = -30;
   
   // Change the density of the algae spowned
-  float numAlgaePerPxSquared = 0.00000024;
+  float numAlgaePerPxSquared = 0.00000007;  //0.00000024;
   
   // Change the size of the algae
   int resizeAlgaeWidth = 100;

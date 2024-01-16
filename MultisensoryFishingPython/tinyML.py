@@ -10,12 +10,16 @@ import numpy as np
 
 
 # Prepare Socket for transmission
-SERVER_IP = ""
-SERVER_PORT = 6969
+SERVER_IP = "127.0.0.1"
+SERVER_PORT = 5000
 
 receive_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 receive_sock.bind((SERVER_IP, SERVER_PORT))
 receive_sock.setblocking(0)
+
+PROCESSONG_IP = '127.0.0.1'
+PROCESSING_PORT = 6969
+send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
 # # Load the TinyML model
@@ -80,5 +84,7 @@ while True:
             prediction = 4 
       
       # OUTPUTs
-      send_data = "tinyML/event:"+LABELS[prediction]+"/variance:"+str(variance)
+      send_data = "tinyML/event:"+LABELS[prediction] #+"/variance: +str(variance)
       print('SEND:\t', send_data)
+      MESSAGE = bytes(send_data, 'utf-8')   
+      send_sock.sendto(MESSAGE, (PROCESSONG_IP, PROCESSING_PORT))

@@ -19,9 +19,9 @@ void setup() {
   HashMap<DebugType, Boolean> debugLevel = new HashMap<DebugType, Boolean>(); 
   debugLevel.put(DebugType.IOFile, true);
   debugLevel.put(DebugType.FishMovement, true);
-  debugLevel.put(DebugType.InputAsKeyboard, true);
-  debugLevel.put(DebugType.ConsoleAll, true);
-  debugLevel.put(DebugType.ConsoleIntentionAndTension, true);
+  debugLevel.put(DebugType.InputAsKeyboard, false);
+  debugLevel.put(DebugType.ConsoleAll, false);
+  debugLevel.put(DebugType.ConsoleIntentionAndTension, false);
   
   
   globalGameManager = new GameManager(this, debugLevel);
@@ -273,11 +273,12 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   // Method triggered after the User press Play on the UI, see the script WIMP_GUI.pde
   void StartGameWithSettings(PlayerInfo _playerInfo){
     
-    if(debugUtility.debugLevels.get(DebugType.IOFile) == true){
+    if(debugUtility.debugLevels.get(DebugType.InputAsKeyboard) == true){
       sensoryInputModule = debugUtility.globalDebugSensoryInputModule;   
     }
     else{
       sensoryInputModule = new SensoryInputModule(this);
+      sensoryInputModule.Start();
     }
    
     currentSession.playerInfo =_playerInfo;
@@ -329,6 +330,10 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     player.Restart();
     
     fish.Restart();
+    
+    for (AbstSensoryOutModule sensoryModule : sensoryModules) {
+      sensoryModule.ResetGame();
+    }
     
     setState(GameState.AttractingFish);
   }
@@ -389,7 +394,6 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     if (currentState != cachedState) {
       GameState pre = currentState;
       currentState = cachedState;
-      currentState = manageGameStates(pre, cachedState);
       
       // notify the modules of a relevant change in state
       if(cachedState == GameState.FishHooked || cachedState == GameState.FishLost || cachedState == GameState.WireEnded){
@@ -412,6 +416,9 @@ class GameManager implements OutputModulesManager, InputModuleManager {
           }
         }
       }
+      
+      currentState = manageGameStates(pre, cachedState);
+      
     }
   }
   
@@ -429,9 +436,8 @@ class GameManager implements OutputModulesManager, InputModuleManager {
       newData.speedOfWireRetrieving = cachedSpeedOfWireRetrieving;
       newData.rawMotionData = cachedRawMotionData;
       
-      
-      newData.coefficentOfWireTension = player.UpdateWireRetreival(newData.speedOfWireRetrieving);
- 
+      newData.coefficentOfWireTension = lerp(player.UpdateWireRetreival(newData.speedOfWireRetrieving), newData.coefficentOfWireTension, 0.8);
+      println(newData.coefficentOfWireTension);
       
       haloForWireRetrieving--;
       haloForRawMovements--;

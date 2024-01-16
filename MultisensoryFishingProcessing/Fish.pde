@@ -37,7 +37,7 @@ class Fish implements PublicFish{
     shakesValenceForAttracting.set("NONE", 0);
     shakesValenceForAttracting.set("SUBTLE", 0.1);
     shakesValenceForAttracting.set("LITTLE_ATTRACTING", 1);
-    shakesValenceForAttracting.set("LONG_ATTRACTING", 0.7);
+    shakesValenceForAttracting.set("LONG_ATTRACTING", 1.5);
     shakesValenceForAttracting.set("LITTLE_NOT_ATTRACTING", -0.4);
     shakesValenceForAttracting.set("STRONG_HOOKING", -2.5);
     shakesValenceForAttracting.set("STRONG_NOT_HOOKING", -3);
