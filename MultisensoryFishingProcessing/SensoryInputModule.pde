@@ -16,8 +16,9 @@ interface InputModuleManager{
 // it is usefull, for instance, for the PureData to add sounds for the rod that is swinging
 // NORMALIZZATI
 class RawMotionData{
-   float speed;
-   float accelleration;
+   int acc_x;
+   int acc_y;
+   int acc_z;
 }
 
 class SensoryInputModule{
