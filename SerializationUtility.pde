@@ -60,7 +60,6 @@ static class ServerThread extends Thread {
               if(k.equals("enc")){
                   float value = Float.parseFloat(value_str);
                   gameManager.OnWeelActivated(value);
-                  // gameManager.OnRawMotionDetected(data); // rumore della wheel che gira RawMotionData.speed, RawMotionData.accelleration
               }
               
               else if(k.equals("acc")){
@@ -72,12 +71,14 @@ static class ServerThread extends Thread {
                   server.send(packet);
                   // System.out.println("SEND: " + line); 
                   
-                  int x = Integer.valueOf(value_str.split(";")[0]);
-                  int y = Integer.valueOf(value_str.split(";")[1]);
-                  int z = Integer.valueOf(value_str.split(";")[2]);
+                  int acc_x = Integer.valueOf(value_str.split(";")[0]);
+                  int acc_y = Integer.valueOf(value_str.split(";")[1]);
+                  int acc_z = Integer.valueOf(value_str.split(";")[2]);
                   
                   System.out.println(String.format("%d;%d;%d",x,y,z)); 
                   
+                  RawMotionData data = new RawMotionData(acc_x,acc_y,acc_z);
+                  gameManager.OnRawMotionDetected(data); 
                   
               }  
 
