@@ -19,6 +19,11 @@ class RawMotionData{
    int acc_x;
    int acc_y;
    int acc_z;
+   RawMotionData(int acc_x, int acc_y, int acc_z){
+         this.acc_x = acc_x;
+         this.acc_y = acc_y;
+         this.acc_z = acc_z;
+   }
 }
 
 class SensoryInputModule{
