@@ -1,5 +1,17 @@
 import netP5.*;
 import oscP5.*;
+import java.util.Map;
+import java.util.HashMap;
+
+public enum Sound {
+  BREAK,
+  CAUGHT,
+  HOOKED,
+  LOST,
+  TASTE,
+  BITE,
+  WIRE
+}
 
 public class CallPureData {
   OscP5 oscP5;
@@ -7,15 +19,30 @@ public class CallPureData {
   NetAddress anySoundPort;
   NetAddress twoSongsPort;
 
+  final String SKETCH_PATH_PITCHED_WHIP = "/play_pitched_whip.pd";
+  final String SKETCH_PATH_PLAY_SOUND = "/play_sound.pd";
+  final String SKETCH_PATH_TWO_SONGS = "/play_two_songs.pd";
+  final String PD_PATH = ".";
+  final HashMap SOUND_PATHS;
+
   public CallPureData() {
       oscP5 = new OscP5(this, 12000);
       whipPort = new NetAddress("127.0.0.1", 3000);
       anySoundPort = new NetAddress("127.0.0.1", 3001);
       twoSongsPort = new NetAddress("127.0.0.1", 3002);
+
+      SOUND_PATHS = new HashMap<>();
+      SOUND_PATHS.put(Sound.BREAK, "sounds/break.wav");
+      SOUND_PATHS.put(Sound.CAUGHT, "sounds/fish_caught.wav");
+      SOUND_PATHS.put(Sound.HOOKED, "sounds/fish_hooked.wav");
+      SOUND_PATHS.put(Sound.LOST, "sounds/fish_lost.wav");
+      SOUND_PATHS.put(Sound.TASTE, "sounds/taste.wav");
+      SOUND_PATHS.put(Sound.BITE, "sounds/bite.wav");
+      SOUND_PATHS.put(Sound.WIRE, "sounds/wire_ended.wav");
     }
 
   void test() {
-    playAnySound("sounds/break.wav");
+    playAnySound(Sound.BREAK);
     delay(500);
     playPitchedWhip(4.0);
     delay(500);
@@ -41,19 +68,17 @@ public class CallPureData {
   public void playPitchedWhip(Float pitch) {
     // Launch the Pd patch
     String pdPath = ".";
-    String patchPath = "/play_pitched_whip.pd";
-    launch(pdPath, patchPath);
+    launch(pdPath, SKETCH_PATH_PITCHED_WHIP);
     
     OscMessage myMessage = new OscMessage("/pitch");
     myMessage.add(pitch);
     oscP5.send(myMessage, whipPort);
   }
 
-  public void playAnySound(String soundPath) {
+  public void playAnySound(Sound sound) {
+    String soundPath = (String)SOUND_PATHS.get(sound);
     // Launch the Pd patch
-    String pdPath = ".";
-    String patchPath = "/play_sound.pd";
-    launch(pdPath, patchPath);
+    launch(PD_PATH, SKETCH_PATH_PLAY_SOUND);
     
     OscMessage myMessage = new OscMessage("/play");
     myMessage.add(soundPath);
@@ -61,8 +86,7 @@ public class CallPureData {
   }
 
   public void playTwoSongs(float firstSongVolume, float secondSongVolume) {
-    whipPort = new NetAddress("127.0.0.1", 3002);
-
+    launch(PD_PATH, SKETCH_PATH_TWO_SONGS);
     OscMessage myMessage = new OscMessage("/values");
     myMessage.add(firstSongVolume);
     myMessage.add(secondSongVolume);
