@@ -101,15 +101,10 @@ public class CallPureData {
   }
 }
 
-/*
-void setup() {
-  CallPureData cpd = new CallPureData();
-  cpd.test();
-}
-
-void draw() { 
-<<<<<<< HEAD:MultisensoryFishingProcessing/CallPD.pde
-}*/
-=======
-}
->>>>>>> feature/pure_data:MultisensoryFishingPureData/CallPD.pde
+//void setup() {
+//  CallPureData cpd = new CallPureData();
+//  cpd.test();
+//}
+//
+//void draw() { 
+//}
