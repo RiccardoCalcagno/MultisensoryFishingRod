@@ -23,10 +23,10 @@ interface InputModuleManager{
 // it is usefull, for instance, for the PureData to add sounds for the rod that is swinging
 // NORMALIZZATI
 class RawMotionData{
-   int acc_x;
-   int acc_y;
-   int acc_z;
-   RawMotionData(int acc_x, int acc_y, int acc_z){
+   float acc_x;
+   float acc_y;
+   float acc_z;
+   RawMotionData(float acc_x, float acc_y, float acc_z){
          this.acc_x = acc_x;
          this.acc_y = acc_y;
          this.acc_z = acc_z;
@@ -37,7 +37,7 @@ class RawMotionData{
 
 
 static int SERVER_PORT = 6969;
-static int TINY_ML_PORT = 6001;
+static int TINY_ML_PORT = 5000;
 static String TINY_ML_IP_value = "127.0.0.1";
 static InetAddress TINY_ML_IP;
 static GameManager gameManager;
@@ -52,12 +52,19 @@ class SensoryInputModule{
   
   // use inputModuleManager to notify the game with all the data comming from the rod
   SensoryInputModule(InputModuleManager _inputModuleManager){
+    
     inputModuleManager = _inputModuleManager;
-    // Start a thread with server
+  }
+  
+  public void Start(){
+        // Start a thread with server
     server = new ServerThread(this);
     server.start();
     System.out.println("Starting server thread on port: "+String.valueOf(SERVER_PORT));
-        
+  }
+  
+  void OnWeelActivated(float speed){
+    inputModuleManager.OnWeelActivated(speed); 
   }
   
   void handleShakeEvent(String type){
@@ -105,7 +112,7 @@ class ServerThread extends Thread {
   Boolean serverExit = false;
   public void run() {
     DatagramSocket server = null;
-    
+
     try{
       
       server = new DatagramSocket(SERVER_PORT);
@@ -130,7 +137,7 @@ class ServerThread extends Thread {
               
               if(k.equals("enc")){
                   float value = Float.parseFloat(value_str);
-                  gameManager.OnWeelActivated(value);
+                  inputModule.OnWeelActivated(value);
               }
               
               else if(k.equals("acc")){
@@ -143,11 +150,11 @@ class ServerThread extends Thread {
                   // System.out.println("SEND: " + line); 
                   
                   int max_acc = 32800;
-                  int acc_x = Integer.valueOf(value_str.split(";")[0])/max_acc;
-                  int acc_y = Integer.valueOf(value_str.split(";")[1])/max_acc;
-                  int acc_z = Integer.valueOf(value_str.split(";")[2])/max_acc;
+                  float acc_x = Float.valueOf(value_str.split(";")[0])/max_acc;
+                  float acc_y = Float.valueOf(value_str.split(";")[1])/max_acc;
+                  float acc_z = Float.valueOf(value_str.split(";")[2])/max_acc;
                   
-                  System.out.println(String.format("%d;%d;%d",acc_x,acc_y,acc_z)); 
+                  //System.out.println(String.format("ACCELLERAZIONI %f;%f;%f",acc_x,acc_y,acc_z)); 
                   
                   RawMotionData data = new RawMotionData(acc_x,acc_y,acc_z);
                   inputModule.OnRawMotionDetected(data);  

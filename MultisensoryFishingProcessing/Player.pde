@@ -271,7 +271,7 @@ class Player {
      println("pesce"+(fish == null));
     }
     
-    println(nfp(getOrigin().y,4,2)+"     "+nfp(wireLengthWhenIdle(), 4, 2)+"     "+nfp(fish.fishShift.y, 2, 2)+"     "+nfp(fish.direction.y, 2, 2));
+    //println(nfp(getOrigin().y,4,2)+"     "+nfp(wireLengthWhenIdle(), 4, 2)+"     "+nfp(fish.fishShift.y, 2, 2)+"     "+nfp(fish.direction.y, 2, 2));
     
     counterOfLoopsBetweenPushes--; 
     counterOfLoopsBetweenBites--;

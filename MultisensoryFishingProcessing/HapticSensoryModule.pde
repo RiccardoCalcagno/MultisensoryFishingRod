@@ -7,8 +7,8 @@ import java.util.List;
 
 static String MESSAGE = "set/act:%d";
 static int CLIENT_PORT = 7000;
-static int ESP_PORT = 6000;
-static String ESP_IP_value = "127.0.0.1";
+static int ESP_PORT = 6969;
+static String ESP_IP_value = "192.168.1.90";
 static InetAddress ESP_IP;
 static DatagramSocket client;
 static Thread client_thread;
@@ -31,7 +31,7 @@ class HapticSensoryModule extends AbstSensoryOutModule {
       data = message.getBytes();
       DatagramPacket packet = new DatagramPacket(data, data.length, ESP_IP, ESP_PORT);
       client.send(packet);
-      System.out.println("SEND: " + message);
+      //System.out.println("SEND: " + message);
     }
     catch(Exception se) {
       se.printStackTrace();
@@ -81,7 +81,7 @@ void send_message_to_vibrators(int value) {
       data = message.getBytes();
       DatagramPacket packet = new DatagramPacket(data, data.length, ESP_IP, ESP_PORT);
       client.send(packet);
-      System.out.println("SEND: " + message);
+      //System.out.println("SEND: " + message);
     }
     catch(Exception se) {
       se.printStackTrace();
@@ -188,7 +188,7 @@ class OnRodStatusReadingThread extends Thread {
   public void run() {
     try {
           buffer.add(dataSnapshot.coefficentOfWireTension);
-          if(buffer.size() == 30){
+          if(buffer.size() == 70){
             wireTension = buffer.get(0);
             buffer.clear();
             //System.out.println(String.format("Wire Tension: %f", wireTension));
