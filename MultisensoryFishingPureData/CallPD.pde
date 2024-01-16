@@ -1,13 +1,13 @@
 import netP5.*;
 import oscP5.*;
 
-class CallPureData {
+public class CallPureData {
   OscP5 oscP5;
   NetAddress whipPort;
   NetAddress anySoundPort;
   NetAddress twoSongsPort;
 
-  CallPureData() {
+  public CallPureData() {
       oscP5 = new OscP5(this, 12000);
       whipPort = new NetAddress("127.0.0.1", 3000);
       anySoundPort = new NetAddress("127.0.0.1", 3001);
