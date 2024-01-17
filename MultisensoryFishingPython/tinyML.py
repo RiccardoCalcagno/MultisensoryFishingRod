@@ -18,7 +18,7 @@ send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Load the TinyML model
 print('LOADING TINYML MODEL...\n')
-MODEL_PATH = 'model_16_1_2024_classes3_adam_categorical_accuracy_batch8'
+MODEL_PATH = 'model_16_1_2024'
 model = tf.keras.models.load_model(MODEL_PATH)
 print('\nSOCKET:\tREADY\nMODEL:\tREADY\nWAITING FOR DATA...\n')
 
