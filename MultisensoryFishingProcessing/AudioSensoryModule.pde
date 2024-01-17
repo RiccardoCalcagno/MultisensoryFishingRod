@@ -13,21 +13,40 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   }
 
   // Once per gameLoop
-  void OnRodStatusReading(RodStatusData dataSnapshot){
-    //only play the wheel sound again if the last wheel sound is finished
-    if (System.currentTimeMillis() > wheelPlayTime)  {
-      float wheelSoundSpeed = abs(50 / dataSnapshot.speedOfWireRetrieving);
-      pureData.playWheelSound(abs(dataSnapshot.speedOfWireRetrieving), 1.0f);
-      wheelPlayTime = System.currentTimeMillis() + (long)wheelSoundSpeed;
-    }
-    
+  public void OnRodStatusReading(RodStatusData dataSnapshot){
+    playWheelSound(dataSnapshot.speedOfWireRetrieving);
+    playRodWhipSound(dataSnapshot.rawMotionData);
+
     // 0 means not in tension. if isFishHooked == true => coefficentOfWireTension = 0
     // max tension when the fish is pulling in the opposite direction of the wire and the speedOfWireRetrieving is equal to -1
     float coefficentOfWireTension = dataSnapshot.coefficentOfWireTension;; 
-    
-    // Check RawMotionData in SensoryInputModule script
-    RawMotionData rawMotionData = dataSnapshot.rawMotionData;
+    //TODO: give auditory feedback of the tension of the wire?
+  }
 
+  private void playWheelTickSound(float speedOfWireRetrieving){
+    if (speedOfWireRetrieving == 0.0f) return;
+    //only play the wheel sound again if the last wheel sound is finished
+    if (System.currentTimeMillis() <= wheelPlayTime) return; 
+
+    //we want the pitch of the wheel sound to go from 2.0 to 4.0
+    float wheelSoundSpeed = 2.0f + (abs(speedOfWireRetrieving)*2);
+    //System.out.println(wheelSoundSpeed);
+    pureData.playWheelSound(wheelSoundSpeed, 1.0f);
+    long waitTime = (long)(50/abs(speedOfWireRetrieving));
+    wheelPlayTime = System.currentTimeMillis() + waitTime;
+  }
+
+  private void playRodWhipSound(RawMotionData rawMotionData){
+    if (rawMotionData == null) return;
+    if (System.currentTimeMillis() <= whipSoundPlayTime) return;
+
+    // Calculate the magnitude of the rod's motion
+    float motionMagnitude = sqrt(pow(rawMotionData.acc_x, 2) + pow(rawMotionData.acc_y, 2) + pow(rawMotionData.acc_z, 2));
+    // Normalize the magnitude to a suitable range for the pitch (you may need to adjust this)
+    float whipSoundPitch = map(motionMagnitude, 0, 10, 1, 5);
+    // Play the whip sound with the calculated pitch
+    pureData.playPitchedWhip(whipSoundPitch, 1.0f);
+    whipSoundPlayTime = System.currentTimeMillis() + 500; // Adjust the delay as needed
   }
   
   // Asyncronous meningful events
