@@ -1,8 +1,5 @@
 import java.util.concurrent.TimeUnit;
 import java.util.List;
-// abstact class => inherit classes (extends) can implement methods cited in the abstract class
-// implementare tali funzioni. Esse vengono chiamate nel main in base allo stato del gioco
-// fare un thread con client che invia dati UDP alla ESP
 
 
 static String MESSAGE = "set/act:%d";
@@ -11,14 +8,32 @@ static int ESP_PORT = 6969;
 static String ESP_IP_value = "192.168.1.90";
 static InetAddress ESP_IP;
 static DatagramSocket client;
-static Thread client_thread;
-static List<Float> buffer = new ArrayList<Float>();
+static int BUFFER_MAX_SIZE = 20;
+static int MIN_VIBRATOR_VALUE = 50;
+
+
+
+enum FishingEvent{
+     DEFAULT,
+     FISH_TASTE_BAIT,
+     FISH_HOOKED,
+     FISH_LOST,
+     FISH_CAUGHT,
+     WIRE_ENDED,
+     END
+}
+
+
 
 class HapticSensoryModule extends AbstSensoryOutModule {
+  
+  ClientThread client_thread;
+  FloatList buffer_wireTensions;
 
   HapticSensoryModule(OutputModulesManager outputModulesManager) {
     super(outputModulesManager);
-    client_thread = new Thread(new ClientThread()); // probabilmente lo devo fare per ogni funzione
+    buffer_wireTensions = new FloatList();
+    client_thread = new ClientThread(this); 
     client_thread.start();
     System.out.println("Starting client thread on port: "+String.valueOf(CLIENT_PORT));
   }
@@ -30,194 +45,126 @@ class HapticSensoryModule extends AbstSensoryOutModule {
       data = message.getBytes();
       DatagramPacket packet = new DatagramPacket(data, data.length, ESP_IP, ESP_PORT);
       client.send(packet);
-      //System.out.println("SEND: " + message);
+      System.out.println("SEND: " + message);
     }
     catch(Exception se) {
       se.printStackTrace();
     }
   }
-
 
   // Once per gameLoop
   void OnRodStatusReading(RodStatusData dataSnapshot) {
-    Thread OnRodStatusReading_thread = new Thread (new OnRodStatusReadingThread(dataSnapshot) );
-    OnRodStatusReading_thread.start();
+      float wireTension = dataSnapshot.coefficentOfWireTension;
+      buffer_wireTensions.append(wireTension);
   }
-
+  
   // Asyncronous meningful events
   void OnShakeOfRod(ShakeDimention rodShakeType) {
   }
-
-  // event fired when the fish is touching the hook. I (Riccardo) change its movemnts in the way that 1 event of tasting the bait has at least 0.8 sec of distance between each others
+  
   void OnFishTasteBait() {
-    Thread OnFishHooked_thread = new Thread (new OnFishTasteBaitThread());
-    OnFishHooked_thread.start();
+    println("Fish has tasted the bait!!!");
+    client_thread.SetEvent(FishingEvent.FISH_TASTE_BAIT);
   }
 
   void OnFishHooked() {
-    Thread OnFishHooked_thread = new Thread (new OnFishHookedThread());
-    OnFishHooked_thread.start();
+    client_thread.SetEvent(FishingEvent.FISH_HOOKED);
   }
 
   void OnFishLost() {
-    Thread OnFishLost_thread = new Thread (new OnFishLostThread());
-    OnFishLost_thread.start();
+    client_thread.SetEvent(FishingEvent.FISH_LOST);
   }
   void OnFishCaught() {
-    Thread OnFishCaught_thread = new Thread (new OnFishCaughtThread());
-    OnFishCaught_thread.start();
+    client_thread.SetEvent(FishingEvent.FISH_CAUGHT);
   }
   void OnWireEndedWithNoFish() {
-    Thread OnWireEndedWithNoFish_thread = new Thread (new OnWireEndedWithNoFishThread());
-    OnWireEndedWithNoFish_thread.start();
+    client_thread.SetEvent(FishingEvent.WIRE_ENDED);
   }
 }
 
-void send_message_to_vibrators(int value) {
-    try {
-      String message = String.format(MESSAGE, value);
-      byte[] data = new byte[100];
-      data = message.getBytes();
-      DatagramPacket packet = new DatagramPacket(data, data.length, ESP_IP, ESP_PORT);
-      client.send(packet);
-      //System.out.println("SEND: " + message);
-    }
-    catch(Exception se) {
-      se.printStackTrace();
-    }
-}
 
 
 
 class ClientThread extends Thread {
+  
+  HapticSensoryModule hapticSensoryModule;
+  boolean exitClient = false;
+  FishingEvent event;
+  
+  ClientThread(HapticSensoryModule _hapticSensoryModule){
+    hapticSensoryModule = _hapticSensoryModule;
+    event = FishingEvent.DEFAULT;
+  }
 
   public void run() {
     try {
       client = new DatagramSocket(CLIENT_PORT);
-      ESP_IP = InetAddress.getByName(ESP_IP_value);
+      ESP_IP = InetAddress.getByName(ESP_IP_value);   
+      while (!exitClient){
+        event = GetEvent();
+        manageEvent(event);
+      }
     }
     catch(Exception se) {
       se.printStackTrace();
-    }
-  }
-
-  void exit_Client() {
-    client.close();
-  }
-}
-
-
-class OnFishTasteBaitThread extends Thread {
-  
-  public void run() {
-    try {
-      //System.out.println("Start OnFishTasteBait Thread");
-      send_message_to_vibrators(255);
-      delay(100);
-      send_message_to_vibrators(0);
-    }
-    catch(Exception se) {
-      se.printStackTrace();
-    }
-  }
-}
-
-class OnFishCaughtThread extends Thread {
-  
-  public void run() {
-    try {
-      send_message_to_vibrators(0);
-    }
-    catch(Exception se) {
-      se.printStackTrace();
-    }
-  }
-}
-
-
-class OnFishLostThread extends Thread {
-  
-  public void run() {
-    try {
-      send_message_to_vibrators(0);
-    }
-    catch(Exception se) {
-      se.printStackTrace();
-    }
-  }
-}
-
-class OnFishHookedThread extends Thread {
-  
-  public void run() {
-    try {
-      send_message_to_vibrators(255);
-      delay(1000);
-      send_message_to_vibrators(0);
-    }
-    catch(Exception se) {
-      se.printStackTrace();
-    }
-  }
-}
-
-class OnWireEndedWithNoFishThread extends Thread {
-  
-  public void run() {
-    try {
-      send_message_to_vibrators(0);
-    }
-    catch(Exception se) {
-      se.printStackTrace();
-    }
-  }
-}
-
-int startTime;
-
-class OnRodStatusReadingThread extends Thread {
-
-  RodStatusData dataSnapshot;
-  Float wireTension;
-  int valueToSend;
-  int cachedValueToSend = 0;
-  int MIN_VIBRATOR_VALUE = 20;
-  
-  OnRodStatusReadingThread(RodStatusData dataSnapshot){
-     this.dataSnapshot = dataSnapshot;
+    }   
   }
   
-  public void run() {
-    try {
-          if(buffer.size() == 0){
-             startTime = millis();
-          }
-          buffer.add(dataSnapshot.coefficentOfWireTension);
-        
-          if(buffer.size() == 20){
-            wireTension = buffer.get(0);
-            buffer.clear();
-            //println(String.format("Time: %d ms ", millis() - startTime));
-            if(wireTension == 0.0){
-              valueToSend = 0;
-            }
-            else if(wireTension < 0){ 
+  void SetEvent(FishingEvent event){
+     this.event = event;
+     println(event);
+  }
+  
+  FishingEvent GetEvent(){
+     return this.event;
+  }
+  
+  void manageEvent(FishingEvent event){
+     switch(event){
+       case FISH_HOOKED:
+         if(hapticSensoryModule.buffer_wireTensions.size() == BUFFER_MAX_SIZE){
+            int valueToSend = 0;
+            float wireTension = hapticSensoryModule.buffer_wireTensions.get(BUFFER_MAX_SIZE-1); //get the last value
+            if(wireTension < 0){ 
               valueToSend = Math.round(MIN_VIBRATOR_VALUE - wireTension * (255-MIN_VIBRATOR_VALUE));
             }
-            else{
+            else if(wireTension < 0){
               valueToSend = Math.round(MIN_VIBRATOR_VALUE + wireTension * (255-MIN_VIBRATOR_VALUE));
             }
-            
-            if (cachedValueToSend != valueToSend){
-              cachedValueToSend = valueToSend;
-              send_message_to_vibrators(valueToSend);
-              delay(500);
-              send_message_to_vibrators(0);
-            }
-          }
-    }
-    catch(Exception se) {
-      se.printStackTrace();
-    }
+            hapticSensoryModule.send_message_to_vibrators(valueToSend);
+            hapticSensoryModule.buffer_wireTensions.clear();
+         }
+         break;
+         
+       case FISH_TASTE_BAIT:
+         hapticSensoryModule.send_message_to_vibrators(255);
+         delay(100);
+         hapticSensoryModule.send_message_to_vibrators(0);
+         this.SetEvent(FishingEvent.DEFAULT);
+         break;
+         
+       case FISH_LOST:
+         hapticSensoryModule.send_message_to_vibrators(0);
+         this.SetEvent(FishingEvent.DEFAULT);
+         break;
+       
+       case FISH_CAUGHT:
+         hapticSensoryModule.send_message_to_vibrators(0);
+         this.SetEvent(FishingEvent.DEFAULT);
+         break;
+         
+       case WIRE_ENDED:
+         hapticSensoryModule.send_message_to_vibrators(0);
+         this.SetEvent(FishingEvent.DEFAULT);
+         break;
+         
+       case END:
+         hapticSensoryModule.send_message_to_vibrators(0);
+         exitClient = true;
+         break;
+         
+       case DEFAULT:
+         break;
+     }
   }
 }
