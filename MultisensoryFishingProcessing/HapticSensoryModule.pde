@@ -12,7 +12,6 @@ static String ESP_IP_value = "192.168.1.90";
 static InetAddress ESP_IP;
 static DatagramSocket client;
 static Thread client_thread;
-static int maxVibratorsValue = 255;
 static List<Float> buffer = new ArrayList<Float>();
 
 class HapticSensoryModule extends AbstSensoryOutModule {
@@ -113,8 +112,8 @@ class OnFishTasteBaitThread extends Thread {
   public void run() {
     try {
       //System.out.println("Start OnFishTasteBait Thread");
-      send_message_to_vibrators(maxVibratorsValue);
-      TimeUnit.MILLISECONDS.sleep(100);
+      send_message_to_vibrators(255);
+      delay(100);
       send_message_to_vibrators(0);
     }
     catch(Exception se) {
@@ -152,8 +151,8 @@ class OnFishHookedThread extends Thread {
   
   public void run() {
     try {
-      send_message_to_vibrators(maxVibratorsValue);
-      TimeUnit.MILLISECONDS.sleep(1000);
+      send_message_to_vibrators(255);
+      delay(1000);
       send_message_to_vibrators(0);
     }
     catch(Exception se) {
@@ -174,12 +173,15 @@ class OnWireEndedWithNoFishThread extends Thread {
   }
 }
 
+int startTime;
+
 class OnRodStatusReadingThread extends Thread {
 
   RodStatusData dataSnapshot;
   Float wireTension;
   int valueToSend;
   int cachedValueToSend = 0;
+  int MIN_VIBRATOR_VALUE = 20;
   
   OnRodStatusReadingThread(RodStatusData dataSnapshot){
      this.dataSnapshot = dataSnapshot;
@@ -187,24 +189,30 @@ class OnRodStatusReadingThread extends Thread {
   
   public void run() {
     try {
+          if(buffer.size() == 0){
+             startTime = millis();
+          }
           buffer.add(dataSnapshot.coefficentOfWireTension);
-          if(buffer.size() == 70){
+        
+          if(buffer.size() == 20){
             wireTension = buffer.get(0);
             buffer.clear();
-            //System.out.println(String.format("Wire Tension: %f", wireTension));
+            //println(String.format("Time: %d ms ", millis() - startTime));
             if(wireTension == 0.0){
               valueToSend = 0;
             }
             else if(wireTension < 0){ 
-              valueToSend = Math.round(100 - wireTension * (maxVibratorsValue-100));
+              valueToSend = Math.round(MIN_VIBRATOR_VALUE - wireTension * (255-MIN_VIBRATOR_VALUE));
             }
             else{
-              valueToSend = Math.round(100 + wireTension * (maxVibratorsValue-100));
+              valueToSend = Math.round(MIN_VIBRATOR_VALUE + wireTension * (255-MIN_VIBRATOR_VALUE));
             }
             
             if (cachedValueToSend != valueToSend){
               cachedValueToSend = valueToSend;
               send_message_to_vibrators(valueToSend);
+              delay(500);
+              send_message_to_vibrators(0);
             }
           }
     }
