@@ -35,7 +35,7 @@ class Player {
   int numLoopsBetweenBites = 80;
   
   // Dial this one to require to the user more or less reactivness to the fish tasting
-  int numLoopsForReactivness = 50; 
+  int numLoopsForReactivness = 100; 
   
   // if 1 => 1 goodShake = 1 catch, if 0 => 1 goodShake = 0 catch, in between => 1 goodShake = randomWithProbabilityOf(rarenessOfHooking) catch
   float rarenessOfHooking = 0.8;

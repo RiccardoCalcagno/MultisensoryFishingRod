@@ -136,7 +136,7 @@ class ServerThread extends Thread {
               String value_str = raw[1];
               
               if(k.equals("enc")){
-                  float value = Float.parseFloat(value_str);
+                  float value = -Float.parseFloat(value_str);
                   inputModule.OnWeelActivated(value);
               }
               
