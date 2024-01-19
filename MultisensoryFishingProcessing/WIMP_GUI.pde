@@ -69,7 +69,7 @@ public void onPlayButtonClick(GButton source, GEvent event) {
   selectedModalities[2] = cbHaptic.isSelected();
 
   // Creazione di un oggetto per memorizzare le informazioni del giocatore
-  PlayerInfo playerInfo = new PlayerInfo(playerName, selectedModalities);
+  PlayerInfo playerInfo = new PlayerInfo(playerName, selectedModalities, true);
   
   // Esempio di utilizzo delle informazioni memorizzate
   println("Player Name: " + playerInfo.playerName);

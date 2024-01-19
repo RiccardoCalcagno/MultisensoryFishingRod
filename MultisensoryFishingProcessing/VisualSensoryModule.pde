@@ -11,7 +11,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   int timeMouthOpen = 10;
   
   // The void space (water) on top and under the box where the fish can swim (defined by boxSize)
-  int verticalPaddingOfVisualBox  = -30;
+  static final int verticalPaddingOfVisualBox  = -30;
   
   // Change the density of the algae spowned
   float numAlgaePerPxSquared = 0.00000007;  //0.00000024;

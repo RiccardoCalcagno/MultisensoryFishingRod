@@ -13,6 +13,21 @@ PImage getWithAlpha(PImage in, float alpha) {
 }
 
 
+PVector getAccellerationInScene(RawMotionData data, boolean isRightHanded){
+    //Supposto tenere la canna a 30° dall orizzontale
+    float cleanX = constrain((constrain(data.acc_z, 0.588, 1) - 0.794) / 0.206, -1, 1); 
+    float cleanY = constrain((constrain(data.acc_y, 0.588, 1) - 0.794) / 0.206, -1, 1);
+    float cleanZ = constrain((constrain(data.acc_x, 0.62, 1) - 0.81) / 0.19, -1, 1);
+    if(isRightHanded == false){
+      cleanX = -cleanX;
+      cleanY = -cleanY;
+    }
+    var rotationHelper = new Vec3(cleanX, cleanY, cleanZ);
+    rotationHelper.rotateX(PI / 6);
+    //rotationHelper.y += 0.82;
+    return rotationHelper;
+   }
+
 
 // Classe di potenziamento di PVector, per le rotazioni in 3D
 class Vec3 extends PVector {

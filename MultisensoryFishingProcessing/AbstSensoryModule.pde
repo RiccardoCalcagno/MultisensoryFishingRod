@@ -24,6 +24,8 @@ interface OutputModulesManager{
   VerletNode[] getNodesOfWire();
   
   PVector getCameraPosition();
+  
+  DebugUtility GetDebugUtility();
 }
 
 abstract class AbstSensoryOutModule{

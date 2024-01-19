@@ -212,7 +212,7 @@ class Fish implements PublicFish{
         
     // Debug
     if(gameManager.debugUtility.debugLevels.get(DebugType.ConsoleIntentionAndTension) == true && ( abs(valenceOfShake)>0.0001 || frameCount - timeOfLastInfluencingShake > numFramesAfterFishstartForgetting)){
-      gameManager.debugUtility.Println("Intent: "+nf(intentionality, 1, 2)+" in [-0.3, "+nf(upperEndOfIntentionality, 1, 2)+"]");      
+      gameManager.debugUtility.Println("Intent: "+nf(intentionality, 1, 2)+" in [-0.3, "+nf(upperEndOfIntentionality, 1, 2)+"]", true);      
     }
   }
 

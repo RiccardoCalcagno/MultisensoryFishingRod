@@ -81,7 +81,6 @@ class ClientThread extends Thread {
   }
   
 
-
   public void run() {
     try {
       client = new DatagramSocket(CLIENT_PORT);
@@ -93,6 +92,8 @@ class ClientThread extends Thread {
         }
         event = GetEvent();
         manageEvent(event);
+        
+        sleep(1);
       }
     }
     catch(Exception se) {

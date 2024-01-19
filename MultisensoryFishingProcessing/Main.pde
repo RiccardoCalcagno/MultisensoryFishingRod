@@ -20,9 +20,10 @@ void setup() {
   debugLevel.put(DebugType.IOFile, true);
   debugLevel.put(DebugType.FishMovement, true);
   debugLevel.put(DebugType.InputAsKeyboard, false);
-  debugLevel.put(DebugType.ConsoleAll, false);
+  debugLevel.put(DebugType.ConsoleAll, true);
+  debugLevel.put(DebugType.ConsoleAlowFrequent, true);
   debugLevel.put(DebugType.ConsoleIntentionAndTension, false);
-  
+  debugLevel.put(DebugType.ConsoleAlowRawRodInputs, false);
   
   globalGameManager = new GameManager(this, debugLevel);
   
@@ -94,6 +95,7 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   float cachedSpeedOfWireRetrieving;
   ShakeDimention cachedShakeRodEvent, prevCachedShakeRodEvent;
   RawMotionData cachedRawMotionData;
+  boolean isRightHanded;
   
   
   // ------------------------------------------- DIPENDENCIES -------------------------------------------
@@ -122,6 +124,10 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   }
   VerletNode[] getNodesOfWire(){
     return player.nodes;
+  }
+  
+  DebugUtility GetDebugUtility(){
+    return debugUtility;
   }
   
   
@@ -277,10 +283,11 @@ class GameManager implements OutputModulesManager, InputModuleManager {
       sensoryInputModule = debugUtility.globalDebugSensoryInputModule;   
     }
     else{
-      sensoryInputModule = new SensoryInputModule(this);
+      sensoryInputModule = new SensoryInputModule(this, true);
       sensoryInputModule.Start();
     }
    
+    isRightHanded = _playerInfo.isRightHanded;
     currentSession.playerInfo =_playerInfo;
     
     for(int i=0; i<3; i++){
@@ -437,7 +444,6 @@ class GameManager implements OutputModulesManager, InputModuleManager {
       newData.rawMotionData = cachedRawMotionData;
       
       newData.coefficentOfWireTension = lerp(player.UpdateWireRetreival(newData.speedOfWireRetrieving), newData.coefficentOfWireTension, 0.8);
-      println(newData.coefficentOfWireTension);
       
       haloForWireRetrieving--;
       haloForRawMovements--;
@@ -580,8 +586,10 @@ class SessionData {
 class PlayerInfo {
   String playerName;
   boolean[] selectedModalities;
-  PlayerInfo(String name, boolean[] modalities) {
+  boolean isRightHanded;
+  PlayerInfo(String name, boolean[] modalities, boolean _isRightHanded) {
     playerName = name;
     selectedModalities = modalities;
+    isRightHanded = _isRightHanded;
   }
 }

@@ -14,7 +14,8 @@ class AudioSensoryModule extends AbstSensoryOutModule{
 
   // Once per gameLoop
   public void OnRodStatusReading(RodStatusData dataSnapshot){
-    playWheelSound(dataSnapshot.speedOfWireRetrieving);
+    //TODO DeComment this, the git push didn'y had the function: playWheelSound
+    //playWheelSound(dataSnapshot.speedOfWireRetrieving);
     playRodWhipSound(dataSnapshot.rawMotionData);
 
     // 0 means not in tension. if isFishHooked == true => coefficentOfWireTension = 0

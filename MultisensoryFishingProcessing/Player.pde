@@ -16,19 +16,16 @@ class Player {
   float multipliyerOfCollisionReaction = 3;
  
   // Gravitational force in 3D
-  PVector gravity = new PVector(0, 0.4, 0); 
+  PVector gravity = new PVector(0, 0.8, 0); 
   
   // This should define the lenght of the rope, not the position of the hook, this would stay evrytime almost in the middel of the boundingBox
-  int totalNodes = 200;
+  int totalNodes = 100; // 200
   
   // This is a constant force that is appplied to the origin of the wire (top extream of it) in order to make it reace a default position if the user is not applying other forces by moving the phiscal rod
   float speedToReachTheIdleOrigin = 0.1;
   
   // this is a coefficent to be fineTuned in order to intensify or decrese the force of the movements of the phisical rod, need to be adjusted in order not to make the hook be throunw out of the water
-  float intensityOfRodMovments = 800;
-  
-  // This is how much the pulling forces produced by the movement of the phisical rod should deviate from the vertical (Y) axis. (with some noise)
-  float intensityOfRandomVariationsFormTheYAxisInRodPulling = 0.5;
+  float intensityOfRodMovments = 10000;
   
   // Average the periods in which the fish is pushing the wire it is repeditly biting (just a taste actually) the hook, 
   // but with a minimum delay between each bites, namely this value. Expect a random variance of +- 0.2*numLoopsBetweenBites
@@ -38,10 +35,10 @@ class Player {
   int numLoopsForReactivness = 100; 
   
   // if 1 => 1 goodShake = 1 catch, if 0 => 1 goodShake = 0 catch, in between => 1 goodShake = randomWithProbabilityOf(rarenessOfHooking) catch
-  float rarenessOfHooking = 0.8;
+  float rarenessOfHooking = 1;
   
   // quantity of wire retreived at each step
-  float maxSpeedOfWireRetreiving = 0.8;
+  float maxSpeedOfWireRetreiving = 5;
   
   // when the wire is idle which is the offset of the bait from the center of the room? (it should be a little bit below so that there is more wire to be retreived)
   float YoffsetOfBaitFromCenterOfRoom = 30;
@@ -65,6 +62,8 @@ class Player {
   int countDownForCapturingAnimation;
   float timeSpentLookingUp;
   float timespentLookingDown;
+  PVector speedRod;
+  int lastFrameSinceAccellerationRodRead;
   
   
   
@@ -79,13 +78,13 @@ class Player {
   PVector getHookPos(){
     return nodes[nodes.length -1].position.copy();
   }
-  float wireLengthWhenIdle(){
+  float wireLengthWhenIdle(){ 
     //We need to consider the gravity force that is streatching a little bit the wire
-    return totalNodes * nodeDistance * 1;
+    return totalNodes * nodeDistance * 1 + 40;
   }
   
-  PVector wireDirection(){
-    return PVector.sub(getHookPos(), nodes[0].position).normalize();
+  PVector wireDirection(){   
+    return PVector.sub(nodes[nodes.length/2].position, nodes[0].position).normalize();
   }
 
   PVector getOrigin(){
@@ -96,7 +95,11 @@ class Player {
     else if(gameManager.isFishHooked()){
       offsetAfterHooking = boxsize/4;
     }
-    return new PVector (0, - wireLengthWhenIdle() + YoffsetOfBaitFromCenterOfRoom - wireCountdown + offsetAfterHooking, 0);
+    float _wireLengthWhenIdle = wireLengthWhenIdle();
+    
+    //_wireLengthWhenIdle = 0;  // TODO Remove
+    
+    return new PVector (0, - _wireLengthWhenIdle + YoffsetOfBaitFromCenterOfRoom - wireCountdown + offsetAfterHooking, 0);
   }
   
   
@@ -120,6 +123,9 @@ class Player {
   
   void Restart(){
     
+      speedRod = new PVector();
+      lastFrameSinceAccellerationRodRead = frameCount;
+      
       wireCountdown = 0;
       
       countDownForCapturingAnimation = -1;
@@ -151,7 +157,7 @@ class Player {
   PVector NegotiateFishShift(PVector fishDesiredDelta){
    
     //if(wireFishTention >0){
-    if(fish != null){
+    if(fish != null && gameManager.isFishHooked() == true){
       PVector fishDistance = PVector.sub(nodes[0].position, fish.getPos());
       float wireDistanceIdle = wireLengthWhenIdle();
       if(fishDistance.magSq() > wireDistanceIdle*wireDistanceIdle){
@@ -174,7 +180,7 @@ class Player {
     
     
     if(countDownForCapturingAnimation > 0){
-      wireCountdown += maxSpeedOfWireRetreiving * 15;
+      wireCountdown += maxSpeedOfWireRetreiving * 10;
       countDownForCapturingAnimation-=1;
       return 0.1;
     }
@@ -246,9 +252,12 @@ class Player {
     float ammountOfWireRetreived = -speedOfWireRetrieving * maxSpeedOfWireRetreiving * speedLimit;
     
     wireCountdown += ammountOfWireRetreived;
+    if(YoffsetOfBaitFromCenterOfRoom - wireCountdown > boxsize/2 + VisualSensoryModule.verticalPaddingOfVisualBox){
+      wireCountdown =  YoffsetOfBaitFromCenterOfRoom - boxsize/2 - VisualSensoryModule.verticalPaddingOfVisualBox;
+    }
     
     if(gameManager.debugUtility.debugLevels.get(DebugType.ConsoleIntentionAndTension) == true && (abs(speedOfWireRetrieving)>0.001 || wireFishTention > 0)){
-      gameManager.debugUtility.Println("WireRetreived: "+nf(ammountOfWireRetreived, 2, 2)+" missingWire: "+nf((YoffsetOfBaitFromCenterOfRoom - wireCountdown +boxsize /2), 1, 2)+"damageCounter: "+nf(damageCounter, 10, 1));      
+      gameManager.debugUtility.Println("WireRetreived: "+nf(ammountOfWireRetreived, 2, 2)+" missingWire: "+nf((YoffsetOfBaitFromCenterOfRoom - wireCountdown +boxsize /2), 1, 2)+"damageCounter: "+nf(damageCounter, 10, 1), true);      
     }
     
     if (YoffsetOfBaitFromCenterOfRoom - wireCountdown < -boxsize /2) {
@@ -260,7 +269,6 @@ class Player {
   
   
   
-  
   void TornWireOnRodMovments(RawMotionData rawMotionData){
     cachedRawMotionData = rawMotionData;
   }
@@ -268,8 +276,10 @@ class Player {
   void update(){
     if(fish == null){
      fish = gameManager.fish; 
-     println("pesce"+(fish == null));
     }
+    
+    
+    println(nf(totalNodes * nodeDistance * 1, 5, 2)+" "+nf(  PVector.sub(nodes[nodes.length-1].position, nodes[0].position).mag(), 5, 2)); 
     
     //println(nfp(getOrigin().y,4,2)+"     "+nfp(wireLengthWhenIdle(), 4, 2)+"     "+nfp(fish.fishShift.y, 2, 2)+"     "+nfp(fish.direction.y, 2, 2));
     
@@ -303,11 +313,17 @@ class Player {
     for (VerletNode node : nodes) {
       node.applyCachedForces();
     }
+    
     float rigidityOfRod = totalNodes * 2;
     // More iterations define the rigidity of the rope
     for(int i=0; i<rigidityOfRod; i++){
-      for (int j = 0; j < nodes.length; j++) {
+      for (int j = 0; j < nodes.length; j++) { // TODO REMOVE 
         nodes[j].applyConstrains((j< nodes.length-1)? nodes[j + 1]: null, nodeDistance, (float)(i+1) / (float)rigidityOfRod);
+        
+        if( i ==  rigidityOfRod-1){
+          nodes[j].position.x = lerp(nodes[j].position.x, 0, 0.003);
+          nodes[j].position.z = lerp(nodes[j].position.z, 0, 0.003);
+        }
       }
     }
   }
@@ -322,13 +338,15 @@ class Player {
         nodes[nodes.length -1].cacheTarget(fish.getPos(), 0.6);
      }
      
-     // Force simulated by the motion of the rod
-     if(abs(cachedRawMotionData.acc_x)+abs(cachedRawMotionData.acc_y)+abs(cachedRawMotionData.acc_z) > 0.1){
-       Vec3 rodPullingVector = new Vec3(-cachedRawMotionData.acc_x*intensityOfRodMovments, -cachedRawMotionData.acc_y*intensityOfRodMovments, -cachedRawMotionData.acc_z*intensityOfRodMovments);
-       //rodPullingVector.rotateX(map(noise(frameCount * 0.01), 0, 1, -intensityOfRandomVariationsFormTheYAxisInRodPulling, intensityOfRandomVariationsFormTheYAxisInRodPulling)); 
-       //rodPullingVector.rotateY(map(noise((frameCount+ 1000) * 0.01), 0, 1, -intensityOfRandomVariationsFormTheYAxisInRodPulling, intensityOfRandomVariationsFormTheYAxisInRodPulling)); 
-       nodes[0].cacheForce(rodPullingVector); 
-     }
+    
+    PVector accelleration = getAccellerationInScene(cachedRawMotionData, gameManager.isRightHanded);
+    float multiplier = -((frameCount - lastFrameSinceAccellerationRodRead) / frameRate) * intensityOfRodMovments;
+    lastFrameSinceAccellerationRodRead = frameCount;
+    speedRod.add(PVector.mult(accelleration, multiplier));  
+    
+    speedRod = PVector.lerp(speedRod, new PVector(), 0.05);
+    
+    nodes[0].cacheForce(speedRod);
   }
   
   void handleCollision() {

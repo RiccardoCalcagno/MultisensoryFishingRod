@@ -1,3 +1,4 @@
+ import java.util.ArrayList;
  
  enum DebugType{
    IOFile,
@@ -5,18 +6,25 @@
    InputAsKeyboard,
    ConsoleAll,
    ConsoleIntentionAndTension,
-   
+   ConsoleAlowFrequent,
+   ConsoleAlowRawRodInputs,
+ }
+ 
+ interface UpdateFunction{
+   void execute(DebugUtility debugUtility, GameManager gameManager); 
  }
  
  public class DebugUtility{
    
    public DebugSensoryInputModule globalDebugSensoryInputModule;
    public PApplet parent;
+   GameManager gameManager;
    
-   public DebugUtility(PApplet _parent, GameManager gameManager, HashMap<DebugType, Boolean> _debugLevels){
+   public DebugUtility(PApplet _parent, GameManager _gameManager, HashMap<DebugType, Boolean> _debugLevels){
      parent = _parent;
      debugLevels = _debugLevels;
-     globalDebugSensoryInputModule = new DebugSensoryInputModule(gameManager); 
+     gameManager = _gameManager;
+     globalDebugSensoryInputModule = new DebugSensoryInputModule(_gameManager, true); 
    }
    
    HashMap<DebugType, Boolean> debugLevels;
@@ -24,10 +32,19 @@
    HashMap<GameEvent, int[]> debuggingScoresDic;
    HashMap<GameEvent, Float> debuggingScoresSumWithWeight;
    HashMap<GameEvent, Integer> debuggingScoresSum;
+   ArrayList<UpdateFunction> updateFunctions = new ArrayList<UpdateFunction>();
+   
+   void SubscribeToDebugLoop(UpdateFunction toBeExecuted){
+     updateFunctions.add(toBeExecuted);
+   }
    
    public void Draw(){
      globalDebugSensoryInputModule.update();
+     for(UpdateFunction fun : updateFunctions){
+       fun.execute(this, gameManager);
+     }
    }
+   
    void OnkeyPressed(int keyPress){
      globalDebugSensoryInputModule.OnkeyPressed(keyPress);
    }
@@ -36,7 +53,10 @@
    }
    
    void Println(String text){
-     if(debugLevels.get(DebugType.ConsoleAll) == true){
+     Println(text, false);
+   }
+   void Println(String text, boolean isFrequent){
+     if((debugLevels.get(DebugType.ConsoleAll) == true) &&(isFrequent == false || debugLevels.get(DebugType.ConsoleAlowFrequent) == true)){
         println(text);
      }
    }
@@ -168,8 +188,8 @@ class DebugSensoryInputModule extends SensoryInputModule{
   //int lastPress = 0;
   //char lastChar = ' ';
   // use inputModuleManager to notify the game with all the data comming from the rod
-  DebugSensoryInputModule(InputModuleManager _inputModuleManager){
-    super(_inputModuleManager);
+  DebugSensoryInputModule(InputModuleManager _inputModuleManager, boolean isRightHanded){
+    super(_inputModuleManager, isRightHanded);
     for (int i = 0; i < 256; i++) {
       keysPressed.put(i, false);
     }

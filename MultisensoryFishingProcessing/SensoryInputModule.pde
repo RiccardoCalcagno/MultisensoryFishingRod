@@ -16,6 +16,8 @@ interface InputModuleManager{
   
   // Costantemente
   void OnRawMotionDetected(RawMotionData data);
+  
+  DebugUtility GetDebugUtility();
 }
 
 // TODO
@@ -23,6 +25,7 @@ interface InputModuleManager{
 // it is usefull, for instance, for the PureData to add sounds for the rod that is swinging
 // NORMALIZZATI
 class RawMotionData{
+  
    float acc_x;
    float acc_y;
    float acc_z;
@@ -33,8 +36,9 @@ class RawMotionData{
    }
    RawMotionData(){
    }
+   
 }
-
+   
 
 static int SERVER_PORT = 6969;
 static int TINY_ML_PORT = 5000;
@@ -50,24 +54,52 @@ class SensoryInputModule{
   
   ServerThread server;
   
+  float speed = 0;
+  String shake = "";
+  RawMotionData data = new RawMotionData();
+  boolean isRightHanded;
+  
+  DebugUtility debugUtility;
+  
   // use inputModuleManager to notify the game with all the data comming from the rod
-  SensoryInputModule(InputModuleManager _inputModuleManager){
+  SensoryInputModule(InputModuleManager _inputModuleManager, boolean _isRightHanded){
     
     inputModuleManager = _inputModuleManager;
+    debugUtility = inputModuleManager.GetDebugUtility();
+    isRightHanded = _isRightHanded;
   }
+ 
   
   public void Start(){
         // Start a thread with server
     server = new ServerThread(this);
     server.start();
-    System.out.println("Starting server thread on port: "+String.valueOf(SERVER_PORT));
+    debugUtility.Println("Starting server thread on port: "+String.valueOf(SERVER_PORT));
+    
+    debugUtility.SubscribeToDebugLoop(new UpdateFunction() {
+      @Override
+      void execute(DebugUtility debugUtility, GameManager gameManager){
+        if(debugUtility.debugLevels.get(DebugType.ConsoleAlowRawRodInputs) == true){
+          var vecAcc = getAccellerationInScene(data, true);
+          debugUtility.Println("RetrivingWire: "+nfp(speed, 1, 2)+"     Acc: "+nfp( vecAcc.x,1, 3)+", "+nfp(vecAcc.y,1, 3)+", "+nfp(vecAcc.z,1, 3)+"        LastShake: "+shake, true);
+        }
+      }
+    });
   }
   
-  void OnWeelActivated(float speed){
-    inputModuleManager.OnWeelActivated(speed); 
+  void OnWeelActivated(float _speed){
+    if(isRightHanded == false){
+      _speed = -_speed;
+    }
+    _speed = constrain(_speed / 12, -1, 1);
+    
+    speed = _speed;
+    inputModuleManager.OnWeelActivated(_speed); 
   }
   
   void handleShakeEvent(String type){
+    shake = type;
+    //println(shake+" "+frameCount);     
     switch(type){
      case "none":
        inputModuleManager.OnShakeEvent(ShakeDimention.NONE);
@@ -94,8 +126,9 @@ class SensoryInputModule{
      }
   }
   
-  void OnRawMotionDetected(RawMotionData data){
-    inputModuleManager.OnRawMotionDetected(data);
+  void OnRawMotionDetected(RawMotionData _data){
+    data = _data;
+    inputModuleManager.OnRawMotionDetected(_data);
   }
   
 }
@@ -164,10 +197,13 @@ class ServerThread extends Thread {
           else if(lineSplit[0].equals("tinyML")){
             // from Python, detected by TinyML
             String event = lineSplit[1].split(":")[1];
-            System.out.println("EVENT: "+event);
             
             inputModule.handleShakeEvent(event);
           }
+          
+          
+          // TODO Verify if it has made the think better
+          sleep(1);
       }
     }
     catch(Exception se){
