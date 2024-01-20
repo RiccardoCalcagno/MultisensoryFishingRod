@@ -8,6 +8,7 @@
    ConsoleIntentionAndTension,
    ConsoleAlowFrequent,
    ConsoleAlowRawRodInputs,
+   StartAlreadyWithFishHoked,
  }
  
  interface UpdateFunction{

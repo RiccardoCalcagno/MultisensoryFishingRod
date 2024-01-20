@@ -32,13 +32,13 @@ class Player {
   int numLoopsBetweenBites = 80;
   
   // Dial this one to require to the user more or less reactivness to the fish tasting
-  int numLoopsForReactivness = 100; 
+  int numLoopsForReactivness = 60; 
   
   // if 1 => 1 goodShake = 1 catch, if 0 => 1 goodShake = 0 catch, in between => 1 goodShake = randomWithProbabilityOf(rarenessOfHooking) catch
   float rarenessOfHooking = 1;
   
   // quantity of wire retreived at each step
-  float maxSpeedOfWireRetreiving = 5;
+  float maxSpeedOfWireRetreiving = 3;
   
   // when the wire is idle which is the offset of the bait from the center of the room? (it should be a little bit below so that there is more wire to be retreived)
   float YoffsetOfBaitFromCenterOfRoom = 30;
@@ -63,6 +63,7 @@ class Player {
   float timeSpentLookingUp;
   float timespentLookingDown;
   PVector speedRod;
+  float lastWireTention;
   int lastFrameSinceAccellerationRodRead;
   
   
@@ -127,6 +128,7 @@ class Player {
       lastFrameSinceAccellerationRodRead = frameCount;
       
       wireCountdown = 0;
+      lastWireTention = 0;
       
       countDownForCapturingAnimation = -1;
     
@@ -178,6 +180,7 @@ class Player {
   // Metodo per simulare l'evento di ritrazione del filo
   float UpdateWireRetreival(float speedOfWireRetrieving) {
     
+    speedOfWireRetrieving = constrain(map(speedOfWireRetrieving, -0.77, 0.77, -1, 1), -1, 1);
     
     if(countDownForCapturingAnimation > 0){
       wireCountdown += maxSpeedOfWireRetreiving * 10;
@@ -219,7 +222,7 @@ class Player {
             speedLimit = map(coeffOfTentionBasedOnFishDirection, 0.5, 1, 1, 0.7);
           }
           
-          wireFishTention = -(speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection)/2.0; // the max value for speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection is -2
+          wireFishTention = constrain( -(speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection)/2.0, 0, 1); // the max value for speedOfWireRetrieving - coeffOfTentionBasedOnFishDirection is -2
           }       
         }
         
@@ -231,6 +234,11 @@ class Player {
           gameManager.SetGameEventForScoring(GameEvent.Good_LeavingWireWhileTention_Shade, weight);
         }
       }
+      
+      // The fish might give to much spiky pulls
+      wireFishTention = lerp(wireFishTention, lastWireTention, 0.7);
+      lastWireTention = wireFishTention;
+        
     
       if(wireFishTention > 0.1){
         
@@ -257,7 +265,7 @@ class Player {
     }
     
     if(gameManager.debugUtility.debugLevels.get(DebugType.ConsoleIntentionAndTension) == true && (abs(speedOfWireRetrieving)>0.001 || wireFishTention > 0)){
-      gameManager.debugUtility.Println("WireRetreived: "+nf(ammountOfWireRetreived, 2, 2)+" missingWire: "+nf((YoffsetOfBaitFromCenterOfRoom - wireCountdown +boxsize /2), 1, 2)+"damageCounter: "+nf(damageCounter, 10, 1), true);      
+      gameManager.debugUtility.Println("Tention: "+nf(wireFishTention, 2, 3)+",  WireRetreived: "+nf(ammountOfWireRetreived, 2, 2)+", missingWire: "+nf((YoffsetOfBaitFromCenterOfRoom - wireCountdown +boxsize /2), 1, 2)+", damageCounter: "+nf(damageCounter, 10, 1), true);      
     }
     
     if (YoffsetOfBaitFromCenterOfRoom - wireCountdown < -boxsize /2) {
@@ -279,8 +287,7 @@ class Player {
     }
     
     
-    println(nf(totalNodes * nodeDistance * 1, 5, 2)+" "+nf(  PVector.sub(nodes[nodes.length-1].position, nodes[0].position).mag(), 5, 2)); 
-    
+    //println(nf(totalNodes * nodeDistance * 1, 5, 2)+" "+nf(  PVector.sub(nodes[nodes.length-1].position, nodes[0].position).mag(), 5, 2)); 
     //println(nfp(getOrigin().y,4,2)+"     "+nfp(wireLengthWhenIdle(), 4, 2)+"     "+nfp(fish.fishShift.y, 2, 2)+"     "+nfp(fish.direction.y, 2, 2));
     
     counterOfLoopsBetweenPushes--; 
@@ -333,9 +340,18 @@ class Player {
      // Force that will guide the hook slowly towards the idle origin, in order to not make the hook disappear if the user pull too much the rod.
      nodes[0].cacheTarget(getOrigin(), (countDownForCapturingAnimation == -1)? speedToReachTheIdleOrigin: 1);
      
+     var mouth = fish.getPos(); mouth.y = mouth.y+10;
      
      if(gameManager.isFishHooked() == true){
-        nodes[nodes.length -1].cacheTarget(fish.getPos(), 0.6);
+        nodes[nodes.length -1].cacheTarget(mouth, 0.6);
+     }
+     else if(counterForReactivness > 0){
+       float intensityOfPushToTheMouth = constrain((1 - (abs(numLoopsForReactivness/2 - counterForReactivness) * 2 / numLoopsForReactivness) )*3, 0, 1) * 0.01;
+       if(counterForReactivness < numLoopsForReactivness * 0.2){
+         intensityOfPushToTheMouth = 0; 
+       }
+       
+       nodes[nodes.length -1].cacheTarget(mouth, intensityOfPushToTheMouth);
      }
      
     
