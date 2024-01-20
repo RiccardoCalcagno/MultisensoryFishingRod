@@ -51,6 +51,8 @@ abstract class AbstSensoryOutModule{
   void OnFishLost(){}
   void OnFishCaught(){}
   void OnWireEndedWithNoFish(){}
+  
+  void OnEndGame(){}
 }
 
 enum ShakeDimention{
@@ -69,8 +71,8 @@ class RodStatusData{
   // negative speed for retreiving the wire, positive velocities for relising wire.
   float speedOfWireRetrieving;
   
-  // 0 means not in tension. if isFishHooked == true => coefficentOfWireTension = 0
-  // max tension when the fish is pulling in the opposite direction of the wire and the speedOfWireRetrieving is equal to -1
+  // From 0 to 1.... 0 means not in tension. if isFishHooked == true => coefficentOfWireTension = 0
+  // max tension when the fish is pulling in the opposite direction of the wire and the speedOfWireRetrieving is equal to 1
   float coefficentOfWireTension; 
   
   // Check RawMotionData in SensoryInputModule script

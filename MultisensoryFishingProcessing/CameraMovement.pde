@@ -66,13 +66,16 @@ class CameraMovement implements CameraStreamReader {
     String portName = "COM2"; // Cambia con la tua porta seriale
     int baudRate = 115200; // Cambia con il baud rate corretto
 
-    myPort = new processing.serial.Serial(parent, portName, baudRate);
-
-    server = new CameraServerThread(myPort, this);
-    //server = new CameraServerThread(this, parent);
-    
-    
-    server.start();
+    try {
+      myPort = new processing.serial.Serial(parent, portName, baudRate);
+  
+      server = new CameraServerThread(myPort, this);
+      //server = new CameraServerThread(this, parent);
+      server.start();
+    }
+    catch(Exception se) {
+      gameManager.GetDebugUtility().Println("ERROR: Can not start camera movement server, probably you need to create COM1 and COM2 virtually, internal error: "+se);
+    }
   }
 
   PVector MapDataToCamPosition(float[] data) {

@@ -18,6 +18,7 @@ void setup() {
 
   HashMap<DebugType, Boolean> debugLevel = new HashMap<DebugType, Boolean>(); 
   debugLevel.put(DebugType.IOFile, true);
+  debugLevel.put(DebugType.StartAlreadyWithFishHoked, false);
   debugLevel.put(DebugType.FishMovement, true);
   debugLevel.put(DebugType.InputAsKeyboard, false);
   debugLevel.put(DebugType.ConsoleAll, true);
@@ -62,6 +63,8 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   // ------------------------------------------- FINE-TUNABLES CONSTANTS -------------------------------------------  
   int NumFramesHaloExternUpdates = 5; 
   
+  int millisecForEndAnimation = 3000;
+  
   public void InitializeGameEventsScoreMapping(){
     
     // ATTRACTING FISH
@@ -96,6 +99,7 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   ShakeDimention cachedShakeRodEvent, prevCachedShakeRodEvent;
   RawMotionData cachedRawMotionData;
   boolean isRightHanded;
+  int millisecSinceCountDownForEndAnimation = -1;
   
   
   // ------------------------------------------- DIPENDENCIES -------------------------------------------
@@ -150,6 +154,16 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     
     player = new Player(this);
     fish = new Fish(this, player);
+    
+    if(debugUtility.debugLevels.get(DebugType.InputAsKeyboard) == true){
+      sensoryInputModule = debugUtility.globalDebugSensoryInputModule;   
+    }
+    else{
+      sensoryInputModule = new SensoryInputModule(this, true);
+      sensoryInputModule.Start();
+    }
+    
+    millisecSinceCountDownForEndAnimation = -1;
   }
   
   
@@ -163,6 +177,8 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     
     updateState();
     
+    debugUtility.Draw();
+    
     if(currentState != GameState.StartExperience && currentState != GameState.End){
       background(85, 146, 200); // Colore azzurro per l'acqua        
     }
@@ -170,7 +186,7 @@ class GameManager implements OutputModulesManager, InputModuleManager {
       background(99, 178, 240); 
     }
     
-    if(currentState != GameState.AttractingFish && currentState != GameState.FishHooked){
+    if(currentState != GameState.AttractingFish && currentState != GameState.FishHooked && currentState != GameState.FishLost && currentState != GameState.WireEnded){
       return;
     }
     
@@ -178,40 +194,40 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     
     hint(ENABLE_DEPTH_SORT);
     
-    if(haloForShakeRodEvent > 0){
-      currentRodState = cachedShakeRodEvent;
-      for (AbstSensoryOutModule sensoryModule : sensoryModules) {
-        if(prevCachedShakeRodEvent != ShakeDimention.NONE && cachedShakeRodEvent != ShakeDimention.NONE){
-          sensoryModule.OnShakeOfRod(ShakeDimention.NONE); 
+    //if(currentState != GameState.FishLost && currentState != GameState.WireEnded){    // TODO Considera magari è questo che causa problemi
+      if(haloForShakeRodEvent > 0){
+        currentRodState = cachedShakeRodEvent;
+        for (AbstSensoryOutModule sensoryModule : sensoryModules) {
+          if(prevCachedShakeRodEvent != ShakeDimention.NONE && cachedShakeRodEvent != ShakeDimention.NONE){
+            sensoryModule.OnShakeOfRod(ShakeDimention.NONE); 
+          }
+          sensoryModule.OnShakeOfRod(cachedShakeRodEvent); 
         }
-        sensoryModule.OnShakeOfRod(cachedShakeRodEvent); 
-      }
-      haloForShakeRodEvent = 0;
-      
-      if(currentState == GameState.AttractingFish && currentRodState == ShakeDimention.STRONG_HOOKING){
-        if(player.HasHookedTheFish()){
-           setState(GameState.FishHooked);
-        }
-      }
-    }
-    
-    fish.UpdateIntentionality(currentRodState);
-    
-    RodStatusData data = calculateRodStatusData();
+        haloForShakeRodEvent = 0;
         
-    player.TornWireOnRodMovments(data.rawMotionData);
+        if(currentState == GameState.AttractingFish && currentRodState != ShakeDimention.NONE){  // TODO CHANGE //currentRodState == ShakeDimention.STRONG_HOOKING){
+          if(player.HasHookedTheFish()){
+             setState(GameState.FishHooked);
+          }
+        }
+      }
+      
+      fish.UpdateIntentionality(currentRodState);
+      
+      RodStatusData data = calculateRodStatusData();
+          
+      player.TornWireOnRodMovments(data.rawMotionData);
+      
+      player.update();
+  
+      for (AbstSensoryOutModule sensoryModule : sensoryModules) {
+  
+        sensoryModule.OnRodStatusReading(data);
+      } 
+    //}
     
-    player.update();
-
-    for (AbstSensoryOutModule sensoryModule : sensoryModules) {
-
-      sensoryModule.OnRodStatusReading(data);
-    }
     
     hint(DISABLE_DEPTH_SORT);
-    
-    
-    debugUtility.Draw();
   }
   
   
@@ -235,8 +251,9 @@ class GameManager implements OutputModulesManager, InputModuleManager {
 
       case AttractingFish:
       
-        // TODO Remove this is only for debug purposes
-        //setState(GameState.FishHooked);
+        if(debugUtility.debugLevels.get(DebugType.StartAlreadyWithFishHoked) == true){
+          setState(GameState.FishHooked);
+        }
         break;
         
       case FishHooked:
@@ -266,26 +283,18 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   void startExperience(){
     
     sensoryModules = new ArrayList<AbstSensoryOutModule>();
+    millisecSinceCountDownForEndAnimation = -1;
     
     currentSession = new SessionData();
     //camera(width/2, height/2.0, 0, width/2, height/2, 0, 0, 1, 0);
     
-    cachedState = GameState.StartExperience;
-    updateState();
+    //cachedState = GameState.StartExperience;
     
     createUI(globalGameManager);
   }
   
   // Method triggered after the User press Play on the UI, see the script WIMP_GUI.pde
   void StartGameWithSettings(PlayerInfo _playerInfo){
-    
-    if(debugUtility.debugLevels.get(DebugType.InputAsKeyboard) == true){
-      sensoryInputModule = debugUtility.globalDebugSensoryInputModule;   
-    }
-    else{
-      sensoryInputModule = new SensoryInputModule(this, true);
-      sensoryInputModule.Start();
-    }
    
     isRightHanded = _playerInfo.isRightHanded;
     currentSession.playerInfo =_playerInfo;
@@ -313,6 +322,8 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   
   // Invoked at the start of each GamePlay, reset the game logic 
   void beginGameSession(){
+  
+    millisecSinceCountDownForEndAnimation = -1;
     
     debugUtility.debuggingScoresDic = new HashMap<GameEvent, int[]>();
     debugUtility.debuggingScoresSumWithWeight = new HashMap<GameEvent, Float>();
@@ -358,13 +369,17 @@ class GameManager implements OutputModulesManager, InputModuleManager {
            currentSession.endReason = "WireEndedWithoutFish"; 
         }
         break;
-    }  
+    }
     
-    setState(GameState.End);
+    millisecSinceCountDownForEndAnimation = millis();
   }
 
   // Metodo per terminare la sessione di gioco
   void endGameSession() {
+    
+    for (AbstSensoryOutModule sensoryModule : sensoryModules) {
+      sensoryModule.OnEndGame();
+    }
     
     camera(width/2, height/2.0, 0, width/2, height/2, 0, 0, 1, 0);
     
@@ -398,6 +413,12 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     cachedState = newState;
   }
   void updateState(){
+    
+    if(millisecSinceCountDownForEndAnimation != -1 && millis() - millisecSinceCountDownForEndAnimation > millisecForEndAnimation){
+      millisecSinceCountDownForEndAnimation = -1;
+      setState(GameState.End);
+    }
+    
     if (currentState != cachedState) {
       GameState pre = currentState;
       currentState = cachedState;
@@ -443,7 +464,7 @@ class GameManager implements OutputModulesManager, InputModuleManager {
       newData.speedOfWireRetrieving = cachedSpeedOfWireRetrieving;
       newData.rawMotionData = cachedRawMotionData;
       
-      newData.coefficentOfWireTension = lerp(player.UpdateWireRetreival(newData.speedOfWireRetrieving), newData.coefficentOfWireTension, 0.8);
+      newData.coefficentOfWireTension = player.UpdateWireRetreival(newData.speedOfWireRetrieving);
       
       haloForWireRetrieving--;
       haloForRawMovements--;

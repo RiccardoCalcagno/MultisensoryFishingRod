@@ -1,4 +1,3 @@
-
 static String MESSAGE = "set/act:%d";
 static int CLIENT_PORT = 7000;
 static int ESP_PORT = 6969;
@@ -8,12 +7,13 @@ static DatagramSocket client;
 static int BUFFER_MAX_SIZE = 20;
 static int MIN_VIBRATOR_VALUE = 50;
 static int MAX_VIBRATOR_VALUE = 255; 
-static boolean DEBUG = false;
+static int HALF_VIBRATOR_VALUE = 180;
 
 
 
 enum FishingEvent{
-     DEFAULT,
+     NONE,
+     ROD_READ,
      FISH_TASTE_BAIT,
      FISH_HOOKED,
      FISH_LOST,
@@ -23,47 +23,201 @@ enum FishingEvent{
 }
 
 
-
 class HapticSensoryModule extends AbstSensoryOutModule {
   
-  ClientThread client_thread;
-  FloatList buffer_wireTensions;
+  ClientThread client_thread = null;
+  float lastTension;
+  
+  HashMap<FishingEvent, Integer> priorities = new HashMap<FishingEvent, Integer>();
+  
+  Integer millisecSinceEvent;
+  
+  FishingEvent event = FishingEvent.NONE;
+      
 
   HapticSensoryModule(OutputModulesManager outputModulesManager) {
     super(outputModulesManager);
-    buffer_wireTensions = new FloatList();
-    client_thread = new ClientThread(this); 
-    client_thread.start();
-    System.out.println("Starting client thread on port: "+String.valueOf(CLIENT_PORT));
+    
+    priorities.put(FishingEvent.NONE, 0);
+    priorities.put(FishingEvent.ROD_READ, 1);
+    priorities.put(FishingEvent.FISH_TASTE_BAIT, 2);
+    priorities.put(FishingEvent.FISH_HOOKED, 4);
+    priorities.put(FishingEvent.FISH_LOST, 4);
+    priorities.put(FishingEvent.FISH_CAUGHT, 4);
+    priorities.put(FishingEvent.WIRE_ENDED, 4);
+    priorities.put(FishingEvent.END, 10);
   }
+    
 
-  // Once per gameLoop
-  void OnRodStatusReading(RodStatusData dataSnapshot) {
-      float wireTension = dataSnapshot.coefficentOfWireTension;
-      buffer_wireTensions.append(wireTension);
+  void ResetGame(){
+     if(client_thread!= null){
+       client_thread.Dispose();
+       client_thread = null;
+     }
+     
+     event = FishingEvent.NONE;
+     millisecSinceEvent = null;
+     lastTension = 0;
+     
+     client_thread = new ClientThread(this); 
+     client_thread.start();
+     System.out.println("Starting client Haptic thread on port: "+String.valueOf(CLIENT_PORT));
   }
   
+  // Once per gameLoop
+  void OnRodStatusReading(RodStatusData dataSnapshot) {
+      lastTension = dataSnapshot.coefficentOfWireTension;
+      if(outputModulesManager.isFishHooked() == true){
+        SetEvent(FishingEvent.ROD_READ); 
+      }
+      
+      if(keyPressed & outputModulesManager.GetDebugUtility().debugLevels.get(DebugType.InputAsKeyboard) == true){
+        debug_for_event();
+      }
+  }  
   // Asyncronous meningful events
   void OnShakeOfRod(ShakeDimention rodShakeType) {
   }
-  
   void OnFishTasteBait() {
-    client_thread.SetEvent(FishingEvent.FISH_TASTE_BAIT);
+    SetEvent(FishingEvent.FISH_TASTE_BAIT);
   }
-
   void OnFishHooked() {
-    client_thread.SetEvent(FishingEvent.FISH_HOOKED);
+    SetEvent(FishingEvent.FISH_HOOKED);
   }
-
   void OnFishLost() {
-    client_thread.SetEvent(FishingEvent.FISH_LOST);
+    SetEvent(FishingEvent.FISH_LOST);
   }
   void OnFishCaught() {
-    client_thread.SetEvent(FishingEvent.FISH_CAUGHT);
+    SetEvent(FishingEvent.FISH_CAUGHT);
   }
   void OnWireEndedWithNoFish() {
-    client_thread.SetEvent(FishingEvent.WIRE_ENDED);
+    SetEvent(FishingEvent.WIRE_ENDED);
   }
+  void OnEndGame(){
+    SetEvent(FishingEvent.END);
+    client_thread.Dispose();
+  }
+  
+  
+  
+  // Pairs, the first value mean the intensity the second for how many millisec, if the time is < 0 then there is not an end, the next event will change the status
+  private int[][] getPattern(FishingEvent event){
+    
+    switch(event){
+         
+       case ROD_READ:
+         float tens = lastTension;
+         if(tens <0.2){
+           tens = map(tens, 0, 0.2, 0, 0.4);
+         }
+         else{
+           tens = map(tens, 0.2, 1, 0.4, 1);
+         }
+         int value = int(map(tens, 0, 1, 0, MAX_VIBRATOR_VALUE));
+         return new int[][] { {value, -1} };
+         
+       case FISH_TASTE_BAIT:
+         return new int[][] { {MAX_VIBRATOR_VALUE, 100}, { 0, -1 } };
+         
+       case FISH_LOST:
+       case WIRE_ENDED:
+         return new int[][] { {HALF_VIBRATOR_VALUE, 700}, { 0, 700 }, { HALF_VIBRATOR_VALUE, 700 }, { 0, 700}, {HALF_VIBRATOR_VALUE, 1500} };
+       
+       case FISH_HOOKED:
+         return new int[][] { {MAX_VIBRATOR_VALUE, 200}, { HALF_VIBRATOR_VALUE, 100 }, {MAX_VIBRATOR_VALUE, 100}, { HALF_VIBRATOR_VALUE, 150 }, {MAX_VIBRATOR_VALUE, 200}, { HALF_VIBRATOR_VALUE, 100 } };
+
+       case FISH_CAUGHT:
+         return new int[][] { {HALF_VIBRATOR_VALUE, 200}, { 0, 180 }, { HALF_VIBRATOR_VALUE, 200 }, { 0, 180}, {HALF_VIBRATOR_VALUE, 200} , { 0, 180 }, { HALF_VIBRATOR_VALUE, 200 }, { 0, 180}, {HALF_VIBRATOR_VALUE, 200} };
+
+       case NONE:
+       case END:
+       default:
+         return new int[][]{ { 0 , -1} };
+     }
+  }
+  private int ReadCurrentIndexOfPattern(int[][] pattern, int millisecFromStart){
+    
+    int indx = -1;
+    int sumMillis = 0;
+    for(int i=0; i<pattern.length; i++){
+      if((sumMillis <= millisecFromStart) && (pattern[i][1] <0 || millisecFromStart < sumMillis+pattern[i][1] )){
+        indx = i;
+      }
+      sumMillis += pattern[i][1];
+    }
+   return indx; 
+  }
+
+  
+  private void SetEvent(FishingEvent _event){
+    
+    if(event != FishingEvent.END){
+      var patternChosed = getPattern(event);
+      var currentIndx = ReadCurrentIndexOfPattern(patternChosed, getMillisFromEvent());
+      
+      if(currentIndx < 0 || priorities.get(_event) >= priorities.get(event)){
+        
+        millisecSinceEvent = null; 
+        event = _event;   
+      } 
+    }
+  }
+  
+  private int getMillisFromEvent(){
+   if(millisecSinceEvent != null){
+     return millis() - millisecSinceEvent;
+   }
+   return 0;
+  }
+  
+  public int getCurrentValue(){
+    String text="";
+    if(millisecSinceEvent == null){
+      millisecSinceEvent = millis();
+      text+="started Pattern: ";
+    }
+    else{
+      text+="                 ";
+    }
+    var patternChosed = getPattern(event);
+    var index = ReadCurrentIndexOfPattern(patternChosed,  getMillisFromEvent());
+    text+=event+" "+index;
+    
+    int outValue = -1;
+    if(index>=0){
+      outValue = patternChosed[index][0];
+    }
+    //println(text+"  "+outValue+"   "+lastTension+"        "+frameCount);
+    return outValue;
+  }
+  
+  
+  void debug_for_event(){ 
+            
+      switch(key) {
+        case('a'):
+          SetEvent(FishingEvent.ROD_READ);
+          break;
+        case('s'):
+          SetEvent(FishingEvent.FISH_TASTE_BAIT);
+          break;
+        case('d'):
+          SetEvent(FishingEvent.FISH_HOOKED);
+          break;
+        case('f'):
+          SetEvent(FishingEvent.FISH_LOST);
+          break;
+        case('g'):
+          SetEvent(FishingEvent.FISH_CAUGHT);
+          break;
+        case('h'):
+          SetEvent(FishingEvent.WIRE_ENDED);
+          break;
+        case('j'):
+          SetEvent(FishingEvent.END);
+          break;
+      }
+    }  
 }
 
 
@@ -72,28 +226,27 @@ class HapticSensoryModule extends AbstSensoryOutModule {
 class ClientThread extends Thread {
   
   HapticSensoryModule hapticSensoryModule;
-  boolean exitClient = false;
-  FishingEvent event;
+  int precedentValue = 0;
   
   ClientThread(HapticSensoryModule _hapticSensoryModule){
     hapticSensoryModule = _hapticSensoryModule;
-    event = FishingEvent.DEFAULT;
   }
-  
 
   public void run() {
     try {
       client = new DatagramSocket(CLIENT_PORT);
       ESP_IP = InetAddress.getByName(ESP_IP_value);   
-      while (!exitClient){
-        if(keyPressed & DEBUG){
-          println("Key Pressed: " + key);
-          debug_for_event();
+      while (isDisposed() == false){
+
+        int value = hapticSensoryModule.getCurrentValue();
+       
+        if(value < 0){
+          value = precedentValue;
         }
-        event = GetEvent();
-        manageEvent(event);
+        send_message_to_vibrators(value);
+        precedentValue = value;
         
-        sleep(1);
+        Thread.sleep(50);
       }
     }
     catch(Exception se) {
@@ -101,15 +254,26 @@ class ClientThread extends Thread {
     }   
   }
   
-  
-  
-  void SetEvent(FishingEvent event){
-     this.event = event;
-     println(event);
+  boolean isDisposed(){
+    return client == null;
   }
   
-  FishingEvent GetEvent(){
-     return this.event;
+  void Dispose(){
+    if(isDisposed() == false){
+      try {
+        send_message_to_vibrators(0);
+        send_message_to_vibrators(0);
+        sleep(10);
+        send_message_to_vibrators(0);
+      }
+      catch(Exception se) {
+        println("in disposing haptic thread, can not put asleep vibrators, exception: "+se);
+      }  
+      try {
+        client.close();
+      } catch(Exception e) { println("in disposing haptic thread, can not close DatagramSoket, exception: "+e);}
+      client = null;
+    }
   }
   
   void send_message_to_vibrators(int value) {
@@ -119,88 +283,11 @@ class ClientThread extends Thread {
       data = message.getBytes();
       DatagramPacket packet = new DatagramPacket(data, data.length, ESP_IP, ESP_PORT);
       client.send(packet);
-      System.out.println("SEND: " + message);
+      //System.out.println("SEND: " + message);
     }
     catch(Exception se) {
       se.printStackTrace();
     }
   }
-  
-  void manageEvent(FishingEvent event){
-     switch(event){
-       case FISH_HOOKED:
-         if(hapticSensoryModule.buffer_wireTensions.size() >= BUFFER_MAX_SIZE){
-            println(hapticSensoryModule.buffer_wireTensions.size());
-            int valueToSend = 0;
-            float wireTension = hapticSensoryModule.buffer_wireTensions.get(BUFFER_MAX_SIZE-1); //get the last value
-            if(wireTension < 0){ 
-              valueToSend = Math.round(MIN_VIBRATOR_VALUE - wireTension * (MAX_VIBRATOR_VALUE-MIN_VIBRATOR_VALUE));
-            }
-            else if(wireTension > 0){
-              valueToSend = Math.round(MIN_VIBRATOR_VALUE + wireTension * (MAX_VIBRATOR_VALUE-MIN_VIBRATOR_VALUE));
-            }
-            send_message_to_vibrators(valueToSend);
-            hapticSensoryModule.buffer_wireTensions.clear();
-         }
-         break;
-         
-       case FISH_TASTE_BAIT:
-         send_message_to_vibrators(MAX_VIBRATOR_VALUE);
-         delay(100);
-         send_message_to_vibrators(0);
-         this.SetEvent(FishingEvent.DEFAULT);
-         break;
-         
-       case FISH_LOST:
-         send_message_to_vibrators(0);
-         this.SetEvent(FishingEvent.DEFAULT);
-         break;
-       
-       case FISH_CAUGHT:
-         send_message_to_vibrators(0);
-         this.SetEvent(FishingEvent.DEFAULT);
-         break;
-         
-       case WIRE_ENDED:
-         send_message_to_vibrators(0);
-         this.SetEvent(FishingEvent.DEFAULT);
-         break;
-         
-       case END:
-         send_message_to_vibrators(0);
-         exitClient = true;
-         break;
-         
-       case DEFAULT:
-         break;
-     }
-  }
-  
-  
-  void debug_for_event(){ 
-              
-        switch(key) {
-          case('a'):
-            SetEvent(FishingEvent.DEFAULT);
-            break;
-          case('s'):
-            SetEvent(FishingEvent.FISH_TASTE_BAIT);
-            break;
-          case('d'):
-            SetEvent(FishingEvent.FISH_HOOKED);
-            break;
-          case('f'):
-            SetEvent(FishingEvent.FISH_LOST);
-            break;
-          case('g'):
-            SetEvent(FishingEvent.FISH_CAUGHT);
-            break;
-          case('h'):
-            SetEvent(FishingEvent.WIRE_ENDED);
-            break;
-          case('j'):
-            SetEvent(FishingEvent.END);
-            break; 
-        }
-      }  
+
 }

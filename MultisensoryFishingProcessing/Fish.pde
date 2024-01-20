@@ -159,6 +159,7 @@ class Fish implements PublicFish{
       return;
     }
     
+    
     switch(currentShake){
      case LITTLE_ATTRACTING:
        gameManager.SetGameEventForScoring(GameEvent.AttractingShake);
@@ -208,7 +209,7 @@ class Fish implements PublicFish{
     // while as soon as he make a mistake the upper limit decrease immediately to its lowest, this because the fish got scared
     float upperEndOfIntentionality = map(timeSinceAttractionWasPositive, 0, strinkingTimeToReachOptimumAttractability, 0.4, 0.8);
     
-    constrain(intentionality, -0.3, upperEndOfIntentionality);
+    intentionality = constrain(intentionality, -0.3, upperEndOfIntentionality);
         
     // Debug
     if(gameManager.debugUtility.debugLevels.get(DebugType.ConsoleIntentionAndTension) == true && ( abs(valenceOfShake)>0.0001 || frameCount - timeOfLastInfluencingShake > numFramesAfterFishstartForgetting)){
