@@ -1,48 +1,13 @@
-DateTime,PlayerName,SessionDuration,AttractingFishScore,HookingFishScore,RetreivingFishScore,sight,audio,haptic,endReason
-14/1/2024 - 10h:47min,Riccardo,71.61929,0.0,0.0,0.0,true,false,true,FishCaught
-14/1/2024 - 10h:51min,Riccardi,85.901245,0.0,0.0,0.0,true,true,true,FishCaught
-14/1/2024 - 10h:55min,,80.148125,0.0,0.0,0.0,true,true,true,FishCaught
-14/1/2024 - 11h:9min,,136.73001,0.0,0.0,0.0,true,true,true,FishCaught
-14/1/2024 - 11h:13min,,75.51121,0.0,0.0,0.0,true,true,true,FishCaught
-14/1/2024 - 11h:32min,,115.35567,0.0,0.0,0.0,true,false,true,FishCaught
-14/1/2024 - 11h:38min,,88.05374,0.0,0.0,0.0,true,true,true,FishCaught
-14/1/2024 - 12h:16min,Riccardo,121.02645,0.0,0.0,0.0,true,false,true,FishCaught
-14/1/2024 - 12h:22min,Riccaor,64.79837,0.0,0.0,0.0,true,false,true,FishCaught
-14/1/2024 - 18h:48min,,220.61018,0.0,0.0,0.0,true,true,true,FishLost
-16/1/2024 - 17h:52min,,36.821526,0.0,0.0,0.0,true,true,true,WireEndedWithoutFish
-16/1/2024 - 18h:2min,adawdawd,63.82678,0.0,0.0,0.0,true,true,true,FishCaught
-16/1/2024 - 18h:7min,,196.45314,0.0,0.0,0.0,true,true,true,FishCaught
-16/1/2024 - 18h:19min,,89.37885,0.0,0.0,0.0,true,true,true,FishCaught
-16/1/2024 - 18h:22min,,52.145016,0.0,0.0,0.0,true,true,true,FishCaught
-16/1/2024 - 19h:5min, ,57.277542,0.0,0.0,0.0,true,true,true,FishCaught
-16/1/2024 - 19h:8min,,76.98277,0.0,0.0,0.0,true,true,true,FishCaught
-19/1/2024 - 15h:44min,,34.758236,0.0,0.0,0.0,true,true,true,WireEndedWithoutFish
-19/1/2024 - 16h:4min,,93.72134,0.0,0.0,0.0,true,true,true,FishCaught
-19/1/2024 - 16h:7min,,69.15435,0.0,0.0,0.0,true,true,true,FishCaught
-19/1/2024 - 16h:18min,,59.003086,0.0,0.0,0.0,true,true,true,FishCaught
-19/1/2024 - 16h:21min,,169.57869,0.0,0.0,0.0,true,true,true,FishCaught
-19/1/2024 - 16h:31min,,90.82386,0.0,0.0,0.0,true,true,true,FishCaught
-19/1/2024 - 16h:33min,,117.41009,0.0,0.0,0.0,true,true,true,FishCaught
-19/1/2024 - 16h:52min,,69.892334,0.0,0.0,0.0,true,true,true,FishCaught
-19/1/2024 - 19h:34min,,92.52236,0.0,0.0,0.0,true,true,true,FishCaught
-19/1/2024 - 20h:2min,,108.73627,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 11h:52min,,56.610023,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 11h:53min,,50.81552,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 12h:21min,,53.103653,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 18h:17min,,104.088036,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 18h:21min,,132.82034,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 18h:31min,,148.57777,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 18h:34min,,63.99265,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 18h:39min,,35.435574,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 18h:41min,,34.259155,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 18h:44min,,21.867758,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 18h:48min,,16.76521,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 18h:54min,,89.27229,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 18h:57min,,57.95258,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 19h:8min,,23.801025,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 19h:26min,,97.403076,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 19h:28min,,24.986994,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 19h:49min,,21.517706,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 19h:51min,,25.087156,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 19h:51min,,21.175781,0.0,0.0,0.0,true,true,true,FishCaught
-20/1/2024 - 19h:52min,,27.367458,0.0,0.0,0.0,true,true,true,FishCaught
+DateTime,PlayerName,SessionDuration,AttractingFishScore,HookingFishScore,RetreivingFishScore, DamagedWire ,sight,audio,haptic,endReason
+22/1/2024 - 18h:14min,,113.14211,0.0,0.0,0.0,0.9682978,true,true,true,FishCaught
+22/1/2024 - 18h:16min,brutta tensione,102.32301,0.0,0.0,0.0,0.9690682,true,true,true,FishCaught
+22/1/2024 - 18h:18min,brutta tensione,73.71972,0.0,0.0,0.0,0.96587586,true,true,true,FishCaught
+22/1/2024 - 18h:20min,brutta tensione,105.07494,0.0,0.0,0.0,0.9567486,true,true,true,FishCaught
+22/1/2024 - 18h:22min,perfect tention,149.56966,0.0,0.0,0.0,0.9714221,true,true,true,FishCaught
+22/1/2024 - 18h:24min,perfect tention,182.88123,0.0,0.0,0.0,0.995961,true,true,true,FishCaught
+22/1/2024 - 18h:27min,perfect tention,157.46094,0.0,0.0,0.0,0.99659616,true,true,true,FishCaught
+22/1/2024 - 18h:30min,perfect tention,124.152565,0.0,0.0,0.0,0.9976449,true,true,true,FishCaught
+22/1/2024 - 18h:32min,perfect tention,105.37173,0.0,0.0,0.0,0.9902905,true,true,true,FishCaught
+22/1/2024 - 18h:34min,perfect tention,87.828804,0.0,0.0,0.0,0.9881552,true,true,true,FishCaught
+22/1/2024 - 20h:20min,,112.392944,0.0,0.0,0.0,0.3741866,true,true,true,FishCaught
+22/1/2024 - 20h:22min,,141.37727,0.0,0.0,0.0,0.4862349,true,true,true,FishCaught

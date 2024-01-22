@@ -25,6 +25,7 @@ void setup() {
   debugLevel.put(DebugType.ConsoleAlowFrequent, true);
   debugLevel.put(DebugType.ConsoleIntentionAndTension, false);
   debugLevel.put(DebugType.ConsoleAlowRawRodInputs, false);
+  debugLevel.put(DebugType.IntentionalityVisualization, true);
   
   globalGameManager = new GameManager(this, debugLevel);
   
@@ -77,7 +78,6 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     // HOOKING FISH
     gameEventsToScore.set("TheFishTastedTheBait", 0);
     gameEventsToScore.set("UserDidNotAnsweredToFishBite", 0);
-    gameEventsToScore.set("NiceShakeItMightHaveCoughtIt", 0);
     
     // RETREIVING FISH
     gameEventsToScore.set("WireInTention_Shade", 0);
@@ -205,7 +205,7 @@ class GameManager implements OutputModulesManager, InputModuleManager {
         }
         haloForShakeRodEvent = 0;
         
-        if(currentState == GameState.AttractingFish && currentRodState != ShakeDimention.NONE){  // TODO CHANGE //currentRodState == ShakeDimention.STRONG_HOOKING){
+        if(currentState == GameState.AttractingFish && currentRodState == ShakeDimention.STRONG_HOOKING){
           if(player.HasHookedTheFish()){
              setState(GameState.FishHooked);
           }
@@ -385,6 +385,8 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     
     currentSession.endTime = frameCount;
     
+    currentSession.demagedWire = (player.maxDamage - player.damageCounter) / player.maxDamage;
+    
     println("Game Finished "+currentSession.endReason);
     
     String written = writeCSVRow(currentSession); 
@@ -489,7 +491,6 @@ class GameManager implements OutputModulesManager, InputModuleManager {
      break;
      case TheFishTastedTheBait:
      case UserDidNotAnsweredToFishBite:
-     case NiceShakeItMightHaveCoughtIt:
        currentSession.HookingFishScore+=increment;
      break;
      case WireInTention_Shade:
@@ -575,7 +576,6 @@ enum GameEvent{
    Good_LeavingWireWhileTention_Shade,
    TheFishTastedTheBait,
    UserDidNotAnsweredToFishBite,
-   NiceShakeItMightHaveCoughtIt,
 }
 
 class SessionData {
@@ -590,6 +590,7 @@ class SessionData {
   float RetreivingFishScore;
   String dateTime = "";
   String endReason;
+  float demagedWire;
   PlayerInfo playerInfo;
   
   public void ResetGameData(){
@@ -598,6 +599,7 @@ class SessionData {
     RetreivingFishScore = 0;
     startTime = frameCount;
     endReason = "";
+    demagedWire = 0;
     dateTime = day()+"/"+month()+"/"+year()+" - "+hour()+"h:"+minute()+"min";
   }
 }

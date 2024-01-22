@@ -10,6 +10,7 @@ String writeCSVRow(SessionData sessionData) {
   boolean haptic = sessionData.playerInfo.selectedModalities[2];
   String endReason = sessionData.endReason;
   String dateTime = sessionData.dateTime;
+  float demagedWire = sessionData.demagedWire;
   float sessionTime = (float(sessionData.endTime - sessionData.startTime) / frameRate);
   
   String output="";
@@ -23,11 +24,11 @@ String writeCSVRow(SessionData sessionData) {
 
     // Se il file non esiste, scrive l'intestazione
     if (lines == null || lines.length == 0) {
-      csvWriter.println("DateTime,PlayerName,SessionDuration,AttractingFishScore,HookingFishScore,RetreivingFishScore,sight,audio,haptic,endReason");
+      csvWriter.println("DateTime,PlayerName,SessionDuration,AttractingFishScore,HookingFishScore,RetreivingFishScore, DamagedWire ,sight,audio,haptic,endReason");
     }
 
     // Scrive i valori della riga nel file CSV
-    output = dateTime + "," + playerName + "," + sessionTime + "," + attractingFishScore + "," + hookingFishScore + "," + retreivingFishScore + "," + sight + "," + audio + "," + haptic + "," + endReason;
+    output = dateTime + "," + playerName + "," + sessionTime + "," + attractingFishScore + "," + hookingFishScore + "," + retreivingFishScore + "," + demagedWire + "," + sight + "," + audio + "," + haptic + "," + endReason;
     csvWriter.println(output);
 
     csvWriter.flush();

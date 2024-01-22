@@ -5,7 +5,7 @@ static String ESP_IP_value = "192.168.1.90";
 static InetAddress ESP_IP;
 static DatagramSocket client;
 static int BUFFER_MAX_SIZE = 20;
-static int MIN_VIBRATOR_VALUE = 50;
+static int MIN_VIBRATOR_VALUE = 90;
 static int MAX_VIBRATOR_VALUE = 255; 
 static int HALF_VIBRATOR_VALUE = 180;
 
@@ -38,7 +38,7 @@ class HapticSensoryModule extends AbstSensoryOutModule {
   HapticSensoryModule(OutputModulesManager outputModulesManager) {
     super(outputModulesManager);
     
-    priorities.put(FishingEvent.NONE, 0);
+    priorities.put(FishingEvent.NONE, 1);
     priorities.put(FishingEvent.ROD_READ, 1);
     priorities.put(FishingEvent.FISH_TASTE_BAIT, 2);
     priorities.put(FishingEvent.FISH_HOOKED, 4);
@@ -68,7 +68,12 @@ class HapticSensoryModule extends AbstSensoryOutModule {
   void OnRodStatusReading(RodStatusData dataSnapshot) {
       lastTension = dataSnapshot.coefficentOfWireTension;
       if(outputModulesManager.isFishHooked() == true){
-        SetEvent(FishingEvent.ROD_READ); 
+        if(lastTension > 0.1){
+          SetEvent(FishingEvent.ROD_READ);           
+        }
+        else{
+          SetEvent(FishingEvent.NONE);
+        }
       }
       
       if(keyPressed & outputModulesManager.GetDebugUtility().debugLevels.get(DebugType.InputAsKeyboard) == true){
@@ -107,27 +112,21 @@ class HapticSensoryModule extends AbstSensoryOutModule {
          
        case ROD_READ:
          float tens = lastTension;
-         if(tens <0.2){
-           tens = map(tens, 0, 0.2, 0, 0.4);
-         }
-         else{
-           tens = map(tens, 0.2, 1, 0.4, 1);
-         }
-         int value = int(map(tens, 0, 1, 0, MAX_VIBRATOR_VALUE));
-         return new int[][] { {value, -1} };
+         int value = int(map(lastTension, 0.1, 1, MIN_VIBRATOR_VALUE, MAX_VIBRATOR_VALUE));
+         return new int[][] { {255, 20}, {value, -1} };
          
        case FISH_TASTE_BAIT:
          return new int[][] { {MAX_VIBRATOR_VALUE, 100}, { 0, -1 } };
          
        case FISH_LOST:
        case WIRE_ENDED:
-         return new int[][] { {HALF_VIBRATOR_VALUE, 700}, { 0, 700 }, { HALF_VIBRATOR_VALUE, 700 }, { 0, 700}, {HALF_VIBRATOR_VALUE, 1500} };
+         return new int[][] { {HALF_VIBRATOR_VALUE, 500}, { 0, 500 }, { HALF_VIBRATOR_VALUE, 500 }, { 0, 500}, {HALF_VIBRATOR_VALUE, 1000}, { 0, -1 }  };
        
        case FISH_HOOKED:
-         return new int[][] { {MAX_VIBRATOR_VALUE, 200}, { HALF_VIBRATOR_VALUE, 100 }, {MAX_VIBRATOR_VALUE, 100}, { HALF_VIBRATOR_VALUE, 150 }, {MAX_VIBRATOR_VALUE, 200}, { HALF_VIBRATOR_VALUE, 100 } };
+         return new int[][] { {MAX_VIBRATOR_VALUE, 200}, { HALF_VIBRATOR_VALUE, 100 }, {MAX_VIBRATOR_VALUE, 100}, { HALF_VIBRATOR_VALUE, 150 }, {MAX_VIBRATOR_VALUE, 200}, { HALF_VIBRATOR_VALUE, 100 }};
 
        case FISH_CAUGHT:
-         return new int[][] { {HALF_VIBRATOR_VALUE, 200}, { 0, 180 }, { HALF_VIBRATOR_VALUE, 200 }, { 0, 180}, {HALF_VIBRATOR_VALUE, 200} , { 0, 180 }, { HALF_VIBRATOR_VALUE, 200 }, { 0, 180}, {HALF_VIBRATOR_VALUE, 200} };
+         return new int[][] { {HALF_VIBRATOR_VALUE, 200}, { 0, 180 }, { HALF_VIBRATOR_VALUE, 200 }, { 0, 180}, {HALF_VIBRATOR_VALUE, 200} , { 0, 180 }, { HALF_VIBRATOR_VALUE, 200 }, { 0, 180}, {HALF_VIBRATOR_VALUE, 200}, { 0, -1 }  };
 
        case NONE:
        case END:
@@ -151,12 +150,11 @@ class HapticSensoryModule extends AbstSensoryOutModule {
   
   private void SetEvent(FishingEvent _event){
     
-    if(event != FishingEvent.END){
+    if(event != FishingEvent.END && ( _event!= FishingEvent.ROD_READ || event!= FishingEvent.ROD_READ)){
       var patternChosed = getPattern(event);
       var currentIndx = ReadCurrentIndexOfPattern(patternChosed, getMillisFromEvent());
       
       if(currentIndx < 0 || priorities.get(_event) >= priorities.get(event)){
-        
         millisecSinceEvent = null; 
         event = _event;   
       } 
@@ -181,13 +179,13 @@ class HapticSensoryModule extends AbstSensoryOutModule {
     }
     var patternChosed = getPattern(event);
     var index = ReadCurrentIndexOfPattern(patternChosed,  getMillisFromEvent());
-    text+=event+" "+index;
+    text+=event+("               ".substring((event.toString()).length()))+" "+index;
     
     int outValue = -1;
     if(index>=0){
       outValue = patternChosed[index][0];
     }
-    //println(text+"  "+outValue+"   "+lastTension+"        "+frameCount);
+    println(text+"  "+outValue+"   "+nf(lastTension, 2, 3)+"        "+frameCount);
     return outValue;
   }
   
@@ -246,7 +244,7 @@ class ClientThread extends Thread {
         send_message_to_vibrators(value);
         precedentValue = value;
         
-        Thread.sleep(50);
+        Thread.sleep(10);
       }
     }
     catch(Exception se) {

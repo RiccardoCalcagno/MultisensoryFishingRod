@@ -114,6 +114,10 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     drawSceneFish();
     
     drawWireAndBait(dataSnapshot.coefficentOfWireTension);
+    
+    if(outputModulesManager.GetDebugUtility().debugLevels.get(DebugType.IntentionalityVisualization) == true){
+      drawIntentionalityVisualization();
+    }
   }
   
   
@@ -122,6 +126,25 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   //                                       DRAWING METHODS
   // ------------------------------------------------------------------------------------------------
   
+  
+  void drawIntentionalityVisualization(){
+   
+    var currentDelta =  outputModulesManager.GetDebugUtility().currentDeltaOFIntentionality;
+    pushMatrix();
+    scale(scaleScene);
+    translate(400,  height/2, width/3);
+    //rotateZ(PI);
+    
+    float intentionality = fish.getIntentionality();
+    int hightP = int(map(intentionality, 0, 1, 0, 500));
+    
+    color co = lerpColor(color(255, 0, 0), color(0,255, 0), map(intentionality, -0.3, 0.8, 0, 1));
+   
+    fill(co);
+    noStroke();
+    rect(0, 0, 100, -hightP);
+    popMatrix();
+  }
   
   void drawAlgae(){
     
@@ -217,7 +240,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     pushMatrix();
     scale(scaleScene);
     
-    translate(width/2 + fishPose.x, height/2 +fishPose.y, fishPose.z);
+    translate(width/2 + fishPose.x, height/2 +fishPose.y - 10, fishPose.z);
     applyMatrix(rotationMatrix);   
     rotateY(-PI/2);
     rotateX(PI -targetGround.x);

@@ -10,13 +10,14 @@ class Player {
   // ------------------------------------------- FINE-TUNABLES CONSTANTS -------------------------------------------  
   
   //max damage supported by the wire
-  int maxDamage = 2000;//200;
+  float maxDamage = 50;
   
   // Bigger => More the wire should bounce in the moment in wich the fish touch it
   float multipliyerOfCollisionReaction = 3;
  
   // Gravitational force in 3D
-  PVector gravity = new PVector(0, 0.8, 0); 
+  PVector weightOfNode = new PVector(0, 0.8, 0); 
+  PVector weightOfBait = new PVector(0, 48, 0); 
   
   // This should define the lenght of the rope, not the position of the hook, this would stay evrytime almost in the middel of the boundingBox
   int totalNodes = 100; // 200
@@ -27,18 +28,19 @@ class Player {
   // this is a coefficent to be fineTuned in order to intensify or decrese the force of the movements of the phisical rod, need to be adjusted in order not to make the hook be throunw out of the water
   float intensityOfRodMovments = 10000;
   
+  // if the mouth of the fish is more distant form the food than minDistanceOfMouthFromFoodToHook at the moment of the Strong_Hooking shake than the hook do not success.
+  int minDistanceOfMouthFromFoodToHook = 20;
+  
   // Average the periods in which the fish is pushing the wire it is repeditly biting (just a taste actually) the hook, 
   // but with a minimum delay between each bites, namely this value. Expect a random variance of +- 0.2*numLoopsBetweenBites
-  int numLoopsBetweenBites = 80;
+  // This value increase with the intentionality of the fish map(intentionality, 0, 0.8, maxNumLoopsBetweenBites, minNumLoopsBetweenBites)
+  int maxNumLoopsBetweenBites = 120;  int minNumLoopsBetweenBites = 80;
   
   // Dial this one to require to the user more or less reactivness to the fish tasting
-  int numLoopsForReactivness = 60; 
-  
-  // if 1 => 1 goodShake = 1 catch, if 0 => 1 goodShake = 0 catch, in between => 1 goodShake = randomWithProbabilityOf(rarenessOfHooking) catch
-  float rarenessOfHooking = 1;
+  int numLoopsForReactivness = 17;   // they start from this value and each time the user fail to strinke this value increase of 4 untill numLoopsForReactivness * 3
   
   // quantity of wire retreived at each step
-  float maxSpeedOfWireRetreiving = 3;
+  float maxSpeedOfWireRetreiving = 2;
   
   // when the wire is idle which is the offset of the bait from the center of the room? (it should be a little bit below so that there is more wire to be retreived)
   float YoffsetOfBaitFromCenterOfRoom = 30;
@@ -54,7 +56,6 @@ class Player {
   int boxsize;
   float damageCounter;
   VerletNode[] nodes;
-  boolean hasFailedBecauseTheRandomness = false;
   float nodeDistance = 15;
   float wireCountdown;
   RawMotionData cachedRawMotionData = new RawMotionData();
@@ -65,6 +66,7 @@ class Player {
   PVector speedRod;
   float lastWireTention;
   int lastFrameSinceAccellerationRodRead;
+  int currentnumLoopsForReactivness;
   
   
   
@@ -98,8 +100,6 @@ class Player {
     }
     float _wireLengthWhenIdle = wireLengthWhenIdle();
     
-    //_wireLengthWhenIdle = 0;  // TODO Remove
-    
     return new PVector (0, - _wireLengthWhenIdle + YoffsetOfBaitFromCenterOfRoom - wireCountdown + offsetAfterHooking, 0);
   }
   
@@ -124,6 +124,9 @@ class Player {
   
   void Restart(){
     
+    
+      currentnumLoopsForReactivness = numLoopsForReactivness;
+      
       speedRod = new PVector();
       lastFrameSinceAccellerationRodRead = frameCount;
       
@@ -148,7 +151,7 @@ class Player {
      
      timeSinceHooking = -1;
      
-     counterOfLoopsBetweenBites = numLoopsBetweenBites;
+     counterOfLoopsBetweenBites = maxNumLoopsBetweenBites;
      counterForReactivness =-1;
      
      timeSpentLookingUp=0;
@@ -240,14 +243,10 @@ class Player {
       lastWireTention = wireFishTention;
         
     
-      if(wireFishTention > 0.1){
+      if(wireFishTention > 0.1 && speedOfWireRetrieving < 0){
         
-        // Calculate the decrement for the score
-        if(wireFishTention > 0.4){
-          float weight = map(wireFishTention, 0.4, 1, 0.4, 1);
-          weight*= map(percentageOfTimePulling, 0.4, 0.6, 1.1, 0.9);
-          gameManager.SetGameEventForScoring(GameEvent.WireInTention_Shade, weight);
-        }
+        float weight = map(wireFishTention, 0.1, 1, 0.5, 1);
+        gameManager.SetGameEventForScoring(GameEvent.WireInTention_Shade, weight);
         
         damageCounter -= wireFishTention;
         
@@ -286,23 +285,10 @@ class Player {
      fish = gameManager.fish; 
     }
     
-    
-    //println(nf(totalNodes * nodeDistance * 1, 5, 2)+" "+nf(  PVector.sub(nodes[nodes.length-1].position, nodes[0].position).mag(), 5, 2)); 
-    //println(nfp(getOrigin().y,4,2)+"     "+nfp(wireLengthWhenIdle(), 4, 2)+"     "+nfp(fish.fishShift.y, 2, 2)+"     "+nfp(fish.direction.y, 2, 2));
-    
     counterOfLoopsBetweenPushes--; 
     counterOfLoopsBetweenBites--;
     counterForReactivness--;
     
-    if(counterForReactivness == 0){
-      if(gameManager.isFishHooked() == false && hasFailedBecauseTheRandomness == false){
-        gameManager.SetGameEventForScoring(GameEvent.UserDidNotAnsweredToFishBite);
-      }
-      else if(gameManager.isFishHooked() == true || hasFailedBecauseTheRandomness == true){
-        gameManager.SetGameEventForScoring(GameEvent.NiceShakeItMightHaveCoughtIt);
-      }
-      hasFailedBecauseTheRandomness = false;
-    }
     
     if(gameManager.isFishHooked() == false && counterOfLoopsBetweenBites <= 0 && counterOfLoopsBetweenPushes > 0){
       BiteTheHook();
@@ -340,19 +326,23 @@ class Player {
      // Force that will guide the hook slowly towards the idle origin, in order to not make the hook disappear if the user pull too much the rod.
      nodes[0].cacheTarget(getOrigin(), (countDownForCapturingAnimation == -1)? speedToReachTheIdleOrigin: 1);
      
-     var mouth = fish.getPos(); mouth.y = mouth.y+10;
+     var mouth = fish.getPos();
      
      if(gameManager.isFishHooked() == true){
         nodes[nodes.length -1].cacheTarget(mouth, 0.6);
      }
      else if(counterForReactivness > 0){
-       float intensityOfPushToTheMouth = constrain((1 - (abs(numLoopsForReactivness/2 - counterForReactivness) * 2 / numLoopsForReactivness) )*3, 0, 1) * 0.01;
-       if(counterForReactivness < numLoopsForReactivness * 0.2){
-         intensityOfPushToTheMouth = 0; 
+         float intensityOfPushToTheMouth = constrain((1 - (abs(currentnumLoopsForReactivness/2 - counterForReactivness) * 2 / currentnumLoopsForReactivness) )*3, 0, 1) * 0.01;
+         nodes[nodes.length -1].cacheTarget(mouth, intensityOfPushToTheMouth);
+     }else if(counterForReactivness == 0){
+         var dir = new Vec3(fish.getFishRotation());
+         var forceOfPush = 4* weightOfBait.y;
+         dir.setMag(forceOfPush);
+         dir.rotateX(random(0, PI/10));
+         dir.rotateY(random(0, PI/10));
+         dir.rotateZ(random(0, PI/10));
+         nodes[nodes.length -1].cacheForce(dir);
        }
-       
-       nodes[nodes.length -1].cacheTarget(mouth, intensityOfPushToTheMouth);
-     }
      
     
     PVector accelleration = getAccellerationInScene(cachedRawMotionData, gameManager.isRightHanded);
@@ -397,13 +387,15 @@ class Player {
     
     if(counterForReactivness > 0){
       
-      if(random(0, 1) <= rarenessOfHooking){
+      if( PVector.dist(fish.getPos(),nodes[nodes.length - 1].position) < minDistanceOfMouthFromFoodToHook){
         timeSinceHooking = frameCount;
         return true;
       }
-      else{
-        hasFailedBecauseTheRandomness = true;
-      }
+    }
+    
+    gameManager.SetGameEventForScoring(GameEvent.UserDidNotAnsweredToFishBite);
+    if(currentnumLoopsForReactivness < numLoopsForReactivness*3){
+      currentnumLoopsForReactivness = currentnumLoopsForReactivness + 4; 
     }
     return false;
   }
@@ -411,8 +403,8 @@ class Player {
   
   void BiteTheHook(){
     gameManager.SetGameEventForScoring(GameEvent.TheFishTastedTheBait);
-    counterForReactivness = numLoopsForReactivness;
-    counterOfLoopsBetweenBites = int(numLoopsBetweenBites * random(0.8, 1.2));
+    counterForReactivness = currentnumLoopsForReactivness;        
+    counterOfLoopsBetweenBites = int( map(fish.getIntentionality(), 0, 0.8, maxNumLoopsBetweenBites, minNumLoopsBetweenBites) * random(0.8, 1.2));
     gameManager.OnFishTasteBait();
   }
     
@@ -424,7 +416,7 @@ class Player {
       node.cacheForce(PVector.sub(node.position, node.oldPosition));
       
       // Add gravity force
-      node.cacheForce( ((i >= nodes.length -1)? gravity.copy().mult(60): gravity));
+      node.cacheForce( ((i >= nodes.length -1)? weightOfBait: weightOfNode));
     }
   }
 }

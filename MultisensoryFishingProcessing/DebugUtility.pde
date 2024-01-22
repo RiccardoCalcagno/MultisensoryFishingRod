@@ -9,6 +9,7 @@
    ConsoleAlowFrequent,
    ConsoleAlowRawRodInputs,
    StartAlreadyWithFishHoked,
+   IntentionalityVisualization,
  }
  
  interface UpdateFunction{
@@ -34,6 +35,8 @@
    HashMap<GameEvent, Float> debuggingScoresSumWithWeight;
    HashMap<GameEvent, Integer> debuggingScoresSum;
    ArrayList<UpdateFunction> updateFunctions = new ArrayList<UpdateFunction>();
+   
+   float currentDeltaOFIntentionality;
    
    void SubscribeToDebugLoop(UpdateFunction toBeExecuted){
      updateFunctions.add(toBeExecuted);
@@ -98,7 +101,6 @@
       toFile+="\n";
       toFile+=Debug_PlotForOneEvent(GameEvent.TheFishTastedTheBait, min, max);
       toFile+=Debug_PlotForOneEvent(GameEvent.UserDidNotAnsweredToFishBite, min, max);
-      toFile+=Debug_PlotForOneEvent(GameEvent.NiceShakeItMightHaveCoughtIt, min, max);
       toFile+="\n";
       toFile+=Debug_PlotForOneEvent(GameEvent.WireInTention_Shade, min, max);
       toFile+=Debug_PlotForOneEvent(GameEvent.Good_LeavingWireWhileTention_Shade, min, max);

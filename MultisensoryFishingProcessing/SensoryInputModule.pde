@@ -103,10 +103,6 @@ class SensoryInputModule{
     switch(type){
      case "none":
        inputModuleManager.OnShakeEvent(ShakeDimention.NONE);
-       //inputModuleManager.sensoryModules.get(2).OnFishLost();
-       break;
-     case "subtle":
-       inputModuleManager.OnShakeEvent(ShakeDimention.SUBTLE);
        break;
      case "little_attracting":
        inputModuleManager.OnShakeEvent(ShakeDimention.LITTLE_ATTRACTING);
@@ -114,15 +110,14 @@ class SensoryInputModule{
      case "long_attracting":
        inputModuleManager.OnShakeEvent(ShakeDimention.LONG_ATTRACTING);
        break;
-     case "little_NOT_attracting":
-       inputModuleManager.OnShakeEvent(ShakeDimention.LITTLE_NOT_ATTRACTING);
-       break;
      case "strong_hooking":
        inputModuleManager.OnShakeEvent(ShakeDimention.STRONG_HOOKING);
        break;
-     case "strong_NOT_hooking":
+     case "long_NOT_attracting":
        inputModuleManager.OnShakeEvent(ShakeDimention.STRONG_NOT_HOOKING);
        break;
+     default:
+       println("ATTENTION, CASE NOT HANDLED: "+type);
      }
   }
   

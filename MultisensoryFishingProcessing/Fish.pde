@@ -24,23 +24,22 @@ class Fish implements PublicFish{
   int strinkingTimeToReachOptimumAttractability = 500; /// ATTENTION: Needs to be a multiple of 5
   
   // If no shake is introduced since numFramesAfterFishstartForgetting of frames, the intentionality of the fish start reaching the 0 with a certain speed (Forgetting)
-  int numFramesAfterFishstartForgetting = 500;
+  int numFramesAfterFishstartForgetting = 300;
   
   // Speed of forgetting his intentionality
   float speedOfForgettingIntentionality = 0.002;
   
   // this express a value of intentionality to reach the bottom of the see when the fish is hooked
-  float intentionToGoDownWhenHooked = 0.24; //TODO REMPLACE
+  float intentionToGoDownWhenHooked = 0.23; 
   
-  // set this values to adjust the degree in wich a certain shake is attracting - scaring the fish 
+  // set this values to adjust the degree in wich a certain shake is attracting - scaring the fish , intentionality can go from -0.3 to 0.8
   public void setShakeAttractionMapping(){
     shakesValenceForAttracting.set("NONE", 0);
-    shakesValenceForAttracting.set("SUBTLE", 0.1);
-    shakesValenceForAttracting.set("LITTLE_ATTRACTING", 1);
-    shakesValenceForAttracting.set("LONG_ATTRACTING", 1.5);
-    shakesValenceForAttracting.set("LITTLE_NOT_ATTRACTING", -0.4);
-    shakesValenceForAttracting.set("STRONG_HOOKING", -2.5);
-    shakesValenceForAttracting.set("STRONG_NOT_HOOKING", -3);
+    shakesValenceForAttracting.set("LITTLE_ATTRACTING", 0.5);    // mapped: 0 at intentionality = 0.8, value when intentionality = 0;  value still when intentionality < 0
+    shakesValenceForAttracting.set("LONG_ATTRACTING", 1);    // mapped: 0 at intentionality = 0.8, value when intentionality = 0;  value still when intentionality < 0
+    
+    shakesValenceForAttracting.set("STRONG_HOOKING", -5);    // mapped: 0 at intentionality = -0.3, value when intentionality = 0.8
+    shakesValenceForAttracting.set("STRONG_NOT_HOOKING", -4);  // mapped: 0 at intentionality = -0.3, value when intentionality = 0.8
   }
   
   
@@ -159,7 +158,6 @@ class Fish implements PublicFish{
       return;
     }
     
-    
     switch(currentShake){
      case LITTLE_ATTRACTING:
        gameManager.SetGameEventForScoring(GameEvent.AttractingShake);
@@ -180,7 +178,18 @@ class Fish implements PublicFish{
     // Each type of shake as a valence (a weight) that put in comparison (good-bad) the shakes together, 
     // then intensityOfValenceOfShakesForAttraction is necessary to fine tuning all the intensity based on how much we want the intentionality to be responsive
     float valenceOfShake = shakesValenceForAttracting.get(currentShake.toString()) * intensityOfValenceOfShakesForAttraction;
+  
+    if(valenceOfShake > 0){
+      if(intentionality > 0){
+        valenceOfShake = map(intentionality, 0, 0.8, valenceOfShake, 0);
+      }
+    }
+    else{
+      valenceOfShake = map(intentionality, -0.3, 0.8, 0, valenceOfShake);
+    }
     
+    gameManager.debugUtility.currentDeltaOFIntentionality = valenceOfShake;
+          
     if(valenceOfShake != 0){
 
       intentionality += valenceOfShake;
@@ -188,7 +197,7 @@ class Fish implements PublicFish{
       if(valenceOfShake < 0){
         timeSinceAttractionWasPositive = 0;
       }
-      else if(timeSinceAttractionWasPositive<strinkingTimeToReachOptimumAttractability){
+      else if(timeSinceAttractionWasPositive < strinkingTimeToReachOptimumAttractability){
         
         timeSinceAttractionWasPositive++;
         float wieight = map(int(timeSinceAttractionWasPositive / int(strinkingTimeToReachOptimumAttractability / 5)), 2.0, 5.0, 0.0, 1.0);
@@ -226,7 +235,12 @@ class Fish implements PublicFish{
     }
     else{
       deltaFood = new PVector(0,1,0); // tendency to stay in the bottom during the capturing
-      targetIntentionality = (pos.y > 0)? intentionToGoDownWhenHooked: map(pos.y, boxsize/2, 0, 0, intentionToGoDownWhenHooked);
+      var intentionToGoDown = intentionToGoDownWhenHooked;
+      var time = (frameCount - gameManager.currentSession.startTime) / frameRate;
+      if(time > 150 && time < 200){
+        intentionToGoDown = map(time, 150, 200, intentionToGoDown, 0);
+      }
+      targetIntentionality = (pos.y < 0) ? intentionToGoDownWhenHooked: map(pos.y, boxsize/2, 0, 0, intentionToGoDownWhenHooked);
     }
     
     // Update fish's position based on intention
