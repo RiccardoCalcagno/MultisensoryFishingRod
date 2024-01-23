@@ -28,7 +28,6 @@
 #X obj 549 528 receive volume;
 #X msg 550 56 read -resize sounds/whip.wav whipData;
 #X obj 531 496 tabread4~ whipData;
-#X obj 541 506 tabread4~ soundData;
 #X connect 1 0 2 0;
 #X connect 2 0 3 1;
 #X connect 2 0 18 0;

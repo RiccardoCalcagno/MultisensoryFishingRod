@@ -54,12 +54,20 @@ class AudioSensoryModuleClass{
     pureData.playAnySound(Sound.TASTE);
   }
   
-  void OnFishHooked(){}
+  void OnFishHooked(){
+    pureData.playAnySound(Sound.HOOKED);
+  }
   
-  void OnFishLost(){}
-  void OnFishCaught(){}
-  void OnWireEndedWithNoFish(){}
-}
+  void OnFishLost(){
+    pureData.playAnySound(Sound.LOST);
+    }
+  void OnFishCaught(){
+    pureData.playAnySound(Sound.CAUGHT);
+    }
+  void OnWireEndedWithNoFish(){
+    pureData.playAnySound(Sound.WIRE);
+    }
+  }
 
 
 class RodStatusData{
@@ -98,13 +106,29 @@ int timer = 0;
 void draw() {
    audioSensoryModule.OnRodStatusReading(rodStatusData);
    timer += 1;
-   if (timer % 100 == 0) {
+   if (timer % 30 == 0 && timer < 100) {
     rodStatusData.speedOfWireRetrieving = random(-1, 1); 
     rodStatusData.coefficentOfWireTension = random(-1, 1); 
     rodStatusData.rawMotionData = new RawMotionData(random(-20f, 20f),random(-20f, 20f), random(-20f, 20f));
    }
-  if (timer >= 400) {
+  if (timer >= 100) {
     rodStatusData.speedOfWireRetrieving = 0;
     rodStatusData.coefficentOfWireTension = 0;
+    rodStatusData.rawMotionData = null;
+  }
+  if (timer == 120) {
+    audioSensoryModule.OnFishTasteBait();
+  }
+  if (timer == 150) {
+    audioSensoryModule.OnFishHooked();
+  }
+  if (timer == 180) {
+    audioSensoryModule.OnFishLost();
+  }
+  if (timer == 210) {
+    audioSensoryModule.OnFishCaught();
+  }
+  if (timer == 240) {
+    audioSensoryModule.OnWireEndedWithNoFish();
   }
 }
