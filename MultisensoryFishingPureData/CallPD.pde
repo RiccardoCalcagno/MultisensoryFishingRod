@@ -19,11 +19,13 @@ public class CallPureData {
   NetAddress anySoundPort;
   NetAddress twoSongsPort;
   NetAddress wheelPort;
+  NetAddress stringPort;
 
   final String SKETCH_PATH_PITCHED_WHIP = "/play_pitched_whip.pd";
   final String SKETCH_PATH_WHEEL_SOUND = "/play_wheel_tick.pd";
   final String SKETCH_PATH_PLAY_SOUND = "/play_sound.pd";
   final String SKETCH_PATH_TWO_SONGS = "/play_two_songs.pd";
+  final String SKETCH_PATH_WIRE_TENSION = "/play_pitched_string_tension.pd";
   final String PD_PATH = ".";
   final HashMap SOUND_PATHS;
 
@@ -33,6 +35,7 @@ public class CallPureData {
       anySoundPort = new NetAddress("127.0.0.1", 3001);
       twoSongsPort = new NetAddress("127.0.0.1", 3002);
       wheelPort = new NetAddress("127.0.0.1", 3003);
+      stringPort = new NetAddress("127.0.0.1", 3004);
 
       SOUND_PATHS = new HashMap<>();
       SOUND_PATHS.put(Sound.BREAK, "sounds/break.wav");
@@ -94,6 +97,17 @@ public class CallPureData {
     myMessage.add(pitch);
     myMessage.add(volume);
     oscP5.send(myMessage, wheelPort);
+  }
+
+  public void playWireTensionSound(float pitch, float volume) {
+    // Launch the Pd patch
+    String pdPath = ".";
+    launch(pdPath, SKETCH_PATH_WIRE_TENSION);
+    
+    OscMessage myMessage = new OscMessage("/wire");
+    myMessage.add(pitch);
+    myMessage.add(volume);
+    oscP5.send(myMessage, stringPort);
   }
 
   public void playAnySound(Sound sound) {

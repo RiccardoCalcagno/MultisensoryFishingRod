@@ -31,7 +31,7 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     //we want the pitch of the wheel sound to go from 2.0 to 4.0
     float wheelSoundSpeed = 2.0f + (abs(speedOfWireRetrieving)*2);
     //System.out.println(wheelSoundSpeed);
-    pureData.playWheelSound(wheelSoundSpeed, 1.0f);
+    pureData.playWheelSound(wheelSoundSpeed, 0.5f);
     long waitTime = (long)(50/abs(speedOfWireRetrieving));
     wheelPlayTime = System.currentTimeMillis() + waitTime;
   }
@@ -44,8 +44,9 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     float motionMagnitude = sqrt(pow(rawMotionData.acc_x, 2) + pow(rawMotionData.acc_y, 2) + pow(rawMotionData.acc_z, 2));
     // Normalize the magnitude to a suitable range for the pitch (you may need to adjust this)
     float whipSoundPitch = map(motionMagnitude, 0, 10, 1, 5);
+    float whipSoundVolume = map(motionMagnitude, 0, 10, 0.5f, 1.0f);
     // Play the whip sound with the calculated pitch
-    pureData.playPitchedWhip(whipSoundPitch, 1.0f);
+    pureData.playPitchedWhip(whipSoundPitch, whipSoundVolume);
     whipSoundPlayTime = System.currentTimeMillis() + 500; // Adjust the delay as needed
   }
   
