@@ -236,7 +236,7 @@ class DebugSensoryInputModule extends SensoryInputModule{
         inputModuleManager.OnShakeEvent(ShakeDimention.NONE); prevWasShake = false;
       }
       else if(keysPressed.get(49)){
-        inputModuleManager.OnShakeEvent(ShakeDimention.SUBTLE);        prevWasShake = true;
+        
       }
       else if(keysPressed.get(50)){
         inputModuleManager.OnShakeEvent(ShakeDimention.LITTLE_ATTRACTING);        prevWasShake = true;
@@ -245,7 +245,7 @@ class DebugSensoryInputModule extends SensoryInputModule{
         inputModuleManager.OnShakeEvent(ShakeDimention.LONG_ATTRACTING);        prevWasShake = true;
       }
       else if(keysPressed.get(52)){
-        inputModuleManager.OnShakeEvent(ShakeDimention.LITTLE_NOT_ATTRACTING);        prevWasShake = true;
+        
       }
       else if(keysPressed.get(53)){
         inputModuleManager.OnShakeEvent(ShakeDimention.STRONG_HOOKING);        prevWasShake = true;

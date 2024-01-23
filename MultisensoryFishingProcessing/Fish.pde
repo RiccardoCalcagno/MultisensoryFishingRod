@@ -170,8 +170,6 @@ class Fish implements PublicFish{
        gameManager.SetGameEventForScoring(GameEvent.BadScaringShake);
        break;
      case NONE:
-     case SUBTLE:
-     case LITTLE_NOT_ATTRACTING:
        break;
     }
     

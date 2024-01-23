@@ -452,7 +452,7 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     }
   }
   
-  RodStatusData calculateRodStatusData(){
+  private RodStatusData calculateRodStatusData(){
       
       if(haloForWireRetrieving <= 0){
         cachedSpeedOfWireRetrieving = 0;
@@ -563,6 +563,14 @@ enum GameState {
   FishLost, 
   WireEnded,  
   End
+}
+
+enum ShakeDimention{
+     NONE,
+     LITTLE_ATTRACTING,
+     LONG_ATTRACTING,
+     STRONG_HOOKING,
+     STRONG_NOT_HOOKING
 }
 
 

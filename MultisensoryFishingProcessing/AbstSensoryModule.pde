@@ -55,15 +55,6 @@ abstract class AbstSensoryOutModule{
   void OnEndGame(){}
 }
 
-enum ShakeDimention{
-     NONE,
-     SUBTLE,
-     LITTLE_ATTRACTING,
-     LONG_ATTRACTING,
-     LITTLE_NOT_ATTRACTING,
-     STRONG_HOOKING,
-     STRONG_NOT_HOOKING
-}
 
 class RodStatusData{
   
