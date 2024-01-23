@@ -14,6 +14,10 @@ class AudioSensoryModuleClass{
     playWheelTickSound(dataSnapshot.speedOfWireRetrieving);
     playRodWhipSound(dataSnapshot.rawMotionData);
     playWireTensionSound(dataSnapshot.coefficentOfWireTension);
+
+    //TODO: correct place for function call
+    //float fishIntentionality = getFishIntentionality();
+    //setSongIntensity(fishIntentionality);
   }
 
   private void playWheelTickSound(float speedOfWireRetrieving){
@@ -48,6 +52,19 @@ class AudioSensoryModuleClass{
     pureData.playWireTensionSound(wirePitch, abs(coefficentOfWireTension)*2);
   }
  
+  private void setSongIntensity(float fishIntentionality){
+    if (fishIntentionality == 0) {
+      pureData.playSong(0, 0, 0, 0);
+    } else if (fishIntentionality < 0.25f) { 
+      pureData.playSong(0, 1, 0, 0);
+    } else if (fishIntentionality < 0.5f) {
+      pureData.playSong(0, 1, 1, 0);
+    } else if (fishIntentionality < 0.75f) {
+      pureData.playSong(1, 1, 1, 0);
+    } else {
+      pureData.playSong(1, 1, 1, 1);
+    }
+  }
   
   // event fired when the fish is touching the hook. I (Riccardo) change its movemnts in the way that 1 event of tasting the bait has at least 0.8 sec of distance between each others
   void OnFishTasteBait(){
@@ -130,5 +147,11 @@ void draw() {
   }
   if (timer == 240) {
     audioSensoryModule.OnWireEndedWithNoFish();
+  }
+  if (timer % 100 == 0 && timer < 1000) {
+    audioSensoryModule.setSongIntensity(random(0, 1));
+  }
+  if (timer == 1000) {
+    audioSensoryModule.setSongIntensity(0);
   }
 }

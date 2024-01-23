@@ -120,11 +120,13 @@ public class CallPureData {
     oscP5.send(myMessage, anySoundPort);
   }
 
-  public void playTwoSongs(float firstSongVolume, float secondSongVolume) {
+  public void playSong(float fluteVolume, float bassVolume, float guitarVolume, float drumsVolume) {
     launch(PD_PATH, SKETCH_PATH_TWO_SONGS);
     OscMessage myMessage = new OscMessage("/values");
-    myMessage.add(firstSongVolume);
-    myMessage.add(secondSongVolume);
+    myMessage.add(fluteVolume);
+    myMessage.add(bassVolume);
+    myMessage.add(guitarVolume);
+    myMessage.add(drumsVolume);
     oscP5.send(myMessage, twoSongsPort);
   }
 }
