@@ -100,9 +100,10 @@ void draw() {
    timer += 1;
    if (timer % 100 == 0) {
     rodStatusData.speedOfWireRetrieving = random(-1, 1); 
-    rodStatusData.coefficentOfWireTension = random(-1, 1);   
+    rodStatusData.coefficentOfWireTension = random(-1, 1); 
+    rodStatusData.rawMotionData = new RawMotionData(random(-20f, 20f),random(-20f, 20f), random(-20f, 20f));
    }
-  if timer >= 400 {
+  if (timer >= 400) {
     rodStatusData.speedOfWireRetrieving = 0;
     rodStatusData.coefficentOfWireTension = 0;
   }
