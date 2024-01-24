@@ -25,6 +25,8 @@ interface OutputModulesManager{
   
   PVector getCameraPosition();
   
+  ShakeDimention getCurrentShake();
+  
   DebugUtility GetDebugUtility();
 }
 

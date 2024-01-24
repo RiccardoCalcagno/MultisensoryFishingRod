@@ -134,6 +134,9 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     return debugUtility;
   }
   
+  ShakeDimention getCurrentShake(){
+    return currentRodState;
+  }
   
   // ------------------------------------------------------------------------------------------------
   //                                             CONSTRUCTOR 

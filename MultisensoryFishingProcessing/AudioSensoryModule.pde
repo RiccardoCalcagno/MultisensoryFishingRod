@@ -1,10 +1,11 @@
-class AudioSensoryModuleClass{
+class AudioSensoryModule extends AbstSensoryOutModule{
   private CallPureData pureData;
   private Long wheelPlayTime;
   private Long whipSoundPlayTime;
 
 
-  AudioSensoryModuleClass(){
+  AudioSensoryModule(OutputModulesManager _outputModulesManager){
+    super(_outputModulesManager);
     pureData = new CallPureData();
     wheelPlayTime = System.currentTimeMillis();
     whipSoundPlayTime = System.currentTimeMillis();
@@ -15,9 +16,8 @@ class AudioSensoryModuleClass{
     playRodWhipSound(dataSnapshot.rawMotionData);
     playWireTensionSound(dataSnapshot.coefficentOfWireTension);
 
-    //TODO: correct place for function call?
-    //float fishIntentionality = getFishIntentionality();
-    //setSongIntensity(fishIntentionality);
+    float fishIntentionality = outputModulesManager.getFish().getIntentionality();
+    setSongIntensity(fishIntentionality);
   }
 
   private void playWheelTickSound(float speedOfWireRetrieving){
@@ -41,6 +41,13 @@ class AudioSensoryModuleClass{
     float motionMagnitude = sqrt(pow(rawMotionData.acc_x, 2) + pow(rawMotionData.acc_y, 2) + pow(rawMotionData.acc_z, 2));
     // Normalize the magnitude to a suitable range for the pitch (you may need to adjust this)
     float whipSoundPitch = map(motionMagnitude, 0, 10, 1, 5);
+    
+    
+    
+    ShakeDimention shake = outputModulesManager.getCurrentShake();
+    
+    
+    
     // Play the whip sound with the calculated pitch
     pureData.playPitchedWhip(whipSoundPitch, 1.0f);
     whipSoundPlayTime = System.currentTimeMillis() + 500; // Adjust the delay as needed
@@ -69,7 +76,14 @@ class AudioSensoryModuleClass{
   // Asyncronous meningful events
   void OnShakeOfRod(ShakeDimention rodShakeType){
     //TODO: playPitchedWhip better here?
+    
+    if(rodShakeType == ShakeDimention.STRONG_HOOKING){
+       pureData.playPitchedWhip(4, 1.0f);
+    }
+    
   }
+  
+  
   // event fired when the fish is touching the hook. I (Riccardo) change its movemnts in the way that 1 event of tasting the bait has at least 0.8 sec of distance between each others
   void OnFishTasteBait(){
     pureData.playAnySound(Sound.TASTE);
