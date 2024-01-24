@@ -198,13 +198,13 @@ void draw() {
    if (timer == 400) {
      audioSensoryModule.OnShakeOfRod(ShakeDimention.NONE);
    }
-   if (timer == 450) {
+   if (timer == 500) {
       audioSensoryModule.OnShakeOfRod(ShakeDimention.LITTLE_ATTRACTING);
     }
-    if (timer == 500) {
+    if (timer == 600) {
       audioSensoryModule.OnShakeOfRod(ShakeDimention.STRONG_HOOKING);
     }
-    if (timer == 550) {
+    if (timer == 700) {
       audioSensoryModule.OnShakeOfRod(ShakeDimention.STRONG_NOT_HOOKING);
     }
    /* if (timer % 30 == 0 && timer < 100) {
