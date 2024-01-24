@@ -1,27 +1,23 @@
-class AudioSensoryModule extends AbstSensoryOutModule{
+class AudioSensoryModuleClass{
   private CallPureData pureData;
   private Long wheelPlayTime;
   private Long whipSoundPlayTime;
 
 
-  AudioSensoryModule(OutputModulesManager outputModulesManager){
-    super(outputModulesManager);
-
+  AudioSensoryModuleClass(){
     pureData = new CallPureData();
     wheelPlayTime = System.currentTimeMillis();
     whipSoundPlayTime = System.currentTimeMillis();
   }
-
   // Once per gameLoop
   public void OnRodStatusReading(RodStatusData dataSnapshot){
-    //TODO DeComment this, the git push didn'y had the function: playWheelSound
-    //playWheelSound(dataSnapshot.speedOfWireRetrieving);
+    playWheelTickSound(dataSnapshot.speedOfWireRetrieving);
     playRodWhipSound(dataSnapshot.rawMotionData);
+    playWireTensionSound(dataSnapshot.coefficentOfWireTension);
 
-    // 0 means not in tension. if isFishHooked == true => coefficentOfWireTension = 0
-    // max tension when the fish is pulling in the opposite direction of the wire and the speedOfWireRetrieving is equal to -1
-    float coefficentOfWireTension = dataSnapshot.coefficentOfWireTension;; 
-    //TODO: give auditory feedback of the tension of the wire?
+    //TODO: correct place for function call?
+    //float fishIntentionality = getFishIntentionality();
+    //setSongIntensity(fishIntentionality);
   }
 
   private void playWheelTickSound(float speedOfWireRetrieving){
@@ -49,19 +45,47 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     pureData.playPitchedWhip(whipSoundPitch, 1.0f);
     whipSoundPlayTime = System.currentTimeMillis() + 500; // Adjust the delay as needed
   }
-  
+
+  private void playWireTensionSound(float coefficentOfWireTension){
+    //we want the pitch of the wheel sound to go from 2.0 to 4.0
+    float wirePitch = 2.0f + (abs(coefficentOfWireTension)*2);
+    pureData.playWireTensionSound(wirePitch, abs(coefficentOfWireTension)*2);
+  }
+ 
+  private void setSongIntensity(float fishIntentionality){
+    if (fishIntentionality == 0) {
+      pureData.playSong(0, 0, 0, 0);
+    } else if (fishIntentionality < 0.25f) { 
+      pureData.playSong(0, 1, 0, 0);
+    } else if (fishIntentionality < 0.5f) {
+      pureData.playSong(0, 1, 1, 0);
+    } else if (fishIntentionality < 0.75f) {
+      pureData.playSong(1, 1, 1, 0);
+    } else {
+      pureData.playSong(1, 1, 1, 1);
+    }
+  }
+
   // Asyncronous meningful events
   void OnShakeOfRod(ShakeDimention rodShakeType){
+    //TODO: playPitchedWhip better here?
   }
-  
   // event fired when the fish is touching the hook. I (Riccardo) change its movemnts in the way that 1 event of tasting the bait has at least 0.8 sec of distance between each others
   void OnFishTasteBait(){
     pureData.playAnySound(Sound.TASTE);
   }
   
-  void OnFishHooked(){}
+  void OnFishHooked(){
+    pureData.playAnySound(Sound.HOOKED);
+  }
   
-  void OnFishLost(){}
-  void OnFishCaught(){}
-  void OnWireEndedWithNoFish(){}
-}
+  void OnFishLost(){
+    pureData.playAnySound(Sound.LOST);
+    }
+  void OnFishCaught(){
+    pureData.playAnySound(Sound.CAUGHT);
+    }
+  void OnWireEndedWithNoFish(){
+    pureData.playAnySound(Sound.WIRE);
+    }
+  }
