@@ -1,12 +1,12 @@
 # MultisensoryFishingRod
 
 <p align="center">
-  <img src="Res/ClassDiagram.jpg" width="350">
+  <img src="Res/ClassDiagram.jpg" width="100%">
 </p>
 
 
 
-##Guide to use the Module Face2Camera movement 
+## Guide to use the Module Face2Camera movement 
 
 ### Download models
 Because of the dimentions of the file of the models, you need to download manually the files and import the im the model:
