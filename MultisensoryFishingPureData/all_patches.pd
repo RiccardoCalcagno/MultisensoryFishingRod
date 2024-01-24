@@ -32,3 +32,18 @@
 #X restore 868 195 graph;
 #X obj 822 350 play_music;
 #X obj 1105 39 play_sound;
+#N canvas 0 50 450 250 (subpatch) 0;
+#X array tricklingData 5.3856e+06 float 2;
+#X coords 0 1 5.3856e+06 -1 200 140 1;
+#X restore 30 248 graph;
+#X obj 30 393 play_trickling;
+#N canvas 0 50 450 250 (subpatch) 0;
+#X array splashData 20558 float 2;
+#X coords 0 1 20558 -1 200 140 1;
+#X restore 238 247 graph;
+#X obj 240 394 play_pitched_splash;
+#N canvas 0 50 450 250 (subpatch) 0;
+#X array swashData 76644 float 2;
+#X coords 0 1 76644 -1 200 140 1;
+#X restore 443 247 graph;
+#X obj 443 392 play_pitched_swash;

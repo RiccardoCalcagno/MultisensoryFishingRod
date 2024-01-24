@@ -4,6 +4,9 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   private Long whipSoundPlayTime;
   private float lastSpeed =0;
   private float precSongVolume;
+  private float longAttractingVolume;
+  private boolean longAttracting;
+  private Long lastTimeLongAttacktingUpdated;
 
 
   AudioSensoryModule(OutputModulesManager _outputModulesManager){
@@ -11,6 +14,9 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     pureData = new CallPureData();
     wheelPlayTime = System.currentTimeMillis();
     whipSoundPlayTime = System.currentTimeMillis();
+    lastTimeLongAttacktingUpdated = System.currentTimeMillis();
+    longAttractingVolume = 0.0f;
+    longAttracting = false;
   }
   
   void ResetGame(){
@@ -34,11 +40,12 @@ class AudioSensoryModule extends AbstSensoryOutModule{
       fishIntentionality = 0.8;
     }
     else{
-      //playRodWhipSound(dataSnapshot.rawMotionData);
       fishIntentionality = outputModulesManager.getFish().getIntentionality();
     }
+    
     setSongIntensity(fishIntentionality);
     
+    playLongAttractingSound();
   }
 
   private void playWheelTickSound(float speedOfWireRetrieving){
@@ -69,6 +76,33 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     // Play the whip sound with the calculated pitch
     pureData.playPitchedWhip(whipSoundPitch, 1.0f);
     whipSoundPlayTime = System.currentTimeMillis() + 500; // Adjust the delay as needed
+  }
+
+  
+  void playLongAttractingSound(){
+    if (longAttracting){
+      if (System.currentTimeMillis() - lastTimeLongAttacktingUpdated > 50){
+        //Interpolate from longAttractingVolume to 0 in some time
+        if (longAttractingVolume < 1.0f) {
+          longAttractingVolume += 0.1f;
+        } else {
+          longAttractingVolume = 1.0f;
+        }
+        pureData.playTricklingSound(longAttractingVolume);
+        lastTimeLongAttacktingUpdated = System.currentTimeMillis();
+      }
+    } else {
+      if (System.currentTimeMillis() - lastTimeLongAttacktingUpdated > 50){
+        //Interpolate from longAttractingVolume to 0 in some time
+        if (longAttractingVolume > 0.0f) {
+          longAttractingVolume -= 0.1f;
+        } else {
+          longAttractingVolume = 0.0f;
+        }
+        pureData.playTricklingSound(longAttractingVolume);
+        lastTimeLongAttacktingUpdated = System.currentTimeMillis();
+      }
+    }
   }
 
   private void playWireTensionSound(float coefficentOfWireTension){
@@ -111,15 +145,30 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     pureData.playSong(val3, val1, val4, val2);
   }
 
-  // Asyncronous meningful events
-  void OnShakeOfRod(ShakeDimention rodShakeType){
-    //TODO: playPitchedWhip better here?
-    
-    if(rodShakeType == ShakeDimention.STRONG_HOOKING){
-       pureData.playPitchedWhip(4, 1.0f);
+    // Asyncronous meningful events
+    void OnShakeOfRod(ShakeDimention rodShakeType){
+      switch(rodShakeType){
+        case NONE:          
+          longAttracting = false;
+          break;
+        case LITTLE_ATTRACTING:
+          pureData.playSwashSound(1.2, 0.3f);
+          longAttracting = false;
+          break;
+        case LONG_ATTRACTING:
+            longAttracting = true;
+          break;
+        case STRONG_HOOKING:
+          pureData.playSplashSound(2, 1.0f);
+          longAttracting = false;
+          break;
+        case STRONG_NOT_HOOKING:
+          pureData.playSplashSound(1, 0.75f);
+          longAttracting = false;
+          break;
+      } 
     }
     
-  }
   
   
   // event fired when the fish is touching the hook. I (Riccardo) change its movemnts in the way that 1 event of tasting the bait has at least 0.8 sec of distance between each others
@@ -133,11 +182,11 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   
   void OnFishLost(){
     pureData.playAnySound(Sound.LOST);
-    }
+  }
   void OnFishCaught(){
     pureData.playAnySound(Sound.CAUGHT);
-    }
+  }
   void OnWireEndedWithNoFish(){
     pureData.playAnySound(Sound.WIRE);
-    }
   }
+}

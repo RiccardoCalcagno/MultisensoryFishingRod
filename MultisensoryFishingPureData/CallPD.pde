@@ -20,8 +20,10 @@ public class CallPureData {
   NetAddress twoSongsPort;
   NetAddress wheelPort;
   NetAddress stringPort;
-
-  final HashMap SOUND_PATHS;
+  NetAddress splashPort;
+  NetAddress tricklingPort;
+  NetAddress swashPort;
+  HashMap<Sound, String> SOUND_PATHS;
 
   public CallPureData() {
     oscP5 = new OscP5(this, 12000);
@@ -30,8 +32,11 @@ public class CallPureData {
     twoSongsPort = new NetAddress("127.0.0.1", 3002);
     wheelPort = new NetAddress("127.0.0.1", 3003);
     stringPort = new NetAddress("127.0.0.1", 3004);
+    splashPort = new NetAddress("127.0.0.1", 3005);
+    tricklingPort = new NetAddress("127.0.0.1", 3006);
+    swashPort = new NetAddress("127.0.0.1", 3007);
 
-    SOUND_PATHS = new HashMap<>();
+    SOUND_PATHS = new HashMap<Sound, String>();
     SOUND_PATHS.put(Sound.BREAK, "sounds/break.wav");
     SOUND_PATHS.put(Sound.CAUGHT, "sounds/fish_caught.wav");
     SOUND_PATHS.put(Sound.HOOKED, "sounds/fish_hooked.wav");
@@ -61,11 +66,30 @@ public class CallPureData {
     myMessage.add(volume);
     oscP5.send(myMessage, stringPort);
   }
+  
+  public void playPitchedSplash(float pitch, float volume) {
+    OscMessage myMessage = new OscMessage("/splash");
+    myMessage.add(pitch);
+    myMessage.add(volume);
+    oscP5.send(myMessage, splashPort);
+  }
+
+  public void playPitchedSwash(float pitch, float volume) {
+    OscMessage myMessage = new OscMessage("/swash");
+    myMessage.add(pitch);
+    myMessage.add(volume);
+    oscP5.send(myMessage, swashPort);
+  }
+
+  public void playTricklingSound(float volume) {
+    OscMessage myMessage = new OscMessage("/trickling");
+    myMessage.add(volume);
+    oscP5.send(myMessage, tricklingPort);
+  }
 
   public void playAnySound(Sound sound) {
-    String soundPath = (String)SOUND_PATHS.get(sound);
     OscMessage myMessage = new OscMessage("/play");
-    myMessage.add(soundPath);
+    myMessage.add(SOUND_PATHS.get(sound));
     oscP5.send(myMessage, anySoundPort);
   }
 
