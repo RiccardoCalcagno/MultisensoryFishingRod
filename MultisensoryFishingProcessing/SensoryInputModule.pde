@@ -43,7 +43,6 @@ static int SERVER_PORT = 6969;
 static int TINY_ML_PORT = 5000;
 static String TINY_ML_IP_value = "127.0.0.1";
 static InetAddress TINY_ML_IP;
-static GameManager gameManager;
 
 class SensoryInputModule{
   

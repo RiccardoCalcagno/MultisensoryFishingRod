@@ -1,5 +1,10 @@
 # MultisensoryFishingRod
 
+<p align="center">
+  <img src="Res/ClassDiagram.jpg" width="350">
+</p>
+
+
 
 ##Guide to use the Module Face2Camera movement 
 
