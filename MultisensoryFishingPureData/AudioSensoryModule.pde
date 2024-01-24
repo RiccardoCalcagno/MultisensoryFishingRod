@@ -1,13 +1,27 @@
+
+enum ShakeDimention{
+     NONE,
+     LITTLE_ATTRACTING,
+     LONG_ATTRACTING,
+     STRONG_HOOKING,
+     STRONG_NOT_HOOKING
+}
+
 class AudioSensoryModuleClass{
   private CallPureData pureData;
   private Long wheelPlayTime;
   private Long whipSoundPlayTime;
+  private float longAttracktingVolume;
+  private boolean longAttracting;
+  private Long lastTimeLongAttacktingUpdated;
 
-
-  AudioSensoryModuleClass(){
+ AudioSensoryModuleClass(){
     pureData = new CallPureData();
     wheelPlayTime = System.currentTimeMillis();
     whipSoundPlayTime = System.currentTimeMillis();
+    lastTimeLongAttacktingUpdated = System.currentTimeMillis();
+    longAttracktingVolume = 0.0f;
+    longAttracting = false;
   }
   // Once per gameLoop
   public void OnRodStatusReading(RodStatusData dataSnapshot){
@@ -44,6 +58,8 @@ class AudioSensoryModuleClass{
     // Play the whip sound with the calculated pitch
     pureData.playPitchedWhip(whipSoundPitch, 1.0f);
     whipSoundPlayTime = System.currentTimeMillis() + 500; // Adjust the delay as needed
+    
+    playLongAttracktingSound();
   }
 
   private void playWireTensionSound(float coefficentOfWireTension){
@@ -70,6 +86,32 @@ class AudioSensoryModuleClass{
   void OnFishTasteBait(){
     pureData.playAnySound(Sound.TASTE);
   }
+
+  void playLongAttracktingSound(){
+    if (longAttracting){
+      if (System.currentTimeMillis() - lastTimeLongAttacktingUpdated > 50){
+        //Interpolate from longAttracktingVolume to 0 in some time
+        if (longAttracktingVolume < 1.0f) {
+          longAttracktingVolume += 0.1f;
+        } else {
+          longAttracktingVolume = 1.0f;
+        }
+        pureData.playTricklingSound(longAttracktingVolume);
+        lastTimeLongAttacktingUpdated = System.currentTimeMillis();
+      }
+    } else {
+      if (System.currentTimeMillis() - lastTimeLongAttacktingUpdated > 50){
+        //Interpolate from longAttracktingVolume to 0 in some time
+        if (longAttracktingVolume > 0.0f) {
+          longAttracktingVolume -= 0.1f;
+        } else {
+          longAttracktingVolume = 0.0f;
+        }
+        pureData.playTricklingSound(longAttracktingVolume);
+        lastTimeLongAttacktingUpdated = System.currentTimeMillis();
+      }
+    }
+  }
   
   void OnFishHooked(){
     pureData.playAnySound(Sound.HOOKED);
@@ -84,7 +126,33 @@ class AudioSensoryModuleClass{
   void OnWireEndedWithNoFish(){
     pureData.playAnySound(Sound.WIRE);
     }
-  }
+
+
+ 
+    // Asyncronous meningful events
+    void OnShakeOfRod(ShakeDimention rodShakeType){
+      switch(rodShakeType){
+        case NONE:          
+          longAttracting = false;
+          break;
+        case LITTLE_ATTRACTING:
+          pureData.playPitchedSwash(1.2, 0.3f);
+          longAttracting = false;
+          break;
+        case LONG_ATTRACTING:
+            longAttracting = true;
+          break;
+        case STRONG_HOOKING:
+          pureData.playPitchedSplash(2, 1.0f);
+          longAttracting = false;
+          break;
+        case STRONG_NOT_HOOKING:
+          pureData.playPitchedSplash(1, 0.75f);
+          longAttracting = false;
+          break;
+      } 
+    }
+}
 
 
 class RodStatusData{
@@ -110,6 +178,7 @@ class RawMotionData{
 AudioSensoryModuleClass audioSensoryModule;
 RodStatusData rodStatusData;
 
+   
 void setup() {
   //FOR TESTING
   audioSensoryModule = new AudioSensoryModuleClass();
@@ -121,9 +190,24 @@ void setup() {
 int timer = 0;
 
 void draw() {
-   audioSensoryModule.OnRodStatusReading(rodStatusData);
+   audioSensoryModule.playLongAttracktingSound();
    timer += 1;
-   if (timer % 30 == 0 && timer < 100) {
+   if (timer == 1) {
+     audioSensoryModule.OnShakeOfRod(ShakeDimention.LONG_ATTRACTING);
+   }
+   if (timer == 400) {
+     audioSensoryModule.OnShakeOfRod(ShakeDimention.NONE);
+   }
+   if (timer == 450) {
+      audioSensoryModule.OnShakeOfRod(ShakeDimention.LITTLE_ATTRACTING);
+    }
+    if (timer == 500) {
+      audioSensoryModule.OnShakeOfRod(ShakeDimention.STRONG_HOOKING);
+    }
+    if (timer == 550) {
+      audioSensoryModule.OnShakeOfRod(ShakeDimention.STRONG_NOT_HOOKING);
+    }
+   /* if (timer % 30 == 0 && timer < 100) {
     rodStatusData.speedOfWireRetrieving = random(-1, 1); 
     rodStatusData.coefficentOfWireTension = random(-1, 1); 
     rodStatusData.rawMotionData = new RawMotionData(random(-20f, 20f),random(-20f, 20f), random(-20f, 20f));
@@ -153,5 +237,5 @@ void draw() {
   }
   if (timer == 1000) {
     audioSensoryModule.setSongIntensity(0);
-  }
+  } */
 }

@@ -2,6 +2,9 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   private CallPureData pureData;
   private Long wheelPlayTime;
   private Long whipSoundPlayTime;
+  private float longAttracktingVolume;
+  private boolean longAttracting;
+  private Long lastTimeLongAttacktingUpdated;
 
 
   AudioSensoryModule(OutputModulesManager _outputModulesManager){
@@ -9,15 +12,20 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     pureData = new CallPureData();
     wheelPlayTime = System.currentTimeMillis();
     whipSoundPlayTime = System.currentTimeMillis();
+    lastTimeLongAttacktingUpdated = System.currentTimeMillis();
+    longAttracktingVolume = 0.0f;
+    longAttracting = false;
   }
   // Once per gameLoop
   public void OnRodStatusReading(RodStatusData dataSnapshot){
     playWheelTickSound(dataSnapshot.speedOfWireRetrieving);
-    playRodWhipSound(dataSnapshot.rawMotionData);
+    //playRodWhipSound(dataSnapshot.rawMotionData);
     playWireTensionSound(dataSnapshot.coefficentOfWireTension);
 
     float fishIntentionality = outputModulesManager.getFish().getIntentionality();
     setSongIntensity(fishIntentionality);
+    
+    playLongAttracktingSound();
   }
 
   private void playWheelTickSound(float speedOfWireRetrieving){
@@ -53,6 +61,33 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     whipSoundPlayTime = System.currentTimeMillis() + 500; // Adjust the delay as needed
   }
 
+  
+  void playLongAttracktingSound(){
+    if (longAttracting){
+      if (System.currentTimeMillis() - lastTimeLongAttacktingUpdated > 50){
+        //Interpolate from longAttracktingVolume to 0 in some time
+        if (longAttracktingVolume < 1.0f) {
+          longAttracktingVolume += 0.1f;
+        } else {
+          longAttracktingVolume = 1.0f;
+        }
+        pureData.playTricklingSound(longAttracktingVolume);
+        lastTimeLongAttacktingUpdated = System.currentTimeMillis();
+      }
+    } else {
+      if (System.currentTimeMillis() - lastTimeLongAttacktingUpdated > 50){
+        //Interpolate from longAttracktingVolume to 0 in some time
+        if (longAttracktingVolume > 0.0f) {
+          longAttracktingVolume -= 0.1f;
+        } else {
+          longAttracktingVolume = 0.0f;
+        }
+        pureData.playTricklingSound(longAttracktingVolume);
+        lastTimeLongAttacktingUpdated = System.currentTimeMillis();
+      }
+    }
+  }
+
   private void playWireTensionSound(float coefficentOfWireTension){
     //we want the pitch of the wheel sound to go from 2.0 to 4.0
     float wirePitch = 2.0f + (abs(coefficentOfWireTension)*2);
@@ -73,15 +108,30 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     }
   }
 
-  // Asyncronous meningful events
-  void OnShakeOfRod(ShakeDimention rodShakeType){
-    //TODO: playPitchedWhip better here?
-    
-    if(rodShakeType == ShakeDimention.STRONG_HOOKING){
-       pureData.playPitchedWhip(4, 1.0f);
+    // Asyncronous meningful events
+    void OnShakeOfRod(ShakeDimention rodShakeType){
+      switch(rodShakeType){
+        case NONE:          
+          longAttracting = false;
+          break;
+        case LITTLE_ATTRACTING:
+          pureData.playPitchedSwash(1.2, 0.3f);
+          longAttracting = false;
+          break;
+        case LONG_ATTRACTING:
+            longAttracting = true;
+          break;
+        case STRONG_HOOKING:
+          pureData.playPitchedSplash(2, 1.0f);
+          longAttracting = false;
+          break;
+        case STRONG_NOT_HOOKING:
+          pureData.playPitchedSplash(1, 0.75f);
+          longAttracting = false;
+          break;
+      } 
     }
     
-  }
   
   
   // event fired when the fish is touching the hook. I (Riccardo) change its movemnts in the way that 1 event of tasting the bait has at least 0.8 sec of distance between each others
@@ -95,11 +145,11 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   
   void OnFishLost(){
     pureData.playAnySound(Sound.LOST);
-    }
+  }
   void OnFishCaught(){
     pureData.playAnySound(Sound.CAUGHT);
-    }
+  }
   void OnWireEndedWithNoFish(){
     pureData.playAnySound(Sound.WIRE);
-    }
   }
+}
