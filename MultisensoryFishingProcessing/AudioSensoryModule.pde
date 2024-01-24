@@ -2,7 +2,7 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   private CallPureData pureData;
   private Long wheelPlayTime;
   private Long whipSoundPlayTime;
-  private float longAttracktingVolume;
+  private float longAttractingVolume;
   private boolean longAttracting;
   private Long lastTimeLongAttacktingUpdated;
 
@@ -13,7 +13,7 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     wheelPlayTime = System.currentTimeMillis();
     whipSoundPlayTime = System.currentTimeMillis();
     lastTimeLongAttacktingUpdated = System.currentTimeMillis();
-    longAttracktingVolume = 0.0f;
+    longAttractingVolume = 0.0f;
     longAttracting = false;
   }
   // Once per gameLoop
@@ -25,7 +25,7 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     float fishIntentionality = outputModulesManager.getFish().getIntentionality();
     setSongIntensity(fishIntentionality);
     
-    playLongAttracktingSound();
+    playLongAttractingSound();
   }
 
   private void playWheelTickSound(float speedOfWireRetrieving){
@@ -62,27 +62,27 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   }
 
   
-  void playLongAttracktingSound(){
+  void playLongAttractingSound(){
     if (longAttracting){
       if (System.currentTimeMillis() - lastTimeLongAttacktingUpdated > 50){
-        //Interpolate from longAttracktingVolume to 0 in some time
-        if (longAttracktingVolume < 1.0f) {
-          longAttracktingVolume += 0.1f;
+        //Interpolate from longAttractingVolume to 0 in some time
+        if (longAttractingVolume < 1.0f) {
+          longAttractingVolume += 0.1f;
         } else {
-          longAttracktingVolume = 1.0f;
+          longAttractingVolume = 1.0f;
         }
-        pureData.playTricklingSound(longAttracktingVolume);
+        pureData.playTricklingSound(longAttractingVolume);
         lastTimeLongAttacktingUpdated = System.currentTimeMillis();
       }
     } else {
       if (System.currentTimeMillis() - lastTimeLongAttacktingUpdated > 50){
-        //Interpolate from longAttracktingVolume to 0 in some time
-        if (longAttracktingVolume > 0.0f) {
-          longAttracktingVolume -= 0.1f;
+        //Interpolate from longAttractingVolume to 0 in some time
+        if (longAttractingVolume > 0.0f) {
+          longAttractingVolume -= 0.1f;
         } else {
-          longAttracktingVolume = 0.0f;
+          longAttractingVolume = 0.0f;
         }
-        pureData.playTricklingSound(longAttracktingVolume);
+        pureData.playTricklingSound(longAttractingVolume);
         lastTimeLongAttacktingUpdated = System.currentTimeMillis();
       }
     }

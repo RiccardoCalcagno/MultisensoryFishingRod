@@ -11,7 +11,7 @@ class AudioSensoryModuleClass{
   private CallPureData pureData;
   private Long wheelPlayTime;
   private Long whipSoundPlayTime;
-  private float longAttracktingVolume;
+  private float longAttractingVolume;
   private boolean longAttracting;
   private Long lastTimeLongAttacktingUpdated;
 
@@ -20,7 +20,7 @@ class AudioSensoryModuleClass{
     wheelPlayTime = System.currentTimeMillis();
     whipSoundPlayTime = System.currentTimeMillis();
     lastTimeLongAttacktingUpdated = System.currentTimeMillis();
-    longAttracktingVolume = 0.0f;
+    longAttractingVolume = 0.0f;
     longAttracting = false;
   }
   // Once per gameLoop
@@ -59,7 +59,7 @@ class AudioSensoryModuleClass{
     pureData.playPitchedWhip(whipSoundPitch, 1.0f);
     whipSoundPlayTime = System.currentTimeMillis() + 500; // Adjust the delay as needed
     
-    playLongAttracktingSound();
+    playLongAttractingSound();
   }
 
   private void playWireTensionSound(float coefficentOfWireTension){
@@ -87,27 +87,27 @@ class AudioSensoryModuleClass{
     pureData.playAnySound(Sound.TASTE);
   }
 
-  void playLongAttracktingSound(){
+  void playLongAttractingSound(){
     if (longAttracting){
       if (System.currentTimeMillis() - lastTimeLongAttacktingUpdated > 50){
-        //Interpolate from longAttracktingVolume to 0 in some time
-        if (longAttracktingVolume < 1.0f) {
-          longAttracktingVolume += 0.1f;
+        //Interpolate from longAttractingVolume to 0 in some time
+        if (longAttractingVolume < 1.0f) {
+          longAttractingVolume += 0.1f;
         } else {
-          longAttracktingVolume = 1.0f;
+          longAttractingVolume = 1.0f;
         }
-        pureData.playTricklingSound(longAttracktingVolume);
+        pureData.playTricklingSound(longAttractingVolume);
         lastTimeLongAttacktingUpdated = System.currentTimeMillis();
       }
     } else {
       if (System.currentTimeMillis() - lastTimeLongAttacktingUpdated > 50){
-        //Interpolate from longAttracktingVolume to 0 in some time
-        if (longAttracktingVolume > 0.0f) {
-          longAttracktingVolume -= 0.1f;
+        //Interpolate from longAttractingVolume to 0 in some time
+        if (longAttractingVolume > 0.0f) {
+          longAttractingVolume -= 0.1f;
         } else {
-          longAttracktingVolume = 0.0f;
+          longAttractingVolume = 0.0f;
         }
-        pureData.playTricklingSound(longAttracktingVolume);
+        pureData.playTricklingSound(longAttractingVolume);
         lastTimeLongAttacktingUpdated = System.currentTimeMillis();
       }
     }
@@ -190,7 +190,7 @@ void setup() {
 int timer = 0;
 
 void draw() {
-   audioSensoryModule.playLongAttracktingSound();
+   audioSensoryModule.playLongAttractingSound();
    timer += 1;
    if (timer == 1) {
      audioSensoryModule.OnShakeOfRod(ShakeDimention.LONG_ATTRACTING);
