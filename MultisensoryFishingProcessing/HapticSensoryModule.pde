@@ -185,7 +185,7 @@ class HapticSensoryModule extends AbstSensoryOutModule {
     if(index>=0){
       outValue = patternChosed[index][0];
     }
-    println(text+"  "+outValue+"   "+nf(lastTension, 2, 3)+"        "+frameCount);
+    //println(text+"  "+outValue+"   "+nf(lastTension, 2, 3)+"        "+frameCount);
     return outValue;
   }
   

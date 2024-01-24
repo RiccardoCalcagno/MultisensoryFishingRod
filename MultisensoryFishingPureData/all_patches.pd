@@ -1,4 +1,4 @@
-#N canvas 1503 -262 1451 622 12;
+#N canvas 1124 675 1451 622 12;
 #N canvas 0 50 450 250 (subpatch) 0;
 #X array tensionData 13847 float 4;
 #X coords 0 1 13846 -1 200 140 1 0 0;
