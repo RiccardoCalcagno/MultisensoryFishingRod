@@ -25,7 +25,7 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     
     
     float fishIntentionality = 0;
-    playWheelTickSound(lastSpeed);
+    //playWheelTickSound(lastSpeed);
     if(outputModulesManager.isFishHooked()){
       playWireTensionSound(dataSnapshot.coefficentOfWireTension);
       fishIntentionality = 0.8;
