@@ -1,9 +1,0 @@
-#N canvas 1762 -297 1370 729 10;
-#X obj 272 17 netreceive -u -b 3002;
-#X obj 272 68 list;
-#X obj 272 44 oscparse;
-#X obj 272 91 unpack s f f f;
-#X obj 296 194 fluidflow~;
-#X connect 0 0 2 0;
-#X connect 1 0 3 0;
-#X connect 2 0 1 0;
