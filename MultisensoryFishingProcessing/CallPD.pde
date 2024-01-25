@@ -20,9 +20,7 @@ public class CallPureData {
   NetAddress twoSongsPort;
   NetAddress wheelPort;
   NetAddress stringPort;
-  NetAddress splashPort;
-  NetAddress tricklingPort;
-  NetAddress swashPort;
+  NetAddress bubblesPort;
   HashMap<Sound, String> SOUND_PATHS;
 
   public CallPureData() {
@@ -32,9 +30,7 @@ public class CallPureData {
     twoSongsPort = new NetAddress("127.0.0.1", 3002);
     wheelPort = new NetAddress("127.0.0.1", 3003);
     stringPort = new NetAddress("127.0.0.1", 3004);
-    splashPort = new NetAddress("127.0.0.1", 3005);
-    tricklingPort = new NetAddress("127.0.0.1", 3006);
-    swashPort = new NetAddress("127.0.0.1", 3007);
+    bubblesPort = new NetAddress("127.0.0.1", 3005);
 
     SOUND_PATHS = new HashMap<Sound, String>();
     SOUND_PATHS.put(Sound.BREAK, "sounds/break.wav");
@@ -68,24 +64,10 @@ public class CallPureData {
     oscP5.send(myMessage, stringPort);
   }
   
-  public void playSplashSound(float pitch, float volume) {
-    OscMessage myMessage = new OscMessage("/splash");
-    myMessage.add(pitch);
-    myMessage.add(volume);
-    oscP5.send(myMessage, splashPort);
-  }
-
-  public void playSwashSound(float pitch, float volume) {
-    OscMessage myMessage = new OscMessage("/swash");
-    myMessage.add(pitch);
-    myMessage.add(volume);
-    oscP5.send(myMessage, swashPort);
-  }
-
-  public void playTricklingSound(float volume) {
-    OscMessage myMessage = new OscMessage("/trickling");
-    myMessage.add(volume);
-    oscP5.send(myMessage, tricklingPort);
+  public void playBubblesSound(String typeOfShake) {
+    OscMessage myMessage = new OscMessage("/bubbles");
+    myMessage.add(typeOfShake);
+    oscP5.send(myMessage, bubblesPort);
   }
 
   public void playAnySound(Sound sound) {
