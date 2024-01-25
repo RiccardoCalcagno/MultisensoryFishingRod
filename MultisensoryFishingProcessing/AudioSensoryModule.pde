@@ -1,22 +1,12 @@
 class AudioSensoryModule extends AbstSensoryOutModule{
   private CallPureData pureData;
-  private Long wheelPlayTime;
-  private Long whipSoundPlayTime;
   private float lastSpeed =0;
   private float precSongVolume;
-  private float longAttractingVolume;
-  private boolean longAttracting;
-  private Long lastTimeLongAttacktingUpdated;
 
 
   AudioSensoryModule(OutputModulesManager _outputModulesManager){
     super(_outputModulesManager);
     pureData = new CallPureData();
-    wheelPlayTime = System.currentTimeMillis();
-    whipSoundPlayTime = System.currentTimeMillis();
-    lastTimeLongAttacktingUpdated = System.currentTimeMillis();
-    longAttractingVolume = 0.0f;
-    longAttracting = false;
   }
   
   void ResetGame(){
@@ -24,6 +14,7 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     pureData.playWheelSound(0, 0f);
     precSongVolume = 0;
     pureData.playSong(0, 0, 0, 0);
+    pureData.playWireTensionSound(0, 0, false);
   }
   
   
@@ -35,7 +26,7 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     
     float fishIntentionality = 0;
     playWheelTickSound(lastSpeed);
-    if(outputModulesManager.isFishHooked() == true){
+    if(outputModulesManager.isFishHooked()){
       playWireTensionSound(dataSnapshot.coefficentOfWireTension);
       fishIntentionality = 0.8;
     }
@@ -44,8 +35,6 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     }
     
     setSongIntensity(fishIntentionality);
-    
-    playLongAttractingSound();
   }
 
   private void playWheelTickSound(float speedOfWireRetrieving){
@@ -58,62 +47,18 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     //System.out.println(wheelSoundSpeed);
     pureData.playWheelSound(wheelSoundSpeed, map(wheelSoundSpeed, 0, 1, MAX_VOLUME, MAX_VOLUME*0.80));
   }
-
-  private void playRodWhipSound(RawMotionData rawMotionData){
-    if (rawMotionData == null) return;
-    if (System.currentTimeMillis() <= whipSoundPlayTime) return;
-
-    // Calculate the magnitude of the rod's motion
-    float motionMagnitude = sqrt(pow(rawMotionData.acc_x, 2) + pow(rawMotionData.acc_y, 2) + pow(rawMotionData.acc_z, 2));
-    // Normalize the magnitude to a suitable range for the pitch (you may need to adjust this)
-    float whipSoundPitch = map(motionMagnitude, 0, 10, 1, 5);
-    
-    
-    ShakeDimention shake = outputModulesManager.getCurrentShake();
-    
-    
-    
-    // Play the whip sound with the calculated pitch
-    pureData.playPitchedWhip(whipSoundPitch, 1.0f);
-    whipSoundPlayTime = System.currentTimeMillis() + 500; // Adjust the delay as needed
-  }
-
   
-  void playLongAttractingSound(){
-    if (longAttracting){
-      if (System.currentTimeMillis() - lastTimeLongAttacktingUpdated > 50){
-        //Interpolate from longAttractingVolume to 0 in some time
-        if (longAttractingVolume < 1.0f) {
-          longAttractingVolume += 0.1f;
-        } else {
-          longAttractingVolume = 1.0f;
-        }
-        pureData.playTricklingSound(longAttractingVolume);
-        lastTimeLongAttacktingUpdated = System.currentTimeMillis();
-      }
-    } else {
-      if (System.currentTimeMillis() - lastTimeLongAttacktingUpdated > 50){
-        //Interpolate from longAttractingVolume to 0 in some time
-        if (longAttractingVolume > 0.0f) {
-          longAttractingVolume -= 0.1f;
-        } else {
-          longAttractingVolume = 0.0f;
-        }
-        pureData.playTricklingSound(longAttractingVolume);
-        lastTimeLongAttacktingUpdated = System.currentTimeMillis();
-      }
+  private void playWireTensionSound(float coefficientOfWireTension){
+    if (coefficientOfWireTension < 0.2) {
+      pureData.playWireTensionSound(0, 0, false);
+      return;
     }
-  }
-
-  private void playWireTensionSound(float coefficentOfWireTension){
     //we want the pitch of the wheel sound to go from 2.0 to 4.0
-    float wirePitch = 2.0f + (abs(coefficentOfWireTension)*2);
-    pureData.playWireTensionSound(wirePitch, abs(coefficentOfWireTension)*2);
+    float wirePitch = 2.0f + (abs(coefficientOfWireTension)*2);
+    pureData.playWireTensionSound(wirePitch, abs(coefficientOfWireTension)*2, true);
   }
  
   private void setSongIntensity(float fishIntentionality){
-    
-    
     float MAX_VOLUME = 0.5;
     if(outputModulesManager.isFishHooked() == true){
       MAX_VOLUME = 0.2;
@@ -145,29 +90,25 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     pureData.playSong(val3, val1, val4, val2);
   }
 
-    // Asyncronous meningful events
-    void OnShakeOfRod(ShakeDimention rodShakeType){
-      switch(rodShakeType){
-        case NONE:          
-          longAttracting = false;
-          break;
-        case LITTLE_ATTRACTING:
-          pureData.playSwashSound(1.2, 0.3f);
-          longAttracting = false;
-          break;
-        case LONG_ATTRACTING:
-            longAttracting = true;
-          break;
-        case STRONG_HOOKING:
-          pureData.playSplashSound(2, 1.0f);
-          longAttracting = false;
-          break;
-        case STRONG_NOT_HOOKING:
-          pureData.playSplashSound(1, 0.75f);
-          longAttracting = false;
-          break;
-      } 
-    }
+  // Asyncronous meningful events
+  void OnShakeOfRod(ShakeDimention rodShakeType){
+    switch(rodShakeType){
+      case NONE: 
+        break;
+      case LITTLE_ATTRACTING:
+        pureData.playBubblesSound("LITTLE_ATTRACTING");
+        break;
+      case LONG_ATTRACTING:
+        pureData.playBubblesSound("LONG_ATTRACTING");
+        break;
+      case STRONG_HOOKING:
+        pureData.playBubblesSound("STRONG_HOOKING");
+        break;
+      case STRONG_NOT_HOOKING:
+        pureData.playBubblesSound("STRONG_NOT_HOOKING");
+        break;
+    } 
+  }
     
   
   

@@ -20,7 +20,7 @@ void setup() {
   debugLevel.put(DebugType.IOFile, true);
   debugLevel.put(DebugType.StartAlreadyWithFishHoked, false);
   debugLevel.put(DebugType.FishMovement, true);
-  debugLevel.put(DebugType.InputAsKeyboard, false);
+  debugLevel.put(DebugType.InputAsKeyboard, true);
   debugLevel.put(DebugType.ConsoleAll, true);
   debugLevel.put(DebugType.ConsoleAlowFrequent, true);
   debugLevel.put(DebugType.ConsoleIntentionAndTension, false);
