@@ -9,7 +9,6 @@
    ConsoleAlowFrequent,
    ConsoleAlowRawRodInputs,
    StartAlreadyWithFishHoked,
-   IntentionalityVisualization,
  }
  
  interface UpdateFunction{

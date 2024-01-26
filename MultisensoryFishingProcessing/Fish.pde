@@ -30,7 +30,7 @@ class Fish implements PublicFish{
   float speedOfForgettingIntentionality = 0.002;
   
   // this express a value of intentionality to reach the bottom of the see when the fish is hooked
-  float intentionToGoDownWhenHooked = 0.5;//0.23;  // TODO Replace
+  float intentionToGoDownWhenHooked = 0.24; 
   
   // set this values to adjust the degree in wich a certain shake is attracting - scaring the fish , intentionality can go from -0.3 to 0.8
   public void setShakeAttractionMapping(){

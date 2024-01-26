@@ -2,9 +2,23 @@ import java.io.*;
 
 String writeCSVRow(SessionData sessionData) {
   String playerName = sessionData.playerInfo.playerName;
-  float attractingFishScore = sessionData.AttractingFishScore;
-  float hookingFishScore = sessionData.HookingFishScore;
-  float retreivingFishScore = sessionData.RetreivingFishScore;
+  
+  float[] rebalancedScores = new float[]{ 
+    (sessionData.sumsOfgameEvents.get(GameEvent.CheckpointInContinuousGoodShakesPeriod_Shade) - 200f) * (2f) / 300f,
+    (sessionData.sumsOfgameEvents.get(GameEvent.AttractingShake) - 1100f) * (1f) / 1000f,
+    (sessionData.sumsOfgameEvents.get(GameEvent.ComplexAttractingShake) - 1200f) * (1.1f) / 1000f,
+    (sessionData.sumsOfgameEvents.get(GameEvent.BadScaringShake) - 150f) * (-3f) / 120f,
+    (sessionData.sumsOfgameEvents.get(GameEvent.FishStartForgetting) - 160f) * (-2f) / 140f,
+    (sessionData.sumsOfgameEvents.get(GameEvent.TheFishTastedTheBait) - 7f) * (-1f) / 4f,
+    (sessionData.sumsOfgameEvents.get(GameEvent.UserDidNotAnsweredToFishBite) - 3.3f) * (-1.5f) / 1.5f,
+    (sessionData.sumsOfgameEvents.get(GameEvent.WireInTention_Shade) - 70f) * (-1f) / 60f,
+    (sessionData.sumsOfgameEvents.get(GameEvent.Good_LeavingWireWhileTention_Shade) - 95f) * (3f) / 50f
+  };
+
+  float attractingFishScore = rebalancedScores[0]+rebalancedScores[1]+rebalancedScores[2]+rebalancedScores[3];
+  float hookingFishScore = rebalancedScores[4]+rebalancedScores[5];
+  float retreivingFishScore = rebalancedScores[6]+rebalancedScores[7];
+  
   boolean sight = sessionData.playerInfo.selectedModalities[0];
   boolean audio = sessionData.playerInfo.selectedModalities[1];
   boolean haptic = sessionData.playerInfo.selectedModalities[2];

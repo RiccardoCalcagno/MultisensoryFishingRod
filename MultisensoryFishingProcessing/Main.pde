@@ -20,12 +20,11 @@ void setup() {
   debugLevel.put(DebugType.IOFile, true);
   debugLevel.put(DebugType.StartAlreadyWithFishHoked, false);
   debugLevel.put(DebugType.FishMovement, true);
-  debugLevel.put(DebugType.InputAsKeyboard, false);
+  debugLevel.put(DebugType.InputAsKeyboard, true);
   debugLevel.put(DebugType.ConsoleAll, true);
   debugLevel.put(DebugType.ConsoleAlowFrequent, true);
   debugLevel.put(DebugType.ConsoleIntentionAndTension, false);
   debugLevel.put(DebugType.ConsoleAlowRawRodInputs, false);
-  debugLevel.put(DebugType.IntentionalityVisualization, true);
   
   globalGameManager = new GameManager(this, debugLevel);
   
@@ -36,11 +35,9 @@ void setup() {
 void draw() {
   globalGameManager.gameLoop(); 
 }
-//TODO rremove it is only for debug
 void keyPressed(){
   globalGameManager.debugUtility.OnkeyPressed(keyCode);
 }
-//TODO rremove it is only for debug
 void keyReleased() {
   globalGameManager.debugUtility.OnkeyReleased(keyCode);
 }
@@ -65,28 +62,9 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   int NumFramesHaloExternUpdates = 5; 
   
   int millisecForEndAnimation = 3000;
-  
-  public void InitializeGameEventsScoreMapping(){
-    
-    // ATTRACTING FISH
-    gameEventsToScore.set("CheckpointInContinuousGoodShakesPeriod_Shade", 0); // for a period of all continuative good shakes defined by Fish.strinkingTimeToReachOptimumAttractability this event is fired 3 times, for the last 3 intervalls of the 5 ones
-    gameEventsToScore.set("AttractingShake", 0);
-    gameEventsToScore.set("ComplexAttractingShake", 0);
-    gameEventsToScore.set("BadScaringShake", 0);
-    gameEventsToScore.set("FishStartForgetting", 0);
-
-    // HOOKING FISH
-    gameEventsToScore.set("TheFishTastedTheBait", 0);
-    gameEventsToScore.set("UserDidNotAnsweredToFishBite", 0);
-    
-    // RETREIVING FISH
-    gameEventsToScore.set("WireInTention_Shade", 0);
-    gameEventsToScore.set("Good_LeavingWireWhileTention_Shade", 0);
-  }
 
   // ------------------------------------------- FIELDS -------------------------------------------
   
-  FloatDict gameEventsToScore = new FloatDict();
   boolean hasFish;
   float wireCountdown; // Conto alla rovescia del filo
   SessionData currentSession;
@@ -148,7 +126,6 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     
     parent = _parent;
     currentState = GameState.Null; cachedState = GameState.Null;
-    InitializeGameEventsScoreMapping();
     
     cameraMovement = new CameraMovement(this, parent);
     cameraMovement.TryConnectToFacePoseProvider();
@@ -197,7 +174,6 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     
     hint(ENABLE_DEPTH_SORT);
     
-    //if(currentState != GameState.FishLost && currentState != GameState.WireEnded){    // TODO Considera magari è questo che causa problemi
       if(haloForShakeRodEvent > 0){
         currentRodState = cachedShakeRodEvent;
         for (AbstSensoryOutModule sensoryModule : sensoryModules) {
@@ -227,7 +203,6 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   
         sensoryModule.OnRodStatusReading(data);
       } 
-    //}
     
     
     hint(DISABLE_DEPTH_SORT);
@@ -261,9 +236,6 @@ class GameManager implements OutputModulesManager, InputModuleManager {
         
       case FishHooked:
         hasFish = true;
-        
-        // TODO Remove this is only for debug purposes
-        //setState(GameState.FishLost);
         break;
    
       case FishLost:
@@ -480,26 +452,14 @@ class GameManager implements OutputModulesManager, InputModuleManager {
   
   public void SetGameEventForScoring(GameEvent event){SetGameEventForScoring(event, 1);}
   public void SetGameEventForScoring(GameEvent event, float contingentAlteration){
-    float increment = gameEventsToScore.get(event.toString()) * contingentAlteration;
-   
+
     debugUtility.SetGameEventForScoring(event, contingentAlteration);
     
-    switch(event){
-     case CheckpointInContinuousGoodShakesPeriod_Shade:
-     case AttractingShake:
-     case ComplexAttractingShake:
-     case BadScaringShake:
-     case FishStartForgetting:
-       currentSession.AttractingFishScore+=increment;
-     break;
-     case TheFishTastedTheBait:
-     case UserDidNotAnsweredToFishBite:
-       currentSession.HookingFishScore+=increment;
-     break;
-     case WireInTention_Shade:
-     case Good_LeavingWireWhileTention_Shade:
-       currentSession.RetreivingFishScore+=increment;
-     break;
+    if(currentSession.sumsOfgameEvents.containsKey(event) == false){
+      currentSession.sumsOfgameEvents.put(event, (Float)(contingentAlteration));
+    }
+    else{    
+      currentSession.sumsOfgameEvents.put(event, (Float)(currentSession.sumsOfgameEvents.get(event) + contingentAlteration));
     }
   }
   
@@ -596,18 +556,14 @@ class SessionData {
   
   int startTime;
   int endTime;
-  float AttractingFishScore;
-  float HookingFishScore;
-  float RetreivingFishScore;
   String dateTime = "";
   String endReason;
   float demagedWire;
+  HashMap<GameEvent, Float> sumsOfgameEvents;
   PlayerInfo playerInfo;
   
   public void ResetGameData(){
-    AttractingFishScore = 0;
-    HookingFishScore = 0;
-    RetreivingFishScore = 0;
+    sumsOfgameEvents = new HashMap<GameEvent, Float>();
     startTime = frameCount;
     endReason = "";
     demagedWire = 0;

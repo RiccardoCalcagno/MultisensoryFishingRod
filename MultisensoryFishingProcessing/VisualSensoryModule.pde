@@ -11,10 +11,10 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   int timeMouthOpen = 10;
   
   // The void space (water) on top and under the box where the fish can swim (defined by boxSize)
-  static final int verticalPaddingOfVisualBox  = -30;
+  static final int verticalPaddingOfVisualBox = -30;
   
   // Change the density of the algae spowned
-  float numAlgaePerPxSquared = 0.00000007;  //0.00000024;
+  float numAlgaePerPxSquared = 0.0000002;
   
   // Change the size of the algae
   int resizeAlgaeWidth = 100;
@@ -31,12 +31,15 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   PVector[] algaePos;
   int[] algaeType;
   float[] algaeRotation;
-  int[] tintColor = new int[]{220, 240, 255};
+  color brightTintColor = color(230, 245, 255);
+  color darkTintColor = color(100, 120, 170);
+  int[] tintColor;
   int numAlgae;
   int isEating = 0;
   float boxSize;
   float fieldSize;
   boolean fishLost = false;
+  PVector cameraPosition = null;
   
   
   // ------------------------------------------- DEPENDENCIES -------------------------------------------  
@@ -72,7 +75,6 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     foodImg = loadImage("images/food.png");
     foodImg.resize(80, 120);
     
-    //TODO fishFromTop
 
     sandImg = loadImage("images/sand.jpg");
     sandImg.resize(2*width, 2*width);
@@ -114,6 +116,8 @@ class VisualSensoryModule extends AbstSensoryOutModule{
       
     isEating--;
     
+    drawIntentionalityVisualization();
+    
     rotateCamera();
     
     drawBottom();
@@ -123,10 +127,6 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     drawSceneFish();
     
     drawWireAndBait(dataSnapshot.coefficentOfWireTension);
-    
-    if(outputModulesManager.GetDebugUtility().debugLevels.get(DebugType.IntentionalityVisualization) == true){
-      drawIntentionalityVisualization();
-    }
   }
   
   
@@ -138,21 +138,47 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   
   void drawIntentionalityVisualization(){
    
-    var currentDelta =  outputModulesManager.GetDebugUtility().currentDeltaOFIntentionality;
+    float intentionality = fish.getIntentionality();
+    //intentionality = 0.8;
+    
+    if(outputModulesManager.isFishHooked() == false && fishLost==false){
+      var colorNow = lerpColor(darkTintColor, brightTintColor, constrain(map(intentionality, -0.3, 0.6, 0, 1), 0, 1));
+      tintColor = new int[]{ int(red(colorNow)), int(green(colorNow)), int(blue(colorNow))};
+    }
+    else{
+      tintColor = new int[]{ int(red(brightTintColor)), int(green(brightTintColor)), int(blue(brightTintColor))} ;
+    }
+    
+    tint(tintColor[0], tintColor[1], tintColor[2], 255);  
+    
+    /*
+    var dir = PVector.sub(new PVector(width/2, height/2, 0), cameraPosition);
+    dir.setMag(width/4);
+    var center = PVector.add(cameraPosition, dir);
+    
+    
+    Vec3 powerdRotation = new Vec3(0,0,-1);
+    PMatrix3D rotationMatrix = powerdRotation.lookAt(dir, new PVector(0, -1, 0));
+    PVector targetGround = new PVector();
+    rotationMatrix.mult(powerdRotation, targetGround);
+
     pushMatrix();
     scale(scaleScene);
-    translate(400,  height/2, width/3);
-    //rotateZ(PI);
     
-    float intentionality = fish.getIntentionality();
-    int hightP = int(map(intentionality, 0, 1, 0, 500));
+    translate(center.x,  center.y, center.z);
+    applyMatrix(rotationMatrix);  
     
+     float intentionality = fish.getIntentionality();
+    intentionality = 0.8;
+    
+    strokeWeight(width/100);
     color co = lerpColor(color(255, 0, 0), color(0,255, 0), map(intentionality, -0.3, 0.8, 0, 1));
-   
-    fill(co);
-    noStroke();
-    rect(0, 0, 100, -hightP);
-    popMatrix();
+    stroke(co);
+    
+    rectMode(CENTER);
+    rect(0, 0, width/4, height/4);
+    rectMode(CORNER);
+    popMatrix();*/
   }
   
   void drawAlgae(){
@@ -180,7 +206,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   
   void rotateCamera(){
     //scale(scaleScene);
-    var cameraPosition = outputModulesManager.getCameraPosition();
+    cameraPosition = outputModulesManager.getCameraPosition();
     // Imposta la posizione della camera
     camera(cameraPosition.x, cameraPosition.y, cameraPosition.z, width/2, height/2, 0, 0, 1, 0);
     /* FOR DEBUG

@@ -310,7 +310,7 @@ class Player {
     float rigidityOfRod = totalNodes * 2;
     // More iterations define the rigidity of the rope
     for(int i=0; i<rigidityOfRod; i++){
-      for (int j = 0; j < nodes.length; j++) { // TODO REMOVE 
+      for (int j = 0; j < nodes.length; j++) { 
         nodes[j].applyConstrains((j< nodes.length-1)? nodes[j + 1]: null, nodeDistance, (float)(i+1) / (float)rigidityOfRod);
         
         if( i ==  rigidityOfRod-1){

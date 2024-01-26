@@ -2,13 +2,13 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   private CallPureData pureData;
   private float lastSpeed =0;
   private float precSongVolume;
-  private boolean fishLost;
+  private boolean endAnimation;
 
 
   AudioSensoryModule(OutputModulesManager _outputModulesManager){
     super(_outputModulesManager);
     pureData = new CallPureData();
-    fishLost = false;
+    endAnimation = false;
   }
   
   void ResetGame(){
@@ -18,7 +18,7 @@ class AudioSensoryModule extends AbstSensoryOutModule{
     precSongVolume = 0;
     pureData.playSong(0, 0, 0, 0);
     pureData.playWireTensionSound(0, 0, false);
-    fishLost = false;
+    endAnimation = false;
   }
   
   void OnEndGame(){
@@ -41,7 +41,7 @@ class AudioSensoryModule extends AbstSensoryOutModule{
 
     float fishIntentionality = 0;
     playWheelTickSound(lastSpeed);
-    if(outputModulesManager.isFishHooked() && fishLost == false){
+    if(outputModulesManager.isFishHooked() && endAnimation == false){
       playWireTensionSound(dataSnapshot.coefficentOfWireTension);
       fishIntentionality = 0.8;
     }
@@ -112,7 +112,7 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   // Asyncronous meningful events
   void OnShakeOfRod(ShakeDimention rodShakeType){
     
-    if(outputModulesManager.isFishHooked() || fishLost == true){
+    if(outputModulesManager.isFishHooked() || endAnimation == true){
       return; 
     }
     switch(rodShakeType){
@@ -146,13 +146,18 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   }
   
   void OnFishLost(){
-    fishLost= true;
+    endAnimation= true;
+    pureData.playWireTensionSound(0, 0, false);
     pureData.playAnySound(Sound.LOST);
   }
   void OnFishCaught(){
+    endAnimation = true;
+    pureData.playWireTensionSound(0, 0, false);
     pureData.playAnySound(Sound.CAUGHT);
   }
   void OnWireEndedWithNoFish(){
+    endAnimation = true;
+    pureData.playWireTensionSound(0, 0, false);
     pureData.playAnySound(Sound.WIRE);
   }
 }

@@ -20,10 +20,7 @@ interface InputModuleManager{
   DebugUtility GetDebugUtility();
 }
 
-// TODO
-// Manuel definirà quelle che possono essere le feature più esplicative per descrivere il movimento come velocities and accellerations.
-// it is usefull, for instance, for the PureData to add sounds for the rod that is swinging
-// NORMALIZZATI
+
 class RawMotionData{
   
    float acc_x;
@@ -194,8 +191,6 @@ class ServerThread extends Thread {
             inputModule.handleShakeEvent(event);
           }
           
-          
-          // TODO Verify if it has made the think better
           sleep(1);
       }
     }
