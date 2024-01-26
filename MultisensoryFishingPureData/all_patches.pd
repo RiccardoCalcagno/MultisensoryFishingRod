@@ -1,4 +1,4 @@
-#N canvas 1666 -285 1451 622 12;
+#N canvas 896 371 1451 686 12;
 #X obj 27 85 play_pitched_string_tension;
 #X obj 26 116 play_wheel_tick;
 #N canvas 0 50 450 250 (subpatch) 0;

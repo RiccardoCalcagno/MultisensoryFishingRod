@@ -37,7 +37,7 @@ WINDOW_SIZE = 10 * 3
 BUFFER_MAX_SIZE = MODEL_INPUT_SIZE + WINDOW_SIZE
 
 BUFFER_MAX_SIZE_STRONG_HOOK = 3 * 3
-MIN_DELAY_BETWEEN_TWO_DIFFERENT_STRONG_HOOKS = 0.3  # in seconds
+MIN_DELAY_BETWEEN_TWO_DIFFERENT_STRONG_HOOKS = 0.7  # in seconds
 
 
 buffer = []
@@ -78,7 +78,7 @@ while True:
 
     if(len(buffer_for_strong_hook) == BUFFER_MAX_SIZE_STRONG_HOOK):
         Y = np.mean(buffer_for_strong_hook)
-        if(y < 0.1 and ((time.time() - time_last_strong_hook) > MIN_DELAY_BETWEEN_TWO_DIFFERENT_STRONG_HOOKS)):       
+        if(y < 0.05 and ((time.time() - time_last_strong_hook) > MIN_DELAY_BETWEEN_TWO_DIFFERENT_STRONG_HOOKS)):       
             sendPrediction(2)
             time_last_strong_hook = time.time()
         del buffer_for_strong_hook[:1]
@@ -94,15 +94,13 @@ while True:
       var_z = np.var(inputs[2::3])
       variance = var_x + var_y + var_z
 
-      early_var_x = np.var(inputs[(3 * 25)::3]) # array[start:stop:step]
-      early_var_y = np.var(inputs[(3 * 25)+1::3])
-      early_var_z = np.var(inputs[(3 * 25)+2::3])
+      early_var_x = np.var(inputs[(3 * 20)::3]) # array[start:stop:step]
+      early_var_y = np.var(inputs[(3 * 20)+1::3])
+      early_var_z = np.var(inputs[(3 * 20)+2::3])
       early_variance = early_var_x + early_var_y + early_var_z
 
       if early_variance < 0.003:
         prediction = 3
-
-
       # MACHINE LEARNING
       else:
         inputs_ml = inputs[None, :] # add the batch dimension 

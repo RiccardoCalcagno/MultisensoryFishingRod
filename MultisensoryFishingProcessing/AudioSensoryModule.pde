@@ -2,31 +2,46 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   private CallPureData pureData;
   private float lastSpeed =0;
   private float precSongVolume;
+  private boolean fishLost;
 
 
   AudioSensoryModule(OutputModulesManager _outputModulesManager){
     super(_outputModulesManager);
     pureData = new CallPureData();
+    fishLost = false;
   }
   
   void ResetGame(){
     lastSpeed = 0;
+    pureData.playBubblesSound("NONE");
     pureData.playWheelSound(0, 0f);
     precSongVolume = 0;
     pureData.playSong(0, 0, 0, 0);
     pureData.playWireTensionSound(0, 0, false);
+    fishLost = false;
+  }
+  
+  void OnEndGame(){
+    pureData.playBubblesSound("NONE");
+    pureData.playWireTensionSound(0, 0, false);
+    pureData.playWheelSound(0, 0f);
+    pureData.playSong(0, 0, 0, 0);
   }
   
   
   // Once per gameLoop
   public void OnRodStatusReading(RodStatusData dataSnapshot){
     
-    lastSpeed = lerp(dataSnapshot.speedOfWireRetrieving, lastSpeed, 0.7);
+    float curSpeed = dataSnapshot.speedOfWireRetrieving;
+    if(abs(dataSnapshot.speedOfWireRetrieving) < 0.05){
+      curSpeed =0;
+    }
     
-    
+    lastSpeed = lerp(curSpeed, lastSpeed, (abs(curSpeed) < 0.05)? 0.2 : 0.7);
+
     float fishIntentionality = 0;
     playWheelTickSound(lastSpeed);
-    if(outputModulesManager.isFishHooked()){
+    if(outputModulesManager.isFishHooked() && fishLost == false){
       playWireTensionSound(dataSnapshot.coefficentOfWireTension);
       fishIntentionality = 0.8;
     }
@@ -38,30 +53,34 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   }
 
   private void playWheelTickSound(float speedOfWireRetrieving){
-    
-    float MAX_VOLUME = 300;
-    
-    println(speedOfWireRetrieving);
+    float MAX_VOLUME = 100;
     //we want the pitch of the wheel sound to go from 2.0 to 4.0
-    float wheelSoundSpeed = abs(speedOfWireRetrieving)*1.3;
-    //System.out.println(wheelSoundSpeed);
+    float wheelSoundSpeed = constrain(abs(speedOfWireRetrieving)*1.3, 0, 1);
     pureData.playWheelSound(wheelSoundSpeed, map(wheelSoundSpeed, 0, 1, MAX_VOLUME, MAX_VOLUME*0.80));
   }
   
   private void playWireTensionSound(float coefficientOfWireTension){
-    if (coefficientOfWireTension < 0.2) {
-      pureData.playWireTensionSound(0, 0, false);
-      return;
+    
+    float MAX_VOLUME = 5f;
+    float volume = 0;
+    float tremolo = 0;
+  
+    if (coefficientOfWireTension < 0.1) {
+      volume = 0;
+      tremolo = -1.29;
     }
-    //we want the pitch of the wheel sound to go from 1.0 to 2.0
-    float volume = 1.0f + coefficientOfWireTension;
+    else{
+      //we want the pitch of the wheel sound to go from 1.0 to 2.0
+      volume = map(coefficientOfWireTension, 0.1, 1, 0, MAX_VOLUME);
+      tremolo = map(coefficientOfWireTension, 0.1, 1, 0, 1);
+    }
     pureData.playWireTensionSound(volume, coefficientOfWireTension, true);
   }
  
   private void setSongIntensity(float fishIntentionality){
-    float MAX_VOLUME = 0.5;
+    float MAX_VOLUME = 0.1;
     if(outputModulesManager.isFishHooked() == true){
-      MAX_VOLUME = 0.2;
+      MAX_VOLUME = 0.01;
     }
     
     precSongVolume = lerp(MAX_VOLUME, precSongVolume, 0.99);
@@ -92,8 +111,13 @@ class AudioSensoryModule extends AbstSensoryOutModule{
 
   // Asyncronous meningful events
   void OnShakeOfRod(ShakeDimention rodShakeType){
+    
+    if(outputModulesManager.isFishHooked() || fishLost == true){
+      return; 
+    }
     switch(rodShakeType){
       case NONE: 
+        pureData.playBubblesSound("NONE");
         break;
       case LITTLE_ATTRACTING:
         pureData.playBubblesSound("LITTLE_ATTRACTING");
@@ -122,18 +146,13 @@ class AudioSensoryModule extends AbstSensoryOutModule{
   }
   
   void OnFishLost(){
+    fishLost= true;
     pureData.playAnySound(Sound.LOST);
-    pureData.playWireTensionSound(0, 0, false);
-    pureData.playWheelSound(0, 0f);
   }
   void OnFishCaught(){
     pureData.playAnySound(Sound.CAUGHT);
-    pureData.playWireTensionSound(0, 0, false);
-    pureData.playWheelSound(0, 0f);
   }
   void OnWireEndedWithNoFish(){
     pureData.playAnySound(Sound.WIRE);
-    pureData.playWireTensionSound(0, 0, false);
-    pureData.playWheelSound(0, 0f);
   }
 }

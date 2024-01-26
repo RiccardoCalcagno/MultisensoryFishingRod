@@ -1,4 +1,4 @@
-#N canvas 1403 -428 1864 734 10;
+#N canvas 908 703 1864 734 10;
 #X obj 655 401 *~;
 #X obj 655 430 dac~;
 #X obj 378 171 loadbang;

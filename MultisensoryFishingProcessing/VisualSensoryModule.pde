@@ -36,6 +36,7 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   int isEating = 0;
   float boxSize;
   float fieldSize;
+  boolean fishLost = false;
   
   
   // ------------------------------------------- DEPENDENCIES -------------------------------------------  
@@ -98,6 +99,14 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   
   void OnFishTasteBait(){
     isEating= timeMouthOpen;
+  }
+  
+  void ResetGame(){
+    fishLost = false;
+  }
+  
+  void OnFishLost(){
+    fishLost= true;
   }
   
   // this can be used als as draw cicle
@@ -330,14 +339,19 @@ class VisualSensoryModule extends AbstSensoryOutModule{
     for (int i = 0; i < nodes.length - 1; i++) {
       colorMode(RGB);
       strokeWeight(3);
-      stroke(255 * wireFishTention, 0, 0);
+      if(wireFishTention<0.3){
+        stroke(255 * map(wireFishTention, 0, 0.3, 0, 0.5), 0, 0);
+      }
+      else{
+        stroke(255 * map(wireFishTention, 0.3, 1, 0.5, 1), 0, 0);
+      }
       line(nodes[i].position.x, nodes[i].position.y, nodes[i].position.z,
            nodes[i+1].position.x, nodes[i+1].position.y, nodes[i+1].position.z);
     }
     hint(DISABLE_STROKE_PURE);
     popMatrix();    
     
-    if(outputModulesManager.isFishHooked() == false){
+    if(outputModulesManager.isFishHooked() == false && fishLost==false){
       pushMatrix();
       scale(scaleScene);
       PVector hookPos = nodes[nodes.length-1].position;
