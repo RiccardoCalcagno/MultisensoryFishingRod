@@ -56,10 +56,10 @@ public class CallPureData {
     oscP5.send(myMessage, wheelPort);
   }
 
-  public void playWireTensionSound(float pitch, float volume, boolean play) {
+  public void playWireTensionSound(float volume, float tremolo, boolean play) {
     OscMessage myMessage = new OscMessage("/wire");
-    myMessage.add(pitch);
     myMessage.add(volume);
+    myMessage.add(tremolo);
     myMessage.add(play ? 1 : 0);
     oscP5.send(myMessage, stringPort);
   }

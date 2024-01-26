@@ -53,9 +53,9 @@ class AudioSensoryModule extends AbstSensoryOutModule{
       pureData.playWireTensionSound(0, 0, false);
       return;
     }
-    //we want the pitch of the wheel sound to go from 2.0 to 4.0
-    float wirePitch = 2.0f + (abs(coefficientOfWireTension)*2);
-    pureData.playWireTensionSound(wirePitch, abs(coefficientOfWireTension)*2, true);
+    //we want the pitch of the wheel sound to go from 1.0 to 2.0
+    float volume = 1.0f + coefficientOfWireTension;
+    pureData.playWireTensionSound(volume, coefficientOfWireTension, true);
   }
  
   private void setSongIntensity(float fishIntentionality){
