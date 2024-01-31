@@ -1,33 +1,11 @@
 DateTime,PlayerName,SessionDuration,AttractingFishScore,HookingFishScore,RetreivingFishScore, DamagedWire ,sight,audio,haptic,endReason
-22/1/2024 - 18h:14min,,113.14211,0.0,0.0,0.0,0.9682978,true,true,true,FishCaught
-22/1/2024 - 18h:16min,brutta tensione,102.32301,0.0,0.0,0.0,0.9690682,true,true,true,FishCaught
-22/1/2024 - 18h:18min,brutta tensione,73.71972,0.0,0.0,0.0,0.96587586,true,true,true,FishCaught
-22/1/2024 - 18h:20min,brutta tensione,105.07494,0.0,0.0,0.0,0.9567486,true,true,true,FishCaught
-22/1/2024 - 18h:22min,perfect tention,149.56966,0.0,0.0,0.0,0.9714221,true,true,true,FishCaught
-22/1/2024 - 18h:24min,perfect tention,182.88123,0.0,0.0,0.0,0.995961,true,true,true,FishCaught
-22/1/2024 - 18h:27min,perfect tention,157.46094,0.0,0.0,0.0,0.99659616,true,true,true,FishCaught
-22/1/2024 - 18h:30min,perfect tention,124.152565,0.0,0.0,0.0,0.9976449,true,true,true,FishCaught
-22/1/2024 - 18h:32min,perfect tention,105.37173,0.0,0.0,0.0,0.9902905,true,true,true,FishCaught
-22/1/2024 - 18h:34min,perfect tention,87.828804,0.0,0.0,0.0,0.9881552,true,true,true,FishCaught
-22/1/2024 - 20h:20min,,112.392944,0.0,0.0,0.0,0.3741866,true,true,true,FishCaught
-22/1/2024 - 20h:22min,,141.37727,0.0,0.0,0.0,0.4862349,true,true,true,FishCaught
-24/1/2024 - 19h:41min,,47.140217,0.0,0.0,0.0,0.0,true,true,false,WireEndedWithoutFish
-24/1/2024 - 19h:53min,,154.41924,0.0,0.0,0.0,0.0,true,true,false,WireEndedWithoutFish
-24/1/2024 - 19h:58min,,152.48871,0.0,0.0,0.0,0.0,true,true,false,WireEndedWithoutFish
-24/1/2024 - 20h:0min,,185.01047,0.0,0.0,0.0,0.0,true,true,false,WireEndedWithoutFish
-26/1/2024 - 10h:51min,,75.34393,0.0,0.0,0.0,0.0,true,true,false,WireEndedWithoutFish
-26/1/2024 - 10h:55min,,49.52582,0.0,0.0,0.0,0.0,true,true,false,WireEndedWithoutFish
-26/1/2024 - 11h:23min,,166.42046,0.0,0.0,0.0,1.0073674,true,true,false,FishLost
-26/1/2024 - 11h:55min,,26.488472,0.0,0.0,0.0,1.0017269,true,true,false,FishLost
-26/1/2024 - 12h:0min,,32.230526,0.0,0.0,0.0,1.0080847,true,true,false,FishLost
-26/1/2024 - 12h:4min,,33.78581,0.0,0.0,0.0,1.0050969,true,true,false,FishLost
-26/1/2024 - 12h:53min,,38.06229,0.0,0.0,0.0,1.0127869,true,true,false,FishLost
-26/1/2024 - 12h:59min,,25.123255,0.0,0.0,0.0,1.0078976,true,true,false,FishLost
-26/1/2024 - 13h:6min,,24.699688,0.0,0.0,0.0,1.001307,true,true,false,FishLost
-26/1/2024 - 13h:7min,,13.521572,0.0,0.0,0.0,1.0054771,true,true,false,FishLost
-26/1/2024 - 13h:8min,,31.528439,0.0,0.0,0.0,1.0078297,true,true,false,FishLost
-26/1/2024 - 13h:11min,,17.66652,0.0,0.0,0.0,1.0081786,true,true,false,FishLost
-26/1/2024 - 13h:12min,,15.198748,0.0,0.0,0.0,1.0029197,true,true,false,FishLost
-26/1/2024 - 13h:16min,,20.573883,0.0,0.0,0.0,1.0065979,true,true,false,FishLost
-26/1/2024 - 14h:22min,,52.461792,0.0,0.0,0.0,1.0018826,true,true,true,FishLost
-26/1/2024 - 19h:34min,,129.83202,-6.2195687,-3.142857,-1.4867085,1.0032903,true,true,false,FishLost
+
+31/1/2024 - 10h:15min,,87.541664,1.7066996,-3.4571428,2.920958,1.0027304,true,true,true,FishLost
+31/1/2024 - 10h:24min,,282.3261,2.3516302,-5.3357143,-1.1569294,0.4509672,true,true,true,FishCaught
+31/1/2024 - 10h:38min,,124.125656,3.1780632,-12.171429,1.4033765,0.7127063,true,false,true,FishCaught
+31/1/2024 - 10h:49min,Test 2,1460.5638,51.880264,-397.47858,2.178793,0.25380683,true,true,true,FishCaught
+31/1/2024 - 11h:16min,,95.80207,0.306737,0.07142854,3.0813932,0.30419046,true,true,true,FishCaught
+31/1/2024 - 11h:20min,,145.99873,3.2514632,-5.257143,1.4257683,0.8243402,true,true,true,FishCaught
+31/1/2024 - 11h:31min,,164.60066,3.0514967,-18.314285,1.0437238,0.32155654,true,true,true,FishCaught
+31/1/2024 - 12h:42min,,48.877464,1.4909997,-4.635714,4.4666667,0.0,true,true,true,WireEndedWithoutFish
+31/1/2024 - 12h:43min,,89.535995,1.1580995,-15.6214285,3.4666667,0.0,true,true,true,WireEndedWithoutFish

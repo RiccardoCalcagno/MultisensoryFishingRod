@@ -92,7 +92,7 @@ void disposeUI() {
 
 
 
-void createAnswerToContinuePlayingUI(boolean haveWon) {
+void createAnswerToContinuePlayingUI(boolean haveWon, float attracting, float hooking, float retreiving) {
     
   if(newPanel == null){
     newPanel = new GPanel(this, width/2 - 150* scala, height/2 - 100* scala, 300 * scala, 200 * scala);
@@ -102,7 +102,8 @@ void createAnswerToContinuePlayingUI(boolean haveWon) {
   
     endMessage = new GLabel(this, 20 * scala, 25 * scala, 260 * scala, 40 * scala);
     if(haveWon){
-      endMessage.setText("YOU HAVE WON!");
+      int score = int((attracting+hooking+retreiving+1000)/3);
+      endMessage.setText("YOU HAVE WON! \nSCORE: "+score);
     }
     else{
       endMessage.setText("Unfortunately you have lost ;(");

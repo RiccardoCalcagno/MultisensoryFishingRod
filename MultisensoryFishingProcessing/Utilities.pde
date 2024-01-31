@@ -3,21 +3,59 @@ import java.io.*;
 String writeCSVRow(SessionData sessionData) {
   String playerName = sessionData.playerInfo.playerName;
   
+  var CheckpointInContinuousGoodShakesPeriod_Shade = 0f;
+  var AttractingShake = 0f;
+  var ComplexAttractingShake = 0f;
+  var BadScaringShake = 0f;
+  var FishStartForgetting = 0f;
+  var TheFishTastedTheBait = 0f;
+  var UserDidNotAnsweredToFishBite = 0f;
+  var WireInTention_Shade = 0f;
+  var Good_LeavingWireWhileTention_Shade = 0f;
+  
+  if(sessionData.sumsOfgameEvents.containsKey(GameEvent.CheckpointInContinuousGoodShakesPeriod_Shade)){
+    CheckpointInContinuousGoodShakesPeriod_Shade = sessionData.sumsOfgameEvents.get(GameEvent.CheckpointInContinuousGoodShakesPeriod_Shade);
+  }
+    if(sessionData.sumsOfgameEvents.containsKey(GameEvent.AttractingShake)){
+    AttractingShake = sessionData.sumsOfgameEvents.get(GameEvent.AttractingShake);
+  }
+    if(sessionData.sumsOfgameEvents.containsKey(GameEvent.ComplexAttractingShake)){
+    ComplexAttractingShake = sessionData.sumsOfgameEvents.get(GameEvent.ComplexAttractingShake);
+  }
+    if(sessionData.sumsOfgameEvents.containsKey(GameEvent.BadScaringShake)){
+    BadScaringShake = sessionData.sumsOfgameEvents.get(GameEvent.BadScaringShake);
+  }
+    if(sessionData.sumsOfgameEvents.containsKey(GameEvent.FishStartForgetting)){
+    FishStartForgetting = sessionData.sumsOfgameEvents.get(GameEvent.FishStartForgetting);
+  }
+    if(sessionData.sumsOfgameEvents.containsKey(GameEvent.TheFishTastedTheBait)){
+    TheFishTastedTheBait = sessionData.sumsOfgameEvents.get(GameEvent.TheFishTastedTheBait);
+  }
+    if(sessionData.sumsOfgameEvents.containsKey(GameEvent.UserDidNotAnsweredToFishBite)){
+    UserDidNotAnsweredToFishBite = sessionData.sumsOfgameEvents.get(GameEvent.UserDidNotAnsweredToFishBite);
+  }
+    if(sessionData.sumsOfgameEvents.containsKey(GameEvent.WireInTention_Shade)){
+    WireInTention_Shade = sessionData.sumsOfgameEvents.get(GameEvent.WireInTention_Shade);
+  }
+    if(sessionData.sumsOfgameEvents.containsKey(GameEvent.Good_LeavingWireWhileTention_Shade)){
+    Good_LeavingWireWhileTention_Shade = sessionData.sumsOfgameEvents.get(GameEvent.Good_LeavingWireWhileTention_Shade);
+  }
+  
   float[] rebalancedScores = new float[]{ 
-    (sessionData.sumsOfgameEvents.get(GameEvent.CheckpointInContinuousGoodShakesPeriod_Shade) - 200f) * (2f) / 300f,
-    (sessionData.sumsOfgameEvents.get(GameEvent.AttractingShake) - 1100f) * (1f) / 1000f,
-    (sessionData.sumsOfgameEvents.get(GameEvent.ComplexAttractingShake) - 1200f) * (1.1f) / 1000f,
-    (sessionData.sumsOfgameEvents.get(GameEvent.BadScaringShake) - 150f) * (-3f) / 120f,
-    (sessionData.sumsOfgameEvents.get(GameEvent.FishStartForgetting) - 160f) * (-2f) / 140f,
-    (sessionData.sumsOfgameEvents.get(GameEvent.TheFishTastedTheBait) - 7f) * (-1f) / 4f,
-    (sessionData.sumsOfgameEvents.get(GameEvent.UserDidNotAnsweredToFishBite) - 3.3f) * (-1.5f) / 1.5f,
-    (sessionData.sumsOfgameEvents.get(GameEvent.WireInTention_Shade) - 70f) * (-1f) / 60f,
-    (sessionData.sumsOfgameEvents.get(GameEvent.Good_LeavingWireWhileTention_Shade) - 95f) * (3f) / 50f
+    (CheckpointInContinuousGoodShakesPeriod_Shade - 200f) * (2f) / 300f,
+    (AttractingShake - 1100f) * (1f) / 1000f,
+    (ComplexAttractingShake - 1200f) * (1.1f) / 1000f,
+    (BadScaringShake - 150f) * (-3f) / 120f,
+    (FishStartForgetting - 160f) * (-2f) / 140f,
+    (TheFishTastedTheBait - 7f) * (-1f) / 4f,
+    (UserDidNotAnsweredToFishBite - 3.3f) * (-1.5f) / 1.5f,
+    (WireInTention_Shade - 70f) * (-1f) / 60f,
+    (Good_LeavingWireWhileTention_Shade - 95f) * (3f) / 50f
   };
-
-  float attractingFishScore = rebalancedScores[0]+rebalancedScores[1]+rebalancedScores[2]+rebalancedScores[3];
-  float hookingFishScore = rebalancedScores[4]+rebalancedScores[5];
-  float retreivingFishScore = rebalancedScores[6]+rebalancedScores[7];
+  
+  sessionData.scoreAttracting = rebalancedScores[0]+rebalancedScores[1]+rebalancedScores[2]+rebalancedScores[3];
+  sessionData.scoreHooking = rebalancedScores[4]+rebalancedScores[5];
+  sessionData.scoreRetreiving = rebalancedScores[6]+rebalancedScores[7];
   
   boolean sight = sessionData.playerInfo.selectedModalities[0];
   boolean audio = sessionData.playerInfo.selectedModalities[1];
@@ -42,7 +80,7 @@ String writeCSVRow(SessionData sessionData) {
     }
 
     // Scrive i valori della riga nel file CSV
-    output = dateTime + "," + playerName + "," + sessionTime + "," + attractingFishScore + "," + hookingFishScore + "," + retreivingFishScore + "," + demagedWire + "," + sight + "," + audio + "," + haptic + "," + endReason;
+    output = dateTime + "," + playerName + "," + sessionTime + "," + sessionData.scoreAttracting + "," + sessionData.scoreHooking + "," + sessionData.scoreRetreiving + "," + demagedWire + "," + sight + "," + audio + "," + haptic + "," + endReason;
     csvWriter.println(output);
 
     csvWriter.flush();

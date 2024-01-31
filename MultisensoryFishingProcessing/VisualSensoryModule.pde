@@ -110,6 +110,12 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   void OnFishLost(){
     fishLost= true;
   }
+  void OnFishCaught(){
+    fishLost= true;
+  }
+  void OnWireEndedWithNoFish(){
+    fishLost= true;
+  }
   
   // this can be used als as draw cicle
   void OnRodStatusReading(RodStatusData dataSnapshot){
@@ -139,7 +145,10 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   void drawIntentionalityVisualization(){
    
     float intentionality = fish.getIntentionality();
-    //intentionality = 0.8;
+    
+    if(outputModulesManager.isFishHooked() == true || fishLost == true){
+      intentionality = 0.8;
+    }
     
     if(outputModulesManager.isFishHooked() == false && fishLost==false){
       var colorNow = lerpColor(darkTintColor, brightTintColor, constrain(map(intentionality, -0.3, 0.6, 0, 1), 0, 1));

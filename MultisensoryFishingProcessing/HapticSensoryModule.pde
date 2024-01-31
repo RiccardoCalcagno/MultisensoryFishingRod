@@ -185,7 +185,7 @@ class HapticSensoryModule extends AbstSensoryOutModule {
     if(index>=0){
       outValue = patternChosed[index][0];
     }
-    //println(text+"  "+outValue+"   "+nf(lastTension, 2, 3)+"        "+frameCount);
+    outputModulesManager.GetDebugUtility().Println((text+"  "+outValue+"   "+nf(lastTension, 2, 3)+"        "+frameCount), true);
     return outValue;
   }
   
@@ -244,7 +244,7 @@ class ClientThread extends Thread {
         send_message_to_vibrators(value);
         precedentValue = value;
         
-        Thread.sleep(10);
+        Thread.sleep(30);
       }
     }
     catch(Exception se) {
@@ -261,7 +261,12 @@ class ClientThread extends Thread {
       try {
         send_message_to_vibrators(0);
         send_message_to_vibrators(0);
+        send_message_to_vibrators(0);
         sleep(10);
+        send_message_to_vibrators(0);
+        sleep(100);
+        send_message_to_vibrators(0);
+        send_message_to_vibrators(0);
         send_message_to_vibrators(0);
       }
       catch(Exception se) {
@@ -269,6 +274,7 @@ class ClientThread extends Thread {
       }  
       try {
         client.close();
+        println("Client Close");
       } catch(Exception e) { println("in disposing haptic thread, can not close DatagramSoket, exception: "+e);}
       client = null;
     }
@@ -281,7 +287,7 @@ class ClientThread extends Thread {
       data = message.getBytes();
       DatagramPacket packet = new DatagramPacket(data, data.length, ESP_IP, ESP_PORT);
       client.send(packet);
-      //System.out.println("SEND: " + message);
+      System.out.println("SEND: " + message+ " "+ frameCount);
     }
     catch(Exception se) {
       se.printStackTrace();

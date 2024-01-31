@@ -20,9 +20,9 @@ void setup() {
   debugLevel.put(DebugType.IOFile, true);
   debugLevel.put(DebugType.StartAlreadyWithFishHoked, false);
   debugLevel.put(DebugType.FishMovement, true);
-  debugLevel.put(DebugType.InputAsKeyboard, true);
+  debugLevel.put(DebugType.InputAsKeyboard, false);
   debugLevel.put(DebugType.ConsoleAll, true);
-  debugLevel.put(DebugType.ConsoleAlowFrequent, true);
+  debugLevel.put(DebugType.ConsoleAlowFrequent, false);
   debugLevel.put(DebugType.ConsoleIntentionAndTension, false);
   debugLevel.put(DebugType.ConsoleAlowRawRodInputs, false);
   
@@ -368,7 +368,7 @@ class GameManager implements OutputModulesManager, InputModuleManager {
     
     debugUtility.Debug_PlotEventsInTime(currentSession, written);
         
-    createAnswerToContinuePlayingUI(currentSession.endReason == "FishCaught");
+    createAnswerToContinuePlayingUI(currentSession.endReason == "FishCaught", currentSession.scoreAttracting, currentSession.scoreHooking, currentSession.scoreRetreiving);
   }
   
   // Triggerd by the answer given to the GUI by the user see script:  WIMP_GUI.pde
@@ -561,6 +561,7 @@ class SessionData {
   float demagedWire;
   HashMap<GameEvent, Float> sumsOfgameEvents;
   PlayerInfo playerInfo;
+  float scoreAttracting, scoreHooking, scoreRetreiving; 
   
   public void ResetGameData(){
     sumsOfgameEvents = new HashMap<GameEvent, Float>();
