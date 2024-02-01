@@ -269,15 +269,11 @@ class VisualSensoryModule extends AbstSensoryOutModule{
   
   void drawSceneFish() {
     var fishRotation = fish.getFishRotation();
-    
-    //var rotations = TrasformVectorInRotation(fishRotation, new PVector(1, 0, 0));//TrasformVectorInRotation(fishRotation, new PVector(1, 0, 0));
     var fishPose = fish.getPos();
     
     Vec3 powerdRotation = new Vec3(1,0,0);
     PVector rotationEnlarged = fishRotation.copy().setMag(100);
     PMatrix3D rotationMatrix = powerdRotation.lookAt(rotationEnlarged, new PVector(0, -1, 0));
-    
-    
     PVector targetGround = new PVector();
     rotationMatrix.mult(powerdRotation, targetGround);
     
