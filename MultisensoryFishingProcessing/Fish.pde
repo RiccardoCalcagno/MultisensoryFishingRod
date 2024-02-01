@@ -8,7 +8,8 @@ class Fish implements PublicFish{
   
   // ------------------------------------------- FINE-TUNABLES CONSTANTS -------------------------------------------  
     
-   // coefficent expressing how much the valence of a certain shake is influencing the intentionality of the fish at each cicle
+  // coefficent expressing how much the valence of a certain 
+  // shake change the intentionality of the fish at each cicle
   float intensityOfValenceOfShakesForAttraction = 0.001;
   
   // Speed of the fish on free condition
@@ -17,29 +18,36 @@ class Fish implements PublicFish{
   // Speed of the fish when hooked
   float stepSizeWhenHooked = 4;  
   
-  // threshold distance necessary to shape the speed of the fish in it environment, with food vision
+  // threshold distance necessary to shape the speed of the 
+  // fish in it environment, with food vision
   float distanceFromFoodWhenStartToDecellerate = 50;
   
-  // reaching this value with the counter: timeSinceAttractionWasPositive define the maximum extream of intentionality unlocked.
-  int strinkingTimeToReachOptimumAttractability = 500; /// ATTENTION: Needs to be a multiple of 5
+  // reaching this value with the counter: 
+  // timeSinceAttractionWasPositive define the maximum extream 
+  // of intentionality unlocked. [Needs to be a multiple of 5]
+  int strinkingTimeToReachOptimumAttractability = 500; 
   
-  // If no shake is introduced since numFramesAfterFishstartForgetting of frames, the intentionality of the fish start reaching the 0 with a certain speed (Forgetting)
+  // If no shake is introduced since this ammount of frames, 
+  // the intentionality of the fish start reaching the 0 with 
+  // a certain speed (Forgetting)
   int numFramesAfterFishstartForgetting = 300;
   
   // Speed of forgetting his intentionality
   float speedOfForgettingIntentionality = 0.002;
   
-  // this express a value of intentionality to reach the bottom of the see when the fish is hooked
+  // this express a value of intentionality to reach the bottom
+  // of the see when the fish is hooked
   float intentionToGoDownWhenHooked = 0.24; 
   
-  // set this values to adjust the degree in wich a certain shake is attracting - scaring the fish , intentionality can go from -0.3 to 0.8
+  // set this values to adjust the degree in wich a certain 
+  // shake is attracting - scaring the fish , intentionality 
+  // can go from -0.3 to 0.8
   public void setShakeAttractionMapping(){
     shakesValenceForAttracting.set("NONE", 0);
-    shakesValenceForAttracting.set("LITTLE_ATTRACTING", 0.5);    // mapped: 0 at intentionality = 0.8, value when intentionality = 0;  value still when intentionality < 0
-    shakesValenceForAttracting.set("LONG_ATTRACTING", 1);    // mapped: 0 at intentionality = 0.8, value when intentionality = 0;  value still when intentionality < 0
-    
-    shakesValenceForAttracting.set("STRONG_HOOKING", -5);    // mapped: 0 at intentionality = -0.3, value when intentionality = 0.8
-    shakesValenceForAttracting.set("STRONG_NOT_HOOKING", -4);  // mapped: 0 at intentionality = -0.3, value when intentionality = 0.8
+    shakesValenceForAttracting.set("LITTLE_ATTRACTING", 0.5);    
+    shakesValenceForAttracting.set("LONG_ATTRACTING", 1);  
+    shakesValenceForAttracting.set("STRONG_HOOKING", -5);  
+    shakesValenceForAttracting.set("STRONG_NOT_HOOKING", -4); 
   }
   
   
