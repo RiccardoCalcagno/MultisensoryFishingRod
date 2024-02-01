@@ -246,7 +246,8 @@ class Fish implements PublicFish{
       if(time > 150 && time < 200){
         intentionToGoDown = map(time, 150, 200, intentionToGoDown, 0);
       }
-      targetIntentionality = (pos.y < 0) ? intentionToGoDownWhenHooked: map(pos.y, boxsize/2, 0, 0, intentionToGoDownWhenHooked);
+      targetIntentionality = (pos.y < 0) ? intentionToGoDownWhenHooked: 
+                                map(pos.y, boxsize/2, 0, 0, intentionToGoDownWhenHooked);
     }
     
     // Update fish's position based on intention
