@@ -5,7 +5,8 @@ interface PublicFish{
   
   PVector getDeltaPos();
   
-  // Fish intentionality is a coefficent from 0 to 1 that tell how much willing is the fish to bite the hook... 0 => random movement, 1 => strait movement to the hook. 
+  // Fish intentionality is a coefficent from 0 to 1 that tell how much willing is the
+  // fish to bite the hook... 0 => random movement, 1 => strait movement to the hook. 
   float getIntentionality();
   
   PVector getFishRotation();
@@ -45,7 +46,8 @@ abstract class AbstSensoryOutModule{
   // Asyncronous meningful events
   void OnShakeOfRod(ShakeDimention rodShakeType){}
   
-  // event fired when the fish is touching the hook. I (Riccardo) change its movemnts in the way that 1 event of tasting the bait has at least 0.8 sec of distance between each others
+  // event fired when the fish is touching the hook.
+  // 1 event of tasting the bait has at least 0.8 sec of distance between each others
   void OnFishTasteBait(){}
   
   void OnFishHooked(){}
@@ -64,8 +66,9 @@ class RodStatusData{
   // negative speed for retreiving the wire, positive velocities for relising wire.
   float speedOfWireRetrieving;
   
-  // From 0 to 1.... 0 means not in tension. if isFishHooked == true => coefficentOfWireTension = 0
-  // max tension when the fish is pulling in the opposite direction of the wire and the speedOfWireRetrieving is equal to 1
+  // From 0 to 1.... 0 means not in tension. if isFishHooked == true => tention = 0
+  // tension is biggest when the fish is pulling in the opposite direction of the wire 
+  // and the speedOfWireRetrieving is equal to 1
   float coefficentOfWireTension; 
   
   // Check RawMotionData in SensoryInputModule script
