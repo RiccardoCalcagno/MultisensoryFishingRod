@@ -169,23 +169,17 @@ class HapticSensoryModule extends AbstSensoryOutModule {
   }
   
   public int getCurrentValue(){
-    String text="";
     if(millisecSinceEvent == null){
       millisecSinceEvent = millis();
-      text+="started Pattern: ";
-    }
-    else{
-      text+="                 ";
     }
     var patternChosed = getPattern(event);
-    var index = ReadCurrentIndexOfPattern(patternChosed,  getMillisFromEvent());
-    text+=event+("               ".substring((event.toString()).length()))+" "+index;
+    var index = ReadCurrentIndexOfPattern
+                   (patternChosed, getMillisFromEvent());
     
     int outValue = -1;
     if(index>=0){
       outValue = patternChosed[index][0];
     }
-    outputModulesManager.GetDebugUtility().Println((text+"  "+outValue+"   "+nf(lastTension, 2, 3)+"        "+frameCount), true);
     return outValue;
   }
   
