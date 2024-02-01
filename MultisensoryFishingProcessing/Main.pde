@@ -441,7 +441,8 @@ class GameManager implements OutputModulesManager, InputModuleManager {
       newData.speedOfWireRetrieving = cachedSpeedOfWireRetrieving;
       newData.rawMotionData = cachedRawMotionData;
       
-      newData.coefficentOfWireTension = player.UpdateWireRetreival(newData.speedOfWireRetrieving);
+      newData.coefficentOfWireTension = 
+        player.UpdateWireRetreival(newData.speedOfWireRetrieving);
       
       haloForWireRetrieving--;
       haloForRawMovements--;
