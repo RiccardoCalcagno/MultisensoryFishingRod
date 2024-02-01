@@ -1,7 +1,7 @@
 # MultisensoryFishingRod
 
 <p align="center">
-  <img src="Res/ClassDiagram.jpg" width="100%">
+  <img src="ClassDiagram.jpg" width="100%">
 </p>
 
 
