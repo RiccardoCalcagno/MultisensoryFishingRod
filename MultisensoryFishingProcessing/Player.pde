@@ -9,40 +9,60 @@ class Player {
   
   // ------------------------------------------- FINE-TUNABLES CONSTANTS -------------------------------------------  
   
-  //max damage supported by the wire
+  // max damage supported by the wire
   float maxDamage = 50;
   
-  // Bigger => More the wire should bounce in the moment in wich the fish touch it
+  // Bigger => More the wire should bounce in the moment 
+  // in wich the fish touch it
   float multipliyerOfCollisionReaction = 3;
  
   // Gravitational force in 3D
   PVector weightOfNode = new PVector(0, 0.8, 0); 
   PVector weightOfBait = new PVector(0, 48, 0); 
   
-  // This should define the lenght of the rope, not the position of the hook, this would stay evrytime almost in the middel of the boundingBox
+  // This should define the lenght of the rope, not the 
+  // position of the hook, this would stay evrytime almost 
+  // in the middel of the boundingBox
   int totalNodes = 100; // 200
   
-  // This is a constant force that is appplied to the origin of the wire (top extream of it) in order to make it reace a default position if the user is not applying other forces by moving the phiscal rod
+  // This is a constant force that is appplied to the origin
+  // of the wire (top extream of it) in order to make it
+  // reace a default position if the user is not applying 
+  // other forces by moving the phiscal rod
   float speedToReachTheIdleOrigin = 0.1;
   
-  // this is a coefficent to be fineTuned in order to intensify or decrese the force of the movements of the phisical rod, need to be adjusted in order not to make the hook be throunw out of the water
+  // this is a coefficent to be fineTuned in order to 
+  // intensify or decrese the force of the movements of the
+  // phisical rod, need to be adjusted in order not to make 
+  // the hook be throunw out of the water
   float intensityOfRodMovments = 10000;
   
-  // if the mouth of the fish is more distant form the food than minDistanceOfMouthFromFoodToHook at the moment of the Strong_Hooking shake than the hook do not success.
+  // if the mouth of the fish is more distant form the food 
+  // than minDistanceOfMouthFromFoodToHook at the moment of 
+  // the Strong_Hooking shake than the hook do not success.
   int minDistanceOfMouthFromFoodToHook = 20;
   
-  // Average the periods in which the fish is pushing the wire it is repeditly biting (just a taste actually) the hook, 
-  // but with a minimum delay between each bites, namely this value. Expect a random variance of +- 0.2*numLoopsBetweenBites
-  // This value increase with the intentionality of the fish map(intentionality, 0, 0.8, maxNumLoopsBetweenBites, minNumLoopsBetweenBites)
-  int maxNumLoopsBetweenBites = 120;  int minNumLoopsBetweenBites = 80;
+  // Average the periods in which the fish is pushing the wire
+  // it is repeditly biting (just a taste actually) the hook, 
+  // but with a minimum delay between each bites, namely this 
+  // value. Expect a variance of +- 0.2*numLoopsBetweenBites
+  // This value increase with the intentionality of the fish
+  // map(intentionality, 0, 0.8, max, min)
+  int maxNumLoopsBetweenBites = 120;  
+  int minNumLoopsBetweenBites = 80;
   
-  // Dial this one to require to the user more or less reactivness to the fish tasting
-  int numLoopsForReactivness = 17;   // they start from this value and each time the user fail to strinke this value increase of 4 untill numLoopsForReactivness * 3
+  // Dial this one to require to the user more or less 
+  // reactivness to the fish tasting
+  // they start from this value and each time the user fail 
+  // to strinke increase of 4 until numLoopsForReactivness * 3
+  int numLoopsForReactivness = 17;   
   
   // quantity of wire retreived at each step
   float maxSpeedOfWireRetreiving = 2;
   
-  // when the wire is idle which is the offset of the bait from the center of the room? (it should be a little bit below so that there is more wire to be retreived)
+  // when the wire is idle which is the offset of the bait
+  // from the center of the room? (it should be a little bit 
+  // below so that there is more wire to be retreived)
   float YoffsetOfBaitFromCenterOfRoom = 30;
   
   
