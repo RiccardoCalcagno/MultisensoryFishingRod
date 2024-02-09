@@ -281,7 +281,7 @@ class ClientThread extends Thread {
       data = message.getBytes();
       DatagramPacket packet = new DatagramPacket(data, data.length, ESP_IP, ESP_PORT);
       client.send(packet);
-      System.out.println("SEND: " + message+ " "+ frameCount);
+      //System.out.println("SEND: " + message+ " "+ frameCount);
     }
     catch(Exception se) {
       se.printStackTrace();
