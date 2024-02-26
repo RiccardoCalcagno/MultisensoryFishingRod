@@ -1,5 +1,7 @@
 # MultisensoryFishingRod
-
+<p align="center">
+  <img src="A4 - 2Poster.png" width="100%">
+</p>
 <p align="center">
   <img src="ClassDiagram.jpg" width="100%">
 </p>
